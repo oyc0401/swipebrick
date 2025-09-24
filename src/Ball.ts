@@ -3,7 +3,7 @@ import type { Position } from "./GameState";
 
 export class Ball {
   private graphics: PIXI.Graphics;
-  private radius: number = 12;
+  private radius: number = 8;
   private color: number = 0x4a90e2; // 토스 블루
 
   constructor(position: Position) {

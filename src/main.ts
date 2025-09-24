@@ -44,16 +44,17 @@ class Game {
     await this.app.init({
       width: getInnerWidth(),
       height: window.innerHeight,
-      // ★ 외부 배경을 회색으로: 앱 배경색만 회색이면 “밖”은 전부 회색으로 채워집니다.
+      autoDensity: true,
       backgroundColor: 0xeeeeee,
       antialias: true,
+      resolution: Math.ceil(window.devicePixelRatio),
     });
+
+    console.log("dpr:", window.devicePixelRatio);
 
     const container = document.getElementById("container");
     if (container) container.appendChild(this.app.canvas);
     this.app.canvas.style.display = "block";
-    // this.app.canvas.style.width = "100vw";
-    this.app.canvas.style.height = "100vh";
 
     // 중앙 고정 레이어
     this.centerLayer = new PIXI.Container();
