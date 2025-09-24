@@ -28,7 +28,6 @@ class Game {
   // 레이어
   private centerLayer!: PIXI.Container; // 화면 중앙 고정 (pivot = 180,180)
   private gameViewport!: PIXI.Container; // 360×360 게임 씬(오브젝트)
-  private whiteBox!: PIXI.Graphics; // ★ 중앙 흰색 박스
 
   private topBoundary!: GameBoundary;
   private bottomBoundary!: GameBoundary;
@@ -64,13 +63,6 @@ class Game {
     // 게임 뷰포트
     this.gameViewport = new PIXI.Container();
     this.centerLayer.addChild(this.gameViewport);
-
-    // ★ 중앙 흰색 박스(바닥면)
-    this.whiteBox = new PIXI.Graphics();
-    this.whiteBox.beginFill(0xffffff);
-    this.whiteBox.drawRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    this.whiteBox.endFill();
-    this.centerLayer.addChildAt(this.whiteBox, 0); // 가장 뒤에 깔기
 
     // 중앙 정렬 & 리사이즈 대응
     this.updateCenterPosition();
