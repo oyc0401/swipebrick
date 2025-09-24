@@ -30,7 +30,7 @@ class Game {
     });
 
     // HTML 컨테이너에 캔버스 추가
-    const container = document.getElementById("game-container");
+    const container = document.getElementById("container");
     if (container) {
       container.appendChild(this.app.canvas);
     }
@@ -71,6 +71,15 @@ class Game {
     } else {
       // 화면이 게임보다 세로가 길 때 - 가로 기준으로 스케일
       scale = windowWidth / GAME_WIDTH;
+    }
+
+    // 최대 렌더링 크기 제한
+    const maxWidth = 400;
+
+    const actualWidth = GAME_WIDTH * scale;
+
+    if (actualWidth > maxWidth) {
+      scale = maxWidth / GAME_WIDTH;
     }
 
     // 캔버스 스케일 적용
