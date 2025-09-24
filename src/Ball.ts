@@ -16,7 +16,9 @@ export class Ball {
     this.body = Matter.Bodies.circle(position.x, position.y, this.radius, {
       restitution: 1, // 완전 탄성 충돌
       friction: 0, // 마찰 없음
-      frictionAir: 0.0, // 공기저항 없음
+      frictionAir: 0, // 공기저항 완전 제거
+      frictionStatic: 0, // 정적 마찰 제거
+      inertia: Infinity, // 회전 관성 무한대
     });
 
     Matter.World.add(world, this.body);
