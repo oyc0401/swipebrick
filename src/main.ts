@@ -4,7 +4,7 @@ import { Ball } from "./Ball";
 import { GameBoundary } from "./GameBoundary";
 
 const GAME_WIDTH = 360;
-const GAME_HEIGHT = 450;
+const GAME_HEIGHT = 370;
 
 class Game {
   private app!: PIXI.Application;
@@ -89,11 +89,11 @@ class Game {
 
   private addGameBoundaries(): void {
     // 상단 경계선 (40px 아래, 5px 두께)
-    this.topBoundary = new GameBoundary(0, 40, GAME_WIDTH, 5);
+    this.topBoundary = new GameBoundary(0, 0, GAME_WIDTH, 5);
     this.app.stage.addChild(this.topBoundary.getGraphics());
 
     // 하단 경계선 (40px 위, 5px 두께)
-    const bottomY = GAME_HEIGHT - 40 - 5;
+    const bottomY = GAME_HEIGHT - 5;
     this.bottomBoundary = new GameBoundary(0, bottomY, GAME_WIDTH, 5);
     this.app.stage.addChild(this.bottomBoundary.getGraphics());
   }
