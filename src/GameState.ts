@@ -10,9 +10,8 @@ export class GameState {
   public score: number;
 
   constructor() {
-    // 하단 검은선 위에 위치: TOP_MARGIN + LINE_THICKNESS + PLAY_AREA_SIZE - 반지름
-    const bottomLineY = 40 + 5 + 360; // 405
-    this.ballStartPosition = { x: 180, y: bottomLineY - 12 }; // 하단 검은선 위에 위치
+    // 360x360 사각형 영역의 하단에 붙어있도록 위치 설정
+    this.ballStartPosition = { x: 180, y: 360 - 12 }; // 사각형 하단에서 반지름만큼 위
     this.ballCount = 1;
     this.level = 1;
     this.score = 0;
