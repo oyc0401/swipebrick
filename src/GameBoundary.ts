@@ -3,7 +3,7 @@ import * as Matter from "matter-js";
 
 export class GameBoundary {
   private graphics: PIXI.Graphics;
-  private body: Matter.Body;
+  private body!: Matter.Body;
   private isDestroyed: boolean = false;
 
   constructor(x: number, y: number, width: number, height: number, color: number = 0x000000, world?: Matter.World) {
