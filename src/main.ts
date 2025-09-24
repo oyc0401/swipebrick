@@ -6,6 +6,19 @@ import { GameBoundary } from "./GameBoundary";
 const GAME_WIDTH = 360;
 const GAME_HEIGHT = 360;
 
+/**
+ * 반응형 UI 가로 크기
+ */
+function getInnerWidth() {
+  // -> 세로 / 가로
+  const RATIO = 1.8; // 2도 좋음
+  let innerWidth = window.innerWidth;
+  if (window.innerHeight / window.innerWidth < RATIO) {
+    innerWidth = window.innerHeight / RATIO;
+  }
+  return innerWidth;
+}
+
 class Game {
   private app!: PIXI.Application;
 
@@ -28,8 +41,9 @@ class Game {
 
   private async init(): Promise<void> {
     this.app = new PIXI.Application();
+
     await this.app.init({
-      width: window.innerWidth,
+      width: getInnerWidth(),
       height: window.innerHeight,
       // ★ 외부 배경을 회색으로: 앱 배경색만 회색이면 “밖”은 전부 회색으로 채워집니다.
       backgroundColor: 0xeeeeee,
@@ -39,7 +53,7 @@ class Game {
     const container = document.getElementById("container");
     if (container) container.appendChild(this.app.canvas);
     this.app.canvas.style.display = "block";
-    this.app.canvas.style.width = "100vw";
+    // this.app.canvas.style.width = "100vw";
     this.app.canvas.style.height = "100vh";
 
     // 중앙 고정 레이어
@@ -71,7 +85,7 @@ class Game {
   }
 
   private onResize() {
-    const w = window.innerWidth;
+    const w = getInnerWidth();
     const h = window.innerHeight;
     this.app.renderer.resize(w, h);
     this.updateCenterPosition();
