@@ -85,7 +85,7 @@ export class PhysicsEngine {
 
     const physicsLoop = () => {
       const currentTime = performance.now();
-      let deltaTime = currentTime - lastTime;
+      const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
 
       accumulator += deltaTime;

@@ -24,6 +24,9 @@ export class DisplayManager {
   private gameViewport: Container;
   private gameWidth: number;
   private gameHeight: number;
+  private background: Graphics | null = null;
+  private debugGuide: Graphics | null = null;
+  private cleanupTasks: (() => void)[] = [];
 
   constructor(gameWidth: number, gameHeight: number) {
     this.app = new Application();
@@ -34,7 +37,7 @@ export class DisplayManager {
   }
 
   public async init(): Promise<void> {
-    let { width, height } = getSize();
+    const { width, height } = getSize();
     await this.app.init({
       width,
       height,
@@ -75,14 +78,17 @@ export class DisplayManager {
   }
 
   private setupEventListeners(): void {
-    window.addEventListener("resize", () => this.onResize());
+    window.addEventListener("resize", this.onResize);
+    this.cleanupTasks.push(() =>
+      window.removeEventListener("resize", this.onResize)
+    );
   }
 
-  private onResize(): void {
-    let { width, height } = getSize();
+  private onResize = (): void => {
+    const { width, height } = getSize();
     this.app.renderer.resize(width, height);
     this.updateCenterPosition();
-  }
+  };
 
   private updateCenterPosition(): void {
     const screenWidth = this.app.renderer.width;
@@ -104,29 +110,43 @@ export class DisplayManager {
   }
 
   private drawBackground(scale: number) {
-    let canvasSize = getSize();
-    // 배경 추가
-    let scaledCanvasHeight = canvasSize.height / scale;
-    let h = (this.gameHeight - scaledCanvasHeight) / 2;
+    const canvasSize = getSize();
+    const scaledCanvasHeight = canvasSize.height / scale;
+    const h = (this.gameHeight - scaledCanvasHeight) / 2;
 
-    const background = new Graphics();
-    background.rect(0, h, this.gameWidth, scaledCanvasHeight).fill(0xececec); // 하늘색
-    this.centerLayer.addChildAt(background, 0);
+    if (!this.background) {
+      // 최초 생성
+      this.background = new Graphics();
+      this.centerLayer.addChildAt(this.background, 0);
+    }
+
+    // 기존 Graphics 재활용 (clear 후 새로 그리기)
+    this.background.clear();
+    this.background
+      .rect(0, h, this.gameWidth, scaledCanvasHeight)
+      .fill(0xececec); // 하늘색
   }
 
   public addDebugGuide(): void {
-    const g = new Graphics();
-    g.rect(0, 0, this.gameWidth, this.gameHeight).stroke({
+    if (!this.debugGuide) {
+      // 최초 생성
+      this.debugGuide = new Graphics();
+      this.centerLayer.addChild(this.debugGuide);
+    }
+
+    // 기존 Graphics 재활용 (clear 후 새로 그리기)
+    this.debugGuide.clear();
+    this.debugGuide.rect(0, 0, this.gameWidth, this.gameHeight).stroke({
       width: 2,
       color: 0x00aa00,
     });
-    g.moveTo(this.gameWidth / 2, 0).lineTo(this.gameWidth / 2, this.gameHeight);
-    g.moveTo(0, this.gameHeight / 2).lineTo(
-      this.gameWidth,
-      this.gameHeight / 2
-    );
-    g.stroke({ width: 1, color: 0xaa0000 });
-    this.centerLayer.addChild(g);
+    this.debugGuide
+      .moveTo(this.gameWidth / 2, 0)
+      .lineTo(this.gameWidth / 2, this.gameHeight);
+    this.debugGuide
+      .moveTo(0, this.gameHeight / 2)
+      .lineTo(this.gameWidth, this.gameHeight / 2);
+    this.debugGuide.stroke({ width: 1, color: 0xaa0000 });
   }
 
   public getCenterLayer(): Container {
@@ -152,5 +172,31 @@ export class DisplayManager {
     };
 
     renderLoop();
+  }
+
+  public destroy(): void {
+    // 이벤트 리스너 정리
+    this.cleanupTasks.forEach((cleanup) => cleanup());
+    this.cleanupTasks = [];
+
+    // Graphics 객체들 정리
+    if (this.background) {
+      this.background.destroy(true);
+      this.background = null;
+    }
+
+    if (this.debugGuide) {
+      this.debugGuide.destroy(true);
+      this.debugGuide = null;
+    }
+
+    // PixiJS 애플리케이션 완전 정리
+    if (this.app) {
+      this.app.destroy(true, {
+        children: true,
+        texture: true,
+        textureSource: true,
+      });
+    }
   }
 }

@@ -19,6 +19,7 @@ export class Ball extends ActiveEntity {
       this.radius
     );
 
+    // 초기 위치 동기화
     this.updateGraphics();
   }
 
