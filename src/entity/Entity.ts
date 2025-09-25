@@ -1,5 +1,5 @@
-import { PhysicsComponent } from "../components/PhysicsComponent";
-import { RenderComponent } from "../components/RenderComponent";
+import { PhysicsComponent } from "../physics/PhysicsComponent";
+import { RenderComponent } from "../render/RenderComponent";
 
 export class Entity {
   public readonly id: string;

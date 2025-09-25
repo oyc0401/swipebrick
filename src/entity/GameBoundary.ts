@@ -1,6 +1,6 @@
 import { Entity } from "./Entity";
-import { RectangleRenderComponent } from "../components/RenderComponent";
-import { BoundaryPhysicsComponent } from "../components/PhysicsComponent";
+import { RectangleRenderComponent } from "../render/RenderComponent";
+import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
 
 export class GameBoundary extends Entity {
   private isDestroyed: boolean = false;

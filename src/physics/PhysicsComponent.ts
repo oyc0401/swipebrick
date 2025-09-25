@@ -1,5 +1,5 @@
 import * as Matter from "matter-js";
-import type { IPhysicsComponent } from "./IComponent";
+import type { IPhysicsComponent } from "../components/IComponent";
 
 export class PhysicsComponent implements IPhysicsComponent {
   protected body: Matter.Body;
@@ -30,12 +30,7 @@ export class PhysicsComponent implements IPhysicsComponent {
 export class BallPhysicsComponent extends PhysicsComponent {
   private radius: number;
 
-  constructor(
-    world: Matter.World,
-    x: number,
-    y: number,
-    radius: number
-  ) {
+  constructor(world: Matter.World, x: number, y: number, radius: number) {
     super(world);
     this.radius = radius;
     this.createBallBody(x, y);

@@ -1,8 +1,8 @@
-import * as PIXI from "pixi.js";
-import { GameRenderer } from "../GameRenderer";
+import type { FederatedPointerEvent } from "pixi.js";
+import { GameRenderer } from "../render/GameRenderer";
 import { GameBoundary } from "../entity/GameBoundary";
 import { Ball } from "../entity/Ball";
-import { PhysicsEngine } from "../PhysicsEngine";
+import { PhysicsEngine } from "../physics/PhysicsEngine";
 
 const GAME_WIDTH = 360;
 const GAME_HEIGHT = 360;
@@ -76,7 +76,7 @@ export class GameView {
   private addClickListener(): void {
     const gameViewport = this.renderer.getGameViewport();
     gameViewport.eventMode = "static";
-    gameViewport.on("pointerdown", (event: PIXI.FederatedPointerEvent) => {
+    gameViewport.on("pointerdown", (event: FederatedPointerEvent) => {
       const localPosition = event.getLocalPosition(gameViewport);
       console.log("Clicked at:", localPosition.x, localPosition.y);
       this.ball.moveTowards(localPosition.x, localPosition.y);

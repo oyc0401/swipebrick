@@ -1,7 +1,7 @@
 import type { Position } from "../GameState";
 import { Entity } from "./Entity";
-import { CircleRenderComponent } from "../components/RenderComponent";
-import { BallPhysicsComponent } from "../components/PhysicsComponent";
+import { CircleRenderComponent } from "../render/RenderComponent";
+import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 
 export class Ball extends Entity {
   private radius: number = 8;

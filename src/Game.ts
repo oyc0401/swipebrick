@@ -1,7 +1,7 @@
 import { GameState } from "./GameState";
 import { Ball } from "./entity/Ball";
-import { GameRenderer } from "./GameRenderer";
-import { PhysicsEngine } from "./PhysicsEngine";
+import { GameRenderer } from "./render/GameRenderer";
+import { PhysicsEngine } from "./physics/PhysicsEngine";
 import { GameView } from "./view/GameView";
 
 export class Game {
