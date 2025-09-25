@@ -17,6 +17,10 @@ function getInnerWidth() {
   return innerWidth;
 }
 
+function getInnerHeight() {
+  return window.innerHeight;
+}
+
 export class DisplayManager {
   private app: Application;
   private centerLayer: Container;
@@ -31,7 +35,7 @@ export class DisplayManager {
   public async init(): Promise<void> {
     await this.app.init({
       width: getInnerWidth(),
-      height: window.innerHeight,
+      height: getInnerHeight(),
       autoDensity: true,
       backgroundColor: 0xeeeeee,
       antialias: true,
@@ -51,13 +55,20 @@ export class DisplayManager {
   private setupLayers(): void {
     // 중앙 고정 레이어
     this.centerLayer.pivot.set(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+
+    // 하늘색 배경 추가
+    const background = new Graphics();
+    background.rect(0, 0, 50, 50).fill(0x87ceeb); // 하늘색
+    this.centerLayer.addChild(background);
+
     this.app.stage.addChild(this.centerLayer);
 
-    // 게임 뷰포트
+    // // 게임 뷰포트
+    // this.centerLayer.hitArea = new Rectangle(0, -200, GAME_WIDTH, 800);
     this.gameViewport.hitArea = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
     this.centerLayer.addChild(this.gameViewport);
 
-    // 중앙 정렬 & 리사이즈 대응
+    // // 중앙 정렬 & 리사이즈 대응
     this.updateCenterPosition();
   }
 
@@ -67,7 +78,7 @@ export class DisplayManager {
 
   private onResize(): void {
     const w = getInnerWidth();
-    const h = window.innerHeight;
+    const h = getInnerHeight();
     this.app.renderer.resize(w, h);
     this.updateCenterPosition();
   }

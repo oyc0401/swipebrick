@@ -9,6 +9,7 @@ export class GameState {
   public level: number;
   public score: number;
   public isWaiting: boolean; // 대기 상태 플래그
+  public isBallLanded = false; // 공이 하나라도 바닥에 도착했는지 여부
 
   constructor() {
     // 360x360 사각형 영역의 하단에 붙어있도록 위치 설정
@@ -38,5 +39,9 @@ export class GameState {
 
   public setWaiting(waiting: boolean): void {
     this.isWaiting = waiting;
+  }
+
+  public setIsBallLanded(isBallLanded: boolean) {
+    this.isBallLanded = isBallLanded;
   }
 }
