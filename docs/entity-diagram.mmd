@@ -40,16 +40,28 @@ direction TB
     class RectangleRenderComponent {
     }
 
-    class IPhysicsComponent {
+    class IComponent {
+        +destroy() void
     }
 
     class IRenderComponent {
+        +getGraphics() Graphics
+        +updatePosition(x: number, y: number) void
+        +destroy() void
+    }
+
+    class IPhysicsComponent {
+        +getBody() Matter.Body
+        +setPosition(x: number, y: number) void
+        +getPosition() Position
+        +destroy() void
     }
 
 	<<abstract>> PhysicsComponent
 	<<abstract>> RenderComponent
 	<<interface>> IPhysicsComponent
 	<<interface>> IRenderComponent
+	<<interface>> IComponent
 
     Entity <|-- ActiveEntity
     ActiveEntity <|-- Ball
@@ -61,6 +73,8 @@ direction TB
     EntityManager --> Entity
     Entity --> IPhysicsComponent
     Entity --> IRenderComponent
-    IPhysicsComponent <|-- PhysicsComponent
-    IRenderComponent <|-- RenderComponent
+    IPhysicsComponent <|.. PhysicsComponent
+    IRenderComponent <|.. RenderComponent
+    IComponent <|.. IPhysicsComponent
+    IComponent <|.. IRenderComponent
 

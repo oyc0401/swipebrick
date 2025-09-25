@@ -127,5 +127,4 @@ direction TB
     IRenderComponent <|-- RenderComponent
 
 
-
 ```

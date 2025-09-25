@@ -1,7 +1,7 @@
 import { Body, Bodies, Sleeping } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
 
-export class PhysicsComponent implements IPhysicsComponent {
+export abstract class PhysicsComponent implements IPhysicsComponent {
   protected body: Matter.Body;
 
   constructor() {
