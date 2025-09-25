@@ -19,6 +19,7 @@ export class Ball {
       frictionAir: 0, // 공기저항 완전 제거
       frictionStatic: 0, // 정적 마찰 제거
       inertia: Infinity, // 회전 관성 무한대
+      label: 'ball', // 충돌 감지를 위한 라벨
     });
 
     Matter.World.add(world, this.body);
@@ -41,6 +42,12 @@ export class Ball {
   }
 
   public moveTowards(targetX: number, targetY: number): void {
+    // 공이 잠들어 있다면 깨우고 탄성을 복구
+    if (this.body.isSleeping) {
+      Matter.Sleeping.set(this.body, false);
+      this.body.restitution = 1; // 탄성 복구
+    }
+
     const currentPos = this.body.position;
     const dx = targetX - currentPos.x;
     const dy = targetY - currentPos.y;

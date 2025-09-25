@@ -57,7 +57,8 @@ class Game {
       GAME_WIDTH,
       5,
       0x000000,
-      world
+      world,
+      'bottom'
     );
     centerLayer.addChild(this.bottomBoundary.getGraphics());
 

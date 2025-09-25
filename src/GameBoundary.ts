@@ -6,7 +6,7 @@ export class GameBoundary {
   private body!: Matter.Body;
   private isDestroyed: boolean = false;
 
-  constructor(x: number, y: number, width: number, height: number, color: number = 0x000000, world?: Matter.World) {
+  constructor(x: number, y: number, width: number, height: number, color: number = 0x000000, world?: Matter.World, label?: string) {
     this.graphics = new PIXI.Graphics();
     this.createBoundary(x, y, width, height, color);
 
@@ -17,7 +17,10 @@ export class GameBoundary {
         y + height / 2, // 중심 y좌표
         width,
         height,
-        { isStatic: true } // 정적 바디 (움직이지 않음)
+        {
+          isStatic: true, // 정적 바디 (움직이지 않음)
+          label: label || 'boundary'
+        }
       );
 
       Matter.World.add(world, this.body);
