@@ -4,6 +4,8 @@ import { Entity } from "./Entity";
 export abstract class ActiveEntity extends Entity {
   constructor(id: string) {
     super(id);
+
+    addEntity(this);
   }
 
   public setPosition(position: Position): void {
@@ -19,4 +21,10 @@ export abstract class ActiveEntity extends Entity {
     const position = this.physicsComponent.getPosition();
     this.renderComponent.updatePosition(position.x, position.y);
   }
+}
+
+export const activeEntities: ActiveEntity[] = [];
+
+export function addEntity(entity: ActiveEntity) {
+  activeEntities.push(entity);
 }

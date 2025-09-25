@@ -1,6 +1,5 @@
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
-import { activeEntities } from "../entity/Entity";
-import { ActiveEntity } from "../entity/ActiveEntity";
+import { activeEntities } from "../entity/ActiveEntity";
 
 const GAME_WIDTH = 360;
 const GAME_HEIGHT = 360;

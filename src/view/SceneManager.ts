@@ -1,4 +1,3 @@
-import { activeEntities } from "./../entity/Entity";
 import type { FederatedPointerEvent } from "pixi.js";
 import { DisplayManager } from "../render/DisplayManager";
 import { GameBoundary } from "../entity/GameBoundary";
@@ -44,7 +43,6 @@ export class SceneManager {
     );
     this.ball = ball;
     // 렌더링 대상 엔티티 등록
-    activeEntities.push(ball);
 
     this.renderer.getGameViewport().addChild(ball.getGraphics());
   }

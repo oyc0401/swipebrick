@@ -20,5 +20,3 @@ export class Entity {
     }
   }
 }
-
-export const activeEntities: ActiveEntity[] = [];
