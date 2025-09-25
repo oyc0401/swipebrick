@@ -10,7 +10,7 @@ export class Ball extends ActiveEntity {
   private color: number = 0x4880ee; // 토스 블루
 
   constructor(position: Position) {
-    super(`ball-${Date.now()}`);
+    super(`ball-${Date.now()}-${Math.random()}`);
 
     // 컴포넌트 직접 할당
     this.renderComponent = new CircleRenderComponent(this.radius, this.color);

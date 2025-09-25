@@ -102,4 +102,9 @@ export class PhysicsEngine {
 
     physicsLoop();
   }
+
+  public destroy(): void {
+    // 이벤트 리스너 제거
+    Events.off(this.engine, "collisionStart");
+  }
 }
