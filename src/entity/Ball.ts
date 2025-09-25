@@ -1,11 +1,11 @@
-import type { Position } from "../GameState";
+import { BALL_RADIUS, type Position } from "../GameState";
 import { ActiveEntity, activeEntities } from "../core/entity/ActiveEntity";
 import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 import type { Graphics } from "pixi.js";
 
 export class Ball extends ActiveEntity {
-  private radius: number = 8;
+  private radius: number = BALL_RADIUS;
   private color: number = 0x4880ee; // 토스 블루
 
   constructor(position: Position) {

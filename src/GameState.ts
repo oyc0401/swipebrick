@@ -3,6 +3,10 @@ export interface Position {
   y: number;
 }
 
+export const GAME_WIDTH = 360;
+export const GAME_HEIGHT = 360;
+export const BALL_RADIUS = 8;
+
 export class GameState {
   public ballStartPosition: Position;
   public ballCount: number;
@@ -13,8 +17,11 @@ export class GameState {
 
   constructor() {
     // 360x360 사각형 영역의 하단에 붙어있도록 위치 설정
-    this.ballStartPosition = { x: 180, y: 360 - 8 }; // 사각형 하단에서 반지름만큼 위
-    this.ballCount = 1;
+    this.ballStartPosition = {
+      x: GAME_WIDTH / 2,
+      y: GAME_HEIGHT - BALL_RADIUS,
+    }; // 사각형 하단에서 반지름만큼 위
+    this.ballCount = 8;
     this.level = 1;
     this.score = 0;
     this.isWaiting = true; // 초기에는 대기 상태 (공이 준비된 상태)

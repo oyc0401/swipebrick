@@ -1,6 +1,7 @@
 import { Engine, World, Events, Body, Sleeping } from "matter-js";
 
 import Matter from "matter-js";
+import { BALL_RADIUS, GAME_HEIGHT } from "../GameState";
 // 벽에 붙는 현상 제거
 (Matter.Resolver as any)._restingThresh = 0; // 기본 2 → 0
 
@@ -43,8 +44,8 @@ export class PhysicsEngine {
           const ballBody = bodyA.label === "ball" ? bodyA : bodyB;
 
           // 공을 바닥에 딱 붙여서 위치 조정 (공의 반지름 8을 고려)
-          const ballRadius = 8;
-          const bottomY = 360; // 바닥의 상단 위치
+          const ballRadius = BALL_RADIUS;
+          const bottomY = GAME_HEIGHT; // 바닥의 상단 위치
           Body.setPosition(ballBody, {
             x: ballBody.position.x,
             y: bottomY - ballRadius, // 352 (바닥에서 공 반지름만큼 위)

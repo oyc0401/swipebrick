@@ -1,13 +1,10 @@
-import { GameState } from "./GameState";
+import { GAME_HEIGHT, GAME_WIDTH, GameState } from "./GameState";
 import { DisplayManager } from "./render/DisplayManager";
 import { PhysicsEngine } from "./physics/PhysicsEngine";
 
 import { BallManager } from "./managers/BallManager";
 import { BoundaryManager } from "./managers/BoundaryManager";
 import { InputManager } from "./managers/InputManager";
-
-const GAME_WIDTH = 360;
-const GAME_HEIGHT = 360;
 
 export class Game {
   private renderer: DisplayManager;
@@ -69,8 +66,8 @@ export class Game {
       // 대기 상태 해제
       this.gameState.setWaiting(false);
 
-      // 공 7개 생성
-      this.ballManager.createBalls(7);
+      // 공들 생성
+      this.ballManager.createBalls(this.gameState.ballCount);
 
       // 미리보기 공 숨김
       this.ballManager.hidePreviewBall();
@@ -107,7 +104,7 @@ export class Game {
           this.gameState.setIsBallLanded(false);
           this.gameState.setWaiting(true);
           console.log("All balls removed. Ready for next shot.");
-        }, 100);
+        }, 30);
       }
     });
   }
