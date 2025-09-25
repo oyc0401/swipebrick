@@ -1,5 +1,5 @@
-import { PhysicsComponent } from "../physics/PhysicsComponent";
-import { RenderComponent } from "../render/RenderComponent";
+import { PhysicsComponent } from "../../physics/PhysicsComponent";
+import { RenderComponent } from "../../render/RenderComponent";
 
 export class Entity {
   public readonly id: string;
@@ -11,9 +11,6 @@ export class Entity {
   }
 
   public destroy(): void {
-    if (this.physicsComponent) {
-      this.physicsComponent.destroy();
-    }
     if (this.renderComponent) {
       this.renderComponent.destroy();
     }

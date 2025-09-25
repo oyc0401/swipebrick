@@ -1,15 +1,12 @@
-import { Body, Bodies, World, Sleeping } from "matter-js";
-import type { IPhysicsComponent } from "../components/IComponent";
+import { Body, Bodies, Sleeping } from "matter-js";
+import type { IPhysicsComponent } from "../core/components/IComponent";
 
 export class PhysicsComponent implements IPhysicsComponent {
   protected body: Body;
-  protected world: World;
 
-  constructor(world: World) {
-    this.world = world;
+  constructor() {
     this.body = Bodies.rectangle(0, 0, 1, 1); // 기본값, 하위 클래스에서 재정의
   }
-
   public getBody(): Body {
     return this.body;
   }
@@ -22,19 +19,16 @@ export class PhysicsComponent implements IPhysicsComponent {
     return { x: this.body.position.x, y: this.body.position.y };
   }
 
-  public destroy(): void {
-    World.remove(this.world, this.body);
-  }
+  public destroy(): void {}
 }
 
 export class BallPhysicsComponent extends PhysicsComponent {
   private radius: number;
 
-  constructor(world: World, x: number, y: number, radius: number) {
-    super(world);
+  constructor(x: number, y: number, radius: number) {
+    super();
     this.radius = radius;
     this.createBallBody(x, y);
-    World.add(this.world, this.body);
   }
 
   private createBallBody(x: number, y: number): void {
@@ -48,8 +42,8 @@ export class BallPhysicsComponent extends PhysicsComponent {
       label: "ball",
       collisionFilter: {
         category: 0x0001, // 공 카테고리
-        mask: 0x0002 | 0x0004 // 벽과만 충돌, 다른 공과는 충돌 안함
-      }
+        mask: 0x0002 | 0x0004, // 벽과만 충돌, 다른 공과는 충돌 안함
+      },
     });
   }
 
@@ -79,16 +73,14 @@ export class BallPhysicsComponent extends PhysicsComponent {
 
 export class BoundaryPhysicsComponent extends PhysicsComponent {
   constructor(
-    world: World,
     x: number,
     y: number,
     width: number,
     height: number,
     label: string = "boundary"
   ) {
-    super(world);
+    super();
     this.createBoundaryBody(x, y, width, height, label);
-    World.add(this.world, this.body);
   }
 
   private createBoundaryBody(
@@ -107,8 +99,8 @@ export class BoundaryPhysicsComponent extends PhysicsComponent {
       label: label,
       collisionFilter: {
         category: 0x0002, // 벽 카테고리
-        mask: 0x0001 // 공과만 충돌
-      }
+        mask: 0x0001, // 공과만 충돌
+      },
     });
   }
 }

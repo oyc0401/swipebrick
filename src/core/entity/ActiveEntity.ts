@@ -1,4 +1,4 @@
-import type { Position } from "../GameState";
+import type { Position } from "../../GameState";
 import { Entity } from "./Entity";
 
 export abstract class ActiveEntity extends Entity {

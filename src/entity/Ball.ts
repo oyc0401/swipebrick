@@ -1,5 +1,5 @@
 import type { Position } from "../GameState";
-import { ActiveEntity, activeEntities } from "./ActiveEntity";
+import { ActiveEntity, activeEntities } from "../core/entity/ActiveEntity";
 import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 
@@ -7,13 +7,12 @@ export class Ball extends ActiveEntity {
   private radius: number = 8;
   private color: number = 0x4880ee; // 토스 블루
 
-  constructor(position: Position, world: any) {
+  constructor(position: Position) {
     super(`ball-${Date.now()}`);
 
     // 컴포넌트 직접 할당
     this.renderComponent = new CircleRenderComponent(this.radius, this.color);
     this.physicsComponent = new BallPhysicsComponent(
-      world,
       position.x,
       position.y,
       this.radius

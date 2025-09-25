@@ -1,5 +1,5 @@
 import type { FederatedPointerEvent } from "pixi.js";
-import { Events } from "matter-js";
+import { Events, World } from "matter-js";
 import { DisplayManager } from "../render/DisplayManager";
 import { GameBoundary } from "../entity/GameBoundary";
 import { Ball } from "../entity/Ball";
@@ -42,7 +42,8 @@ export class SceneManager {
     const world = this.physics.getWorld();
     const centerLayer = this.renderer.getCenterLayer();
 
-    this.topBoundary = new GameBoundary(0, -5, GAME_WIDTH, 5, 0x000000, world);
+    this.topBoundary = new GameBoundary(0, -5, GAME_WIDTH, 5, 0x000000);
+    World.add(this.physics.getWorld(), this.topBoundary.getPhysicsBody());
     centerLayer.addChild(this.topBoundary.getGraphics());
 
     this.bottomBoundary = new GameBoundary(
@@ -51,19 +52,13 @@ export class SceneManager {
       GAME_WIDTH,
       5,
       0x000000,
-      world,
       "bottom"
     );
+    World.add(this.physics.getWorld(), this.bottomBoundary.getPhysicsBody());
     centerLayer.addChild(this.bottomBoundary.getGraphics());
 
-    this.leftBoundary = new GameBoundary(
-      -5,
-      0,
-      5,
-      GAME_HEIGHT,
-      0x000000,
-      world
-    );
+    this.leftBoundary = new GameBoundary(-5, 0, 5, GAME_HEIGHT, 0x000000);
+    World.add(this.physics.getWorld(), this.leftBoundary.getPhysicsBody());
     centerLayer.addChild(this.leftBoundary.getGraphics());
 
     this.rightBoundary = new GameBoundary(
@@ -71,9 +66,9 @@ export class SceneManager {
       0,
       5,
       GAME_HEIGHT,
-      0x000000,
-      world
+      0x000000
     );
+    World.add(this.physics.getWorld(), this.rightBoundary.getPhysicsBody());
     centerLayer.addChild(this.rightBoundary.getGraphics());
   }
 
@@ -103,10 +98,8 @@ export class SceneManager {
   private createNewBalls(): void {
     // 공 2개 생성
     for (let i = 0; i < 2; i++) {
-      const ball = new Ball(
-        this.gameState.ballStartPosition,
-        this.physics.getWorld()
-      );
+      const ball = new Ball(this.gameState.ballStartPosition);
+      World.add(this.physics.getWorld(), ball.getPhysicsBody());
       this.renderer.getGameViewport().addChild(ball.getGraphics());
 
       this.balls.push(ball);
@@ -184,8 +177,9 @@ export class SceneManager {
   private removeBall(ball: Ball): void {
     // 렌더링에서 제거
     this.renderer.getGameViewport().removeChild(ball.getGraphics());
-
     // 물리에서 제거
+    World.remove(this.physics.getWorld(), ball.getPhysicsBody());
+
     ball.destroy();
 
     // 배열에서 제거

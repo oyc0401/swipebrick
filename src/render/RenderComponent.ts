@@ -1,5 +1,5 @@
 import { Graphics } from "pixi.js";
-import type { IRenderComponent } from "../components/IComponent";
+import type { IRenderComponent } from "../core/components/IComponent";
 
 export class RenderComponent implements IRenderComponent {
   protected graphics: Graphics;
