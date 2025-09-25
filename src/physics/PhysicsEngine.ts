@@ -1,5 +1,9 @@
 import { Engine, World, Events, Body, Sleeping } from "matter-js";
 
+import Matter from "matter-js";
+// 벽에 붙는 현상 제거
+(Matter.Resolver as any)._restingThresh = 0; // 기본 2 → 0
+
 export class PhysicsEngine {
   private engine: Engine;
   private world: World;
@@ -11,6 +15,14 @@ export class PhysicsEngine {
     // 중력 비활성화 (수평 이동 게임)
     this.engine.gravity.y = 0;
     this.engine.gravity.x = 0;
+
+    // Matter.js 정밀도 최적화
+    this.engine.constraintIterations = 8; // 기본값 2 → 8
+    this.engine.positionIterations = 8; // 기본값 6 → 8
+    this.engine.timing.timeScale = 1.0; // 정확한 타이밍
+
+    this.engine.enableSleeping = false; // 미세한 움직임 자동 정지 막음
+    this.engine.velocityIterations = 4; // 속도 해상도 개선
 
     this.setupCollisionEvents();
   }
@@ -29,8 +41,6 @@ export class PhysicsEngine {
 
         if (isBallBottomCollision) {
           const ballBody = bodyA.label === "ball" ? bodyA : bodyB;
-          // 바닥에 충돌했을 때만 탄성을 0으로 변경
-          ballBody.restitution = 0;
 
           // 공을 바닥에 딱 붙여서 위치 조정 (공의 반지름 8을 고려)
           const ballRadius = 8;

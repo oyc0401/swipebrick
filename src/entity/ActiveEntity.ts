@@ -19,6 +19,10 @@ export abstract class ActiveEntity extends Entity {
 
   public updateGraphics(): void {
     const position = this.physicsComponent.getPosition();
+
+    // const body = this.physicsComponent.getBody();
+    // console.log(body.velocity.x, body.velocity.y, "x:", position.x);
+
     this.renderComponent.updatePosition(position.x, position.y);
   }
 }

@@ -44,6 +44,7 @@ export class BallPhysicsComponent extends PhysicsComponent {
       frictionAir: 0,
       frictionStatic: 0,
       inertia: Infinity,
+      slop: 0.01,
       label: "ball",
     });
   }
@@ -93,15 +94,13 @@ export class BoundaryPhysicsComponent extends PhysicsComponent {
     height: number,
     label: string
   ): void {
-    this.body = Bodies.rectangle(
-      x + width / 2,
-      y + height / 2,
-      width,
-      height,
-      {
-        isStatic: true,
-        label: label,
-      }
-    );
+    this.body = Bodies.rectangle(x + width / 2, y + height / 2, width, height, {
+      isStatic: true, // 정적 객체
+      restitution: 1, // 완전 탄성 반사
+      friction: 0, // 마찰 완전 제거
+      frictionStatic: 0, // 정적 마찰 완전 제거
+      slop: 0.01,
+      label: label,
+    });
   }
 }
