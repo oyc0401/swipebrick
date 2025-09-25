@@ -1,7 +1,7 @@
-import type { Container } from "pixi.js";
+import type { Container, Graphics } from "pixi.js";
 import { World } from "matter-js";
 import { Ball } from "../entity/Ball";
-import type { Position } from "../GameState";
+import type { GameState } from "../GameState";
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 
 interface BallLandingCallback {
@@ -17,7 +17,7 @@ export class BallManager {
   private previewBall!: Ball;
   private gameViewport: Container;
   private physicsWorld: any;
-  private ballStartPosition: Position = { x: 180, y: 50 };
+  private gameState: GameState;
 
   private onBallLanding?: BallLandingCallback;
   private onAllBallsRemoved?: AllBallsRemovedCallback;
@@ -25,18 +25,16 @@ export class BallManager {
   constructor(
     gameViewport: Container,
     physics: PhysicsEngine,
-    initialBallPosition?: Position
+    gameState: GameState
   ) {
     this.gameViewport = gameViewport;
     this.physicsWorld = physics.getWorld();
-    if (initialBallPosition) {
-      this.ballStartPosition = initialBallPosition;
-    }
+    this.gameState = gameState;
     this.createPreviewBall();
   }
 
   /** 첫번째 공이 도착했을 때 이벤트 */
-  public onFirstBallLanded(callback: BallLandingCallback): void {
+  public onBallLanded(callback: BallLandingCallback): void {
     this.onBallLanding = callback;
   }
 
@@ -47,14 +45,18 @@ export class BallManager {
 
   public createBalls(count: number): void {
     for (let i = 0; i < count; i++) {
-      const ball = new Ball(this.ballStartPosition);
+      const ball = new Ball(this.gameState.ballStartPosition);
       World.add(this.physicsWorld, ball.getPhysicsBody());
       this.gameViewport.addChild(ball.getGraphics());
       this.activeBalls.push(ball);
     }
   }
 
-  public launchBalls(targetX: number, targetY: number, delayMs: number = 100): void {
+  public launchBalls(
+    targetX: number,
+    targetY: number,
+    delayMs: number = 100
+  ): void {
     this.activeBalls.forEach((ball, index) => {
       setTimeout(() => {
         ball.moveTowards(targetX, targetY);
@@ -77,41 +79,20 @@ export class BallManager {
     this.checkAllBallsRemoved();
   }
 
-  public setBallStartPosition(x: number, y: number): void {
-    this.ballStartPosition = { x, y };
-    this.updatePreviewBallPosition();
-  }
-
   public showPreviewBall(): void {
     this.previewBall.getGraphics().visible = true;
-    this.updatePreviewBallPosition();
+    this.previewBall.setPosition(this.gameState.ballStartPosition);
   }
 
   public hidePreviewBall(): void {
     this.previewBall.getGraphics().visible = false;
   }
 
-  public getActiveBallCount(): number {
-    return this.activeBalls.length;
-  }
-
-  public hasActiveBalls(): boolean {
-    return this.activeBalls.length > 0;
-  }
-
-  public getBallStartPosition(): Position {
-    return { ...this.ballStartPosition };
-  }
-
   private createPreviewBall(): void {
-    this.previewBall = new Ball(this.ballStartPosition);
+    this.previewBall = new Ball(this.gameState.ballStartPosition);
+
     this.gameViewport.addChild(this.previewBall.getGraphics());
   }
-
-  private updatePreviewBallPosition(): void {
-    this.previewBall.setPosition(this.ballStartPosition);
-  }
-
   private removeBall(ball: Ball): void {
     this.gameViewport.removeChild(ball.getGraphics());
     World.remove(this.physicsWorld, ball.getPhysicsBody());
@@ -134,7 +115,7 @@ export class BallManager {
   }
 
   public destroy(): void {
-    this.activeBalls.forEach(ball => {
+    this.activeBalls.forEach((ball) => {
       this.removeBall(ball);
     });
 

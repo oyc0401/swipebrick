@@ -19,14 +19,14 @@ export class Game {
   private inputManager: InputManager;
 
   constructor() {
-    this.renderer = new DisplayManager();
+    this.renderer = new DisplayManager(GAME_WIDTH, GAME_HEIGHT);
     this.physics = new PhysicsEngine();
     this.gameState = new GameState();
 
     this.ballManager = new BallManager(
       this.renderer.getGameViewport(),
       this.physics,
-      this.gameState.ballStartPosition
+      this.gameState
     );
     this.boundaryManager = new BoundaryManager(
       this.renderer.getCenterLayer(),
@@ -69,11 +69,11 @@ export class Game {
       // 대기 상태 해제
       this.gameState.setWaiting(false);
 
+      // 공 7개 생성
+      this.ballManager.createBalls(7);
+
       // 미리보기 공 숨김
       this.ballManager.hidePreviewBall();
-
-      // 공 2개 생성
-      this.ballManager.createBalls(2);
 
       // 공들을 목표 지점으로 발사
       this.ballManager.launchBalls(x, y);
@@ -90,13 +90,13 @@ export class Game {
 
   // 게임 진행시 공 이벤트
   private setupBallManagerCallbacks(): void {
-    // 첫번째 공이 도착했을 때 이벤트
-    this.ballManager.onFirstBallLanded((landedBall) => {
+    // 공이 도착했을 때 이벤트
+    this.ballManager.onBallLanded((landedBall) => {
+      // 첫번째 공
       if (!this.gameState.isBallLanded) {
         this.gameState.setIsBallLanded(true);
         const position = landedBall.getPosition();
         this.gameState.setBallStartPosition(position.x, position.y);
-        this.ballManager.setBallStartPosition(position.x, position.y);
         this.ballManager.showPreviewBall();
         console.log("First ball landed at:", position.x, position.y);
       }

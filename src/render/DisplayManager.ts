@@ -1,41 +1,43 @@
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import { activeEntities } from "../core/entity/ActiveEntity";
 
-const GAME_WIDTH = 360;
-const GAME_HEIGHT = 360;
-
 /**
  * 반응형 UI 가로 크기
  */
-function getInnerWidth() {
+function getSize() {
+  const size = { width: window.innerWidth, height: window.innerHeight };
   // -> 세로 / 가로
   const RATIO = 1.8; // 2도 좋음
-  let innerWidth = window.innerWidth;
-  if (window.innerHeight / window.innerWidth < RATIO) {
-    innerWidth = window.innerHeight / RATIO;
+  let innerWidth = size.width;
+  if (size.height / size.width < RATIO) {
+    innerWidth = size.height / RATIO;
   }
-  return innerWidth;
-}
-
-function getInnerHeight() {
-  return window.innerHeight;
+  return {
+    width: innerWidth,
+    height: size.height,
+  };
 }
 
 export class DisplayManager {
   private app: Application;
   private centerLayer: Container;
   private gameViewport: Container;
+  private gameWidth: number;
+  private gameHeight: number;
 
-  constructor() {
+  constructor(gameWidth: number, gameHeight: number) {
     this.app = new Application();
     this.centerLayer = new Container(); // 캔버스 전체영역.
     this.gameViewport = new Container(); // 게임영역 내부 화면
+    this.gameWidth = gameWidth;
+    this.gameHeight = gameHeight;
   }
 
   public async init(): Promise<void> {
+    let { width, height } = getSize();
     await this.app.init({
-      width: getInnerWidth(),
-      height: getInnerHeight(),
+      width,
+      height,
       autoDensity: true,
       backgroundColor: 0xeeeeee,
       antialias: true,
@@ -54,18 +56,18 @@ export class DisplayManager {
 
   private setupLayers(): void {
     // 중앙 고정 레이어
-    this.centerLayer.pivot.set(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-
-    // 하늘색 배경 추가
-    const background = new Graphics();
-    background.rect(0, 0, 50, 50).fill(0x87ceeb); // 하늘색
-    this.centerLayer.addChild(background);
+    this.centerLayer.pivot.set(this.gameWidth / 2, this.gameWidth / 2);
 
     this.app.stage.addChild(this.centerLayer);
 
     // // 게임 뷰포트
-    // this.centerLayer.hitArea = new Rectangle(0, -200, GAME_WIDTH, 800);
-    this.gameViewport.hitArea = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    // this.centerLayer.hitArea = new Rectangle(0, -200, this.gameWidth, 800);
+    this.gameViewport.hitArea = new Rectangle(
+      0,
+      0,
+      this.gameWidth,
+      this.gameHeight
+    );
     this.centerLayer.addChild(this.gameViewport);
 
     // // 중앙 정렬 & 리사이즈 대응
@@ -77,9 +79,8 @@ export class DisplayManager {
   }
 
   private onResize(): void {
-    const w = getInnerWidth();
-    const h = getInnerHeight();
-    this.app.renderer.resize(w, h);
+    let { width, height } = getSize();
+    this.app.renderer.resize(width, height);
     this.updateCenterPosition();
   }
 
@@ -89,8 +90,8 @@ export class DisplayManager {
 
     // 화면 가로 크기에 맞춰 스케일 계산
     const scale = Math.min(
-      screenWidth / GAME_WIDTH,
-      screenHeight / GAME_HEIGHT
+      screenWidth / this.gameWidth,
+      screenHeight / this.gameHeight
     );
 
     // centerLayer에 스케일 적용
@@ -98,13 +99,32 @@ export class DisplayManager {
 
     // 화면 중앙에 배치
     this.centerLayer.position.set(screenWidth / 2, screenHeight / 2);
+
+    this.drawBackground(scale);
+  }
+
+  private drawBackground(scale: number) {
+    let canvasSize = getSize();
+    // 배경 추가
+    let scaledCanvasHeight = canvasSize.height / scale;
+    let h = (this.gameHeight - scaledCanvasHeight) / 2;
+
+    const background = new Graphics();
+    background.rect(0, h, this.gameWidth, scaledCanvasHeight).fill(0xececec); // 하늘색
+    this.centerLayer.addChildAt(background, 0);
   }
 
   public addDebugGuide(): void {
     const g = new Graphics();
-    g.rect(0, 0, GAME_WIDTH, GAME_HEIGHT).stroke({ width: 2, color: 0x00aa00 });
-    g.moveTo(GAME_WIDTH / 2, 0).lineTo(GAME_WIDTH / 2, GAME_HEIGHT);
-    g.moveTo(0, GAME_HEIGHT / 2).lineTo(GAME_WIDTH, GAME_HEIGHT / 2);
+    g.rect(0, 0, this.gameWidth, this.gameHeight).stroke({
+      width: 2,
+      color: 0x00aa00,
+    });
+    g.moveTo(this.gameWidth / 2, 0).lineTo(this.gameWidth / 2, this.gameHeight);
+    g.moveTo(0, this.gameHeight / 2).lineTo(
+      this.gameWidth,
+      this.gameHeight / 2
+    );
     g.stroke({ width: 1, color: 0xaa0000 });
     this.centerLayer.addChild(g);
   }

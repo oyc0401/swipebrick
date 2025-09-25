@@ -2,6 +2,7 @@ import type { Position } from "../GameState";
 import { ActiveEntity, activeEntities } from "../core/entity/ActiveEntity";
 import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
+import type { Graphics } from "pixi.js";
 
 export class Ball extends ActiveEntity {
   private radius: number = 8;
@@ -17,6 +18,8 @@ export class Ball extends ActiveEntity {
       position.y,
       this.radius
     );
+
+    this.updateGraphics();
   }
 
   public moveTowards(targetX: number, targetY: number): void {
@@ -26,7 +29,7 @@ export class Ball extends ActiveEntity {
     );
   }
 
-  public getGraphics(): any {
+  public getGraphics(): Graphics {
     return this.renderComponent.getGraphics();
   }
 
