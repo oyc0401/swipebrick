@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 import { GameState } from "./GameState";
-import { Ball } from "./Ball";
-import { GameBoundary } from "./GameBoundary";
+import { Ball } from "./entity/Ball";
+import { GameBoundary } from "./entity/GameBoundary";
 import { GameRenderer } from "./GameRenderer";
 import { PhysicsEngine } from "./PhysicsEngine";
 
@@ -58,7 +58,7 @@ class Game {
       5,
       0x000000,
       world,
-      'bottom'
+      "bottom"
     );
     centerLayer.addChild(this.bottomBoundary.getGraphics());
 
