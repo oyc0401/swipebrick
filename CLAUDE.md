@@ -56,6 +56,13 @@
 - **충돌 방지**: Date.now()와 Math.random() 조합으로 고유성 보장
 - **예시**: `super(\`ball-${Date.now()}-${Math.random()}\`)`
 
+### 다이어그램 표기법
+
+- **외부 라이브러리 타입**: 구체적인 클래스명 대신 라이브러리명 사용
+- **PixiJS**: `Container`, `Graphics`, `Application` → `PixiJS`
+- **Matter.js**: `World`, `Body`, `Engine` → `MatterJS`
+- **예시**: `private world: MatterJS` (not `private world: World`)
+
 ## 현재 코드 구조
 
 ### 핵심 클래스

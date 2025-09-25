@@ -6,112 +6,126 @@ https://vercel.com/ohyuchans-projects/swipebrick
 
 ```mermaid
 classDiagram
+direction TB
     class Game {
-        -renderer: DisplayManager
-        -physics: PhysicsEngine
-        -gameState: GameState
-        -ballManager: BallManager
-        -boundaryManager: BoundaryManager
-        -inputManager: InputManager
-        +init() void
+	    -renderer: DisplayManager
+	    -physics: PhysicsEngine
+	    -gameState: GameState
+	    -ballManager: BallManager
+	    -boundaryManager: BoundaryManager
+	    -inputManager: InputManager
+	    +init() void
     }
-
     class DisplayManager {
-        -app: Application
-        -centerLayer: Container
-        -gameViewport: Container
-        +getCenterLayer() Container
-        +getGameViewport() Container
+	    -app: Application
+	    -centerLayer: Container
+	    -gameViewport: Container
+	    +getCenterLayer() Container
+	    +getGameViewport() Container
     }
-
     class PhysicsEngine {
-        -engine: Engine
-        -world: World
-        +getWorld() World
-        +getEngine() Engine
+	    -engine: Engine
+	    -world: World
+	    +getWorld() World
+	    +getEngine() Engine
     }
-
     class GameState {
-        +ballStartPosition: Position
-        +ballCount: number
-        +isWaiting: boolean
+	    +ballStartPosition: Position
+	    +ballCount: number
+	    +isWaiting: boolean
     }
-
     class BallManager {
-        -gameViewport: Container
-        -physicsWorld: World
-        -gameState: GameState
-        -activeBalls: Ball[]
+	    -gameViewport: Container
+	    -physicsWorld: World
+	    -gameState: GameState
+	    -activeBalls: Ball[]
     }
-
     class BoundaryManager {
-        -renderLayer: Container
-        -physicsWorld: World
-        -physicsEngine: PhysicsEngine
-        -boundaries: Map
+	    -renderLayer: Container
+	    -physicsWorld: World
+	    -physicsEngine: PhysicsEngine
+	    -boundaries: Map
     }
-
     class InputManager {
-        -layer: Container
+	    -layer: Container
     }
 
+    Game --> DisplayManager
+    Game --> PhysicsEngine
+    Game --> GameState
+    Game --> BallManager
+    Game --> BoundaryManager
+    Game --> InputManager
+
+```
+
+```mermaid
+classDiagram
+direction TB
     class Ball {
-        -physicsComponent: BallPhysicsComponent
-        -renderComponent: CircleRenderComponent
     }
 
     class GameBoundary {
-        -physicsComponent: BoundaryPhysicsComponent
-        -renderComponent: RectangleRenderComponent
     }
 
     class EntityManager {
-        -entities: Set
-        +add(entity) void
-        +remove(entity) boolean
+	    -entities: Set
+	    +add(entity) void
+	    +remove(entity) boolean
     }
 
     class Entity {
-        +physicsComponent: PhysicsComponent
-        +renderComponent: RenderComponent
+	    +physicsComponent: IPhysicsComponent
+	    +renderComponent: IRenderComponent
     }
 
     class ActiveEntity {
-        +setPosition(position) void
-        +getPosition() Position
+	    +setPosition(position) void
+	    +getPosition() Position
     }
 
-    class PhysicsComponent
-    class BallPhysicsComponent
-    class BoundaryPhysicsComponent
-    class RenderComponent
-    class CircleRenderComponent
-    class RectangleRenderComponent
+    class PhysicsComponent {
+    }
 
-    Game --> DisplayManager : creates
-    Game --> PhysicsEngine : creates
-    Game --> GameState : creates
-    Game --> BallManager : creates
-    Game --> BoundaryManager : creates
-    Game --> InputManager : creates
+    class BallPhysicsComponent {
+    }
 
-    BallManager --> Ball : creates
-    BoundaryManager --> GameBoundary : creates
+    class BoundaryPhysicsComponent {
+    }
 
-    Ball --> BallPhysicsComponent : owns
-    Ball --> CircleRenderComponent : owns
-    GameBoundary --> BoundaryPhysicsComponent : owns
-    GameBoundary --> RectangleRenderComponent : owns
+    class RenderComponent {
+    }
+
+    class CircleRenderComponent {
+    }
+
+    class RectangleRenderComponent {
+    }
+
+    class IPhysicsComponent {
+    }
+
+    class IRenderComponent {
+    }
+
+	<<abstract>> PhysicsComponent
+	<<abstract>> RenderComponent
+	<<interface>> IPhysicsComponent
+	<<interface>> IRenderComponent
 
     Entity <|-- ActiveEntity
     ActiveEntity <|-- Ball
     Entity <|-- GameBoundary
-
     PhysicsComponent <|-- BallPhysicsComponent
     PhysicsComponent <|-- BoundaryPhysicsComponent
     RenderComponent <|-- CircleRenderComponent
     RenderComponent <|-- RectangleRenderComponent
+    EntityManager --> Entity
+    Entity --> IPhysicsComponent
+    Entity --> IRenderComponent
+    IPhysicsComponent <|-- PhysicsComponent
+    IRenderComponent <|-- RenderComponent
 
-    ActiveEntity ..> EntityManager : registers to
+
 
 ```

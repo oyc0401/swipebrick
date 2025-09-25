@@ -1,10 +1,12 @@
-import { PhysicsComponent } from "../../physics/PhysicsComponent";
-import { RenderComponent } from "../../render/RenderComponent";
+import type {
+  IPhysicsComponent,
+  IRenderComponent,
+} from "../components/IComponent";
 
 export class Entity {
   public readonly id: string;
-  public physicsComponent!: PhysicsComponent;
-  public renderComponent!: RenderComponent;
+  public physicsComponent!: IPhysicsComponent;
+  public renderComponent!: IRenderComponent;
 
   constructor(id: string) {
     this.id = id;

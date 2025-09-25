@@ -1,7 +1,6 @@
 import type { Graphics } from "pixi.js";
 
 export interface IComponent {
-  update?(deltaTime: number): void;
   destroy(): void;
 }
 

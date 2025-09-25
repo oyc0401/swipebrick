@@ -1,0 +1,66 @@
+classDiagram
+direction TB
+    class Ball {
+    }
+
+    class GameBoundary {
+    }
+
+    class EntityManager {
+	    -entities: Set
+	    +add(entity) void
+	    +remove(entity) boolean
+    }
+
+    class Entity {
+	    +physicsComponent: IPhysicsComponent
+	    +renderComponent: IRenderComponent
+    }
+
+    class ActiveEntity {
+	    +setPosition(position) void
+	    +getPosition() Position
+    }
+
+    class PhysicsComponent {
+    }
+
+    class BallPhysicsComponent {
+    }
+
+    class BoundaryPhysicsComponent {
+    }
+
+    class RenderComponent {
+    }
+
+    class CircleRenderComponent {
+    }
+
+    class RectangleRenderComponent {
+    }
+
+    class IPhysicsComponent {
+    }
+
+    class IRenderComponent {
+    }
+
+	<<abstract>> PhysicsComponent
+	<<abstract>> RenderComponent
+	<<interface>> IPhysicsComponent
+	<<interface>> IRenderComponent
+
+    Entity <|-- ActiveEntity
+    ActiveEntity <|-- Ball
+    Entity <|-- GameBoundary
+    PhysicsComponent <|-- BallPhysicsComponent
+    PhysicsComponent <|-- BoundaryPhysicsComponent
+    RenderComponent <|-- CircleRenderComponent
+    RenderComponent <|-- RectangleRenderComponent
+    EntityManager --> Entity
+    Entity --> IPhysicsComponent
+    Entity --> IRenderComponent
+    IPhysicsComponent <|-- PhysicsComponent
+    IRenderComponent <|-- RenderComponent
+
