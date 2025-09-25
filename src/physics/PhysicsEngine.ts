@@ -2,7 +2,8 @@ import { Engine, World, Events, Body, Sleeping } from "matter-js";
 
 import Matter from "matter-js";
 import { BALL_RADIUS, GAME_HEIGHT } from "../GameState";
-// 벽에 붙는 현상 제거
+// 벽에 붙는 현상 제거 - Matter.js 내부 속성 접근을 위한 의도적 타입 우회
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (Matter.Resolver as any)._restingThresh = 0; // 기본 2 → 0
 
 export class PhysicsEngine {

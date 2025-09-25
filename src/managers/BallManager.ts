@@ -12,7 +12,7 @@ export class BallManager {
   private activeBalls: Ball[] = [];
   private previewBall!: Ball;
   private gameViewport: Container;
-  private physicsWorld: any;
+  private physicsWorld: Matter.World;
   private gameState: GameState;
 
   private onBallLanding?: BallLandingCallback;
@@ -54,7 +54,7 @@ export class BallManager {
     });
   }
 
-  public handleBallLanding(ballBody: any): void {
+  public handleBallLanding(ballBody: Matter.Body): void {
     const landedBall = this.activeBalls.find(
       (ball) => ball.getPhysicsBody() === ballBody
     );

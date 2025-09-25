@@ -35,7 +35,7 @@ export class Ball extends ActiveEntity {
     return this.renderComponent.getGraphics();
   }
 
-  public getPhysicsBody(): any {
+  public getPhysicsBody(): Matter.Body {
     return this.physicsComponent.getBody();
   }
 

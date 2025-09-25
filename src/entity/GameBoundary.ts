@@ -1,6 +1,7 @@
 import { Entity } from "../core/entity/Entity";
 import { RectangleRenderComponent } from "../render/RenderComponent";
 import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
+import type { Graphics } from "pixi.js";
 
 export class GameBoundary extends Entity {
   private isDestroyed: boolean = false;
@@ -55,11 +56,11 @@ export class GameBoundary extends Entity {
     );
   }
 
-  public getGraphics(): any {
+  public getGraphics(): Graphics {
     return this.renderComponent.getGraphics();
   }
 
-  public getPhysicsBody(): any {
+  public getPhysicsBody(): Matter.Body {
     return this.physicsComponent.getBody();
   }
 

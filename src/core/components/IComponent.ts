@@ -1,5 +1,4 @@
 import type { Graphics } from "pixi.js";
-import type { Body } from "matter-js";
 
 export interface IComponent {
   update?(deltaTime: number): void;
@@ -12,7 +11,7 @@ export interface IRenderComponent extends IComponent {
 }
 
 export interface IPhysicsComponent extends IComponent {
-  getBody(): Body;
+  getBody(): Matter.Body;
   setPosition(x: number, y: number): void;
   getPosition(): { x: number; y: number };
 }

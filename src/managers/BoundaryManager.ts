@@ -13,13 +13,13 @@ interface BoundaryConfig {
 }
 
 interface BottomCollisionCallback {
-  (ballBody: any): void;
+  (ballBody: Matter.Body): void;
 }
 
 export class BoundaryManager {
   private boundaries: Map<string, GameBoundary> = new Map();
   private renderLayer: Container;
-  private physicsWorld: any;
+  private physicsWorld: Matter.World;
   private physicsEngine: PhysicsEngine;
   private gameWidth: number;
   private gameHeight: number;
@@ -123,8 +123,8 @@ export class BoundaryManager {
     Events.on(
       this.physicsEngine.getEngine(),
       "collisionStart",
-      (event: any) => {
-        event.pairs.forEach((pair: any) => {
+      (event: Matter.IEventCollision<Matter.Engine>) => {
+        event.pairs.forEach((pair) => {
           const { bodyA, bodyB } = pair;
 
           // 바닥과의 충돌 감지

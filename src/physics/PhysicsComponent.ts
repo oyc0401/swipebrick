@@ -2,12 +2,12 @@ import { Body, Bodies, Sleeping } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
 
 export class PhysicsComponent implements IPhysicsComponent {
-  protected body: Body;
+  protected body: Matter.Body;
 
   constructor() {
     this.body = Bodies.rectangle(0, 0, 1, 1); // 기본값, 하위 클래스에서 재정의
   }
-  public getBody(): Body {
+  public getBody(): Matter.Body {
     return this.body;
   }
 
