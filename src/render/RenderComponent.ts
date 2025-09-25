@@ -13,8 +13,10 @@ export class RenderComponent implements IRenderComponent {
   }
 
   public updatePosition(x: number, y: number): void {
-    this.graphics.x = x;
-    this.graphics.y = y;
+    if (this.graphics && !this.graphics.destroyed) {
+      this.graphics.x = x;
+      this.graphics.y = y;
+    }
   }
 
   public destroy(): void {

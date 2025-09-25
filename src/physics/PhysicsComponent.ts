@@ -46,6 +46,10 @@ export class BallPhysicsComponent extends PhysicsComponent {
       inertia: Infinity,
       slop: 0.01,
       label: "ball",
+      collisionFilter: {
+        category: 0x0001, // 공 카테고리
+        mask: 0x0002 | 0x0004 // 벽과만 충돌, 다른 공과는 충돌 안함
+      }
     });
   }
 
@@ -101,6 +105,10 @@ export class BoundaryPhysicsComponent extends PhysicsComponent {
       frictionStatic: 0, // 정적 마찰 완전 제거
       slop: 0.01,
       label: label,
+      collisionFilter: {
+        category: 0x0002, // 벽 카테고리
+        mask: 0x0001 // 공과만 충돌
+      }
     });
   }
 }

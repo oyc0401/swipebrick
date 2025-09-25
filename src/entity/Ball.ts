@@ -1,5 +1,5 @@
 import type { Position } from "../GameState";
-import { ActiveEntity } from "./ActiveEntity";
+import { ActiveEntity, activeEntities } from "./ActiveEntity";
 import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 
@@ -29,5 +29,24 @@ export class Ball extends ActiveEntity {
 
   public getGraphics(): any {
     return this.renderComponent.getGraphics();
+  }
+
+  public getPhysicsBody(): any {
+    return this.physicsComponent.getBody();
+  }
+
+  public getPosition(): Position {
+    return this.physicsComponent.getPosition();
+  }
+
+  public destroy(): void {
+    // activeEntities 배열에서 제거
+    const index = activeEntities.indexOf(this);
+    if (index > -1) {
+      activeEntities.splice(index, 1);
+    }
+
+    // 부모 destroy 호출
+    super.destroy();
   }
 }

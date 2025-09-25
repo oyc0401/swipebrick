@@ -1,4 +1,5 @@
 import type { FederatedPointerEvent } from "pixi.js";
+import { Events } from "matter-js";
 import { DisplayManager } from "../render/DisplayManager";
 import { GameBoundary } from "../entity/GameBoundary";
 import { Ball } from "../entity/Ball";
@@ -12,7 +13,8 @@ export class SceneManager {
   private renderer: DisplayManager;
   private physics: PhysicsEngine;
   private gameState: GameState;
-  private ball!: Ball;
+  private balls: Ball[] = []; // 여러 공을 관리하기 위한 배열
+  private firstLandedBall: Ball | null = null; // 첫 번째로 바닥에 도착한 공
 
   private topBoundary!: GameBoundary;
   private bottomBoundary!: GameBoundary;
@@ -30,21 +32,10 @@ export class SceneManager {
   }
 
   public init(): void {
-    this.addBall();
     this.addGameBoundaries();
     this.addClickListener();
+    this.setupPhysicsEventListeners();
     this.renderer.addDebugGuide();
-  }
-
-  private addBall(): void {
-    const ball = new Ball(
-      this.gameState.ballStartPosition,
-      this.physics.getWorld()
-    );
-    this.ball = ball;
-    // 렌더링 대상 엔티티 등록
-
-    this.renderer.getGameViewport().addChild(ball.getGraphics());
   }
 
   private addGameBoundaries(): void {
@@ -90,13 +81,117 @@ export class SceneManager {
     const gameViewport = this.renderer.getGameViewport();
     gameViewport.eventMode = "static";
     gameViewport.on("pointerdown", (event: FederatedPointerEvent) => {
+      // 대기 상태가 아니면 클릭 무시
+      if (!this.gameState.isWaiting) {
+        return;
+      }
+
       const localPosition = event.getLocalPosition(gameViewport);
       console.log("Clicked at:", localPosition.x, localPosition.y);
-      this.ball.moveTowards(localPosition.x, localPosition.y);
+
+      // 대기 상태 해제
+      this.gameState.setWaiting(false);
+
+      // 공 2개 생성
+      this.createNewBalls();
+
+      // 공들을 목표 지점으로 발사
+      this.launchBalls(localPosition.x, localPosition.y);
     });
   }
 
-  public getBall(): Ball {
-    return this.ball;
+  private createNewBalls(): void {
+    // 공 2개 생성
+    for (let i = 0; i < 2; i++) {
+      const ball = new Ball(
+        this.gameState.ballStartPosition,
+        this.physics.getWorld()
+      );
+      this.renderer.getGameViewport().addChild(ball.getGraphics());
+
+      this.balls.push(ball);
+    }
+
+    // 첫 번째 도착 공 초기화
+    this.firstLandedBall = null;
+  }
+
+  private launchBalls(targetX: number, targetY: number): void {
+    // 공들을 100ms 간격으로 발사
+    this.balls.forEach((ball, index) => {
+      setTimeout(() => {
+        ball.moveTowards(targetX, targetY);
+      }, index * 100);
+    });
+  }
+
+  private setupPhysicsEventListeners(): void {
+    Events.on(this.physics.getEngine(), "collisionStart", (event: any) => {
+      event.pairs.forEach((pair: any) => {
+        const { bodyA, bodyB } = pair;
+
+        // 바닥과의 충돌 감지
+        if (bodyA.label === "bottom" || bodyB.label === "bottom") {
+          const ballBody =
+            bodyA.label === "ball"
+              ? bodyA
+              : bodyB.label === "ball"
+              ? bodyB
+              : null;
+          if (ballBody) {
+            this.handleBallLanding(ballBody);
+          }
+        }
+      });
+    });
+  }
+
+  private handleBallLanding(ballBody: any): void {
+    // 해당 body를 가진 Ball 엔티티 찾기
+    const landedBall = this.balls.find(
+      (ball) => ball.getPhysicsBody() === ballBody
+    );
+    if (!landedBall) return;
+
+    if (!this.firstLandedBall) {
+      // 첫 번째 도착한 공 설정 및 시작 위치 업데이트
+      this.firstLandedBall = landedBall;
+      const position = landedBall.getPosition();
+      this.gameState.setBallStartPosition(position.x, position.y);
+      console.log("First ball landed at:", position.x, position.y);
+
+      // 첫 번째 공도 제거
+      this.removeBall(landedBall);
+    } else {
+      // 두 번째부터 도착하는 공들 제거
+      this.removeBall(landedBall);
+    }
+
+    // 모든 공이 제거되었는지 확인
+    this.checkAllBallsRemoved();
+  }
+
+  private checkAllBallsRemoved(): void {
+    // 모든 공이 제거되었으면 대기 상태로 전환
+    if (this.balls.length === 0) {
+      setTimeout(() => {
+        this.gameState.setWaiting(true);
+        console.log("All balls removed. Ready for next shot.");
+      }, 100); // 약간의 딜레이 후 대기 상태로 전환
+    }
+  }
+
+  private removeBall(ball: Ball): void {
+    // 렌더링에서 제거
+    this.renderer.getGameViewport().removeChild(ball.getGraphics());
+
+    // 물리에서 제거
+    ball.destroy();
+
+    // 배열에서 제거
+    const index = this.balls.indexOf(ball);
+    if (index > -1) {
+      this.balls.splice(index, 1);
+    }
   }
 }

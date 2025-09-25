@@ -1,3 +1,3 @@
 import { Game } from "./Game";
 
-new Game().init();
+export const game = new Game().init();
