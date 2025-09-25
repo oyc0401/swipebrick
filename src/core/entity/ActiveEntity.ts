@@ -1,11 +1,13 @@
 import type { Position } from "../../GameState";
 import { Entity } from "./Entity";
+import { EntityManager } from "./EntityManager";
 
 export abstract class ActiveEntity extends Entity {
   constructor(id: string) {
     super(id);
 
-    addEntity(this);
+    // EntityManager에 직접 등록
+    EntityManager.add(this);
   }
 
   public setPosition(position: Position): void {
@@ -22,10 +24,4 @@ export abstract class ActiveEntity extends Entity {
 
     this.renderComponent.updatePosition(position.x, position.y);
   }
-}
-
-export const activeEntities: ActiveEntity[] = [];
-
-export function addEntity(entity: ActiveEntity) {
-  activeEntities.push(entity);
 }

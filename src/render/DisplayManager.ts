@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
-import { activeEntities } from "../core/entity/ActiveEntity";
+import { EntityManager } from "../core/entity/EntityManager";
 
 /**
  * 반응형 UI 가로 크기
@@ -164,7 +164,7 @@ export class DisplayManager {
   public startLoop(): void {
     const renderLoop = () => {
       // 모든 MovingEntity 업데이트
-      activeEntities.forEach((entity) => {
+      EntityManager.forEach((entity) => {
         entity.updateGraphics();
       });
 

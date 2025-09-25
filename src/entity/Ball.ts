@@ -1,7 +1,8 @@
 import { BALL_RADIUS, type Position } from "../GameState";
-import { ActiveEntity, activeEntities } from "../core/entity/ActiveEntity";
+import { ActiveEntity } from "../core/entity/ActiveEntity";
 import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
+import { EntityManager } from "../core/entity/EntityManager";
 import type { Graphics } from "pixi.js";
 
 export class Ball extends ActiveEntity {
@@ -49,11 +50,8 @@ export class Ball extends ActiveEntity {
   }
 
   public destroy(): void {
-    // activeEntities 배열에서 제거
-    const index = activeEntities.indexOf(this);
-    if (index > -1) {
-      activeEntities.splice(index, 1);
-    }
+    // EntityManager에서 제거
+    EntityManager.remove(this);
 
     // 부모 destroy 호출
     super.destroy();
