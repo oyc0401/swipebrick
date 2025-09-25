@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Application, Container, Graphics, Rectangle } from "pixi.js";
 
 const GAME_WIDTH = 360;
 const GAME_HEIGHT = 360;
@@ -17,14 +17,14 @@ function getInnerWidth() {
 }
 
 export class GameRenderer {
-  private app: PIXI.Application;
-  private centerLayer: PIXI.Container;
-  private gameViewport: PIXI.Container;
+  private app: Application;
+  private centerLayer: Container;
+  private gameViewport: Container;
 
   constructor() {
-    this.app = new PIXI.Application();
-    this.centerLayer = new PIXI.Container();
-    this.gameViewport = new PIXI.Container();
+    this.app = new Application();
+    this.centerLayer = new Container();
+    this.gameViewport = new Container();
   }
 
   public async init(): Promise<void> {
@@ -53,7 +53,7 @@ export class GameRenderer {
     this.app.stage.addChild(this.centerLayer);
 
     // 게임 뷰포트
-    this.gameViewport.hitArea = new PIXI.Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    this.gameViewport.hitArea = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
     this.centerLayer.addChild(this.gameViewport);
 
     // 중앙 정렬 & 리사이즈 대응
@@ -89,7 +89,7 @@ export class GameRenderer {
   }
 
   public addDebugGuide(): void {
-    const g = new PIXI.Graphics();
+    const g = new Graphics();
     g.rect(0, 0, GAME_WIDTH, GAME_HEIGHT).stroke({ width: 2, color: 0x00aa00 });
     g.moveTo(GAME_WIDTH / 2, 0).lineTo(GAME_WIDTH / 2, GAME_HEIGHT);
     g.moveTo(0, GAME_HEIGHT / 2).lineTo(GAME_WIDTH, GAME_HEIGHT / 2);
@@ -97,15 +97,15 @@ export class GameRenderer {
     this.centerLayer.addChild(g);
   }
 
-  public getCenterLayer(): PIXI.Container {
+  public getCenterLayer(): Container {
     return this.centerLayer;
   }
 
-  public getGameViewport(): PIXI.Container {
+  public getGameViewport(): Container {
     return this.gameViewport;
   }
 
-  public getApp(): PIXI.Application {
+  public getApp(): Application {
     return this.app;
   }
 }

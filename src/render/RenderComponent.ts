@@ -1,14 +1,14 @@
-import * as PIXI from "pixi.js";
+import { Graphics } from "pixi.js";
 import type { IRenderComponent } from "../components/IComponent";
 
 export class RenderComponent implements IRenderComponent {
-  protected graphics: PIXI.Graphics;
+  protected graphics: Graphics;
 
   constructor() {
-    this.graphics = new PIXI.Graphics();
+    this.graphics = new Graphics();
   }
 
-  public getGraphics(): PIXI.Graphics {
+  public getGraphics(): Graphics {
     return this.graphics;
   }
 

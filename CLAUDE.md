@@ -12,6 +12,14 @@
 - 순수 바닐라 JavaScript/TypeScript만 사용
 - PixiJS와 Matter.js로만 게임 구현
 
+## 코딩 컨벤션
+
+### Import 규칙
+- **네임스페이스 import 금지**: `import * as PIXI from "pixi.js"` 사용 금지
+- **명시적 import 사용**: `import type { FederatedPointerEvent } from "pixi.js"` 권장
+- **필요한 것만 import**: `import { Application, Graphics } from "pixi.js"`
+- **타입/인터페이스는 반드시 type import**: `import type { IComponent } from "./IComponent"`
+
 ## 현재 코드 구조
 
 ### 핵심 클래스
