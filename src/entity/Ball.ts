@@ -1,9 +1,9 @@
 import type { Position } from "../GameState";
-import { Entity } from "./Entity";
+import { ActiveEntity } from "./ActiveEntity";
 import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 
-export class Ball extends Entity {
+export class Ball extends ActiveEntity {
   private radius: number = 8;
   private color: number = 0x4880ee; // 토스 블루
 
@@ -20,25 +20,11 @@ export class Ball extends Entity {
     );
   }
 
-  public setPosition(position: Position): void {
-    this.physicsComponent.setPosition(position.x, position.y);
-    this.updateGraphics();
-  }
-
-  public getPosition(): Position {
-    return this.physicsComponent.getPosition();
-  }
-
   public moveTowards(targetX: number, targetY: number): void {
     (this.physicsComponent as BallPhysicsComponent).moveTowards(
       targetX,
       targetY
     );
-  }
-
-  public updateGraphics(): void {
-    const position = this.physicsComponent.getPosition();
-    this.renderComponent.updatePosition(position.x, position.y);
   }
 
   public getGraphics(): any {

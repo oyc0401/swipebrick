@@ -54,7 +54,7 @@ export class PhysicsEngine {
     });
   }
 
-  public update(deltaTime: number = 16): void {
+  public update(deltaTime: number): void {
     Engine.update(this.engine, deltaTime);
   }
 
@@ -64,5 +64,30 @@ export class PhysicsEngine {
 
   public getEngine(): Engine {
     return this.engine;
+  }
+
+  // 60 프레임 고정
+  public startLoop(): void {
+    let lastTime = performance.now();
+    let accumulator = 0;
+    const FIXED_TIMESTEP = 16.66; // 고정 타임스텝
+
+    const physicsLoop = () => {
+      const currentTime = performance.now();
+      let deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
+
+      accumulator += deltaTime;
+
+      // 고정 타임스텝으로 물리 업데이트
+      while (accumulator >= FIXED_TIMESTEP) {
+        this.update(FIXED_TIMESTEP); // 항상 16.67ms
+        accumulator -= FIXED_TIMESTEP;
+      }
+
+      setTimeout(physicsLoop, FIXED_TIMESTEP);
+    };
+
+    physicsLoop();
   }
 }

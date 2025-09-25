@@ -1,5 +1,6 @@
+import { activeEntities } from "./../entity/Entity";
 import type { FederatedPointerEvent } from "pixi.js";
-import { GameRenderer } from "../render/GameRenderer";
+import { DisplayManager } from "../render/DisplayManager";
 import { GameBoundary } from "../entity/GameBoundary";
 import { Ball } from "../entity/Ball";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
@@ -9,7 +10,7 @@ const GAME_WIDTH = 360;
 const GAME_HEIGHT = 360;
 
 export class SceneManager {
-  private renderer: GameRenderer;
+  private renderer: DisplayManager;
   private physics: PhysicsEngine;
   private gameState: GameState;
   private ball!: Ball;
@@ -20,7 +21,7 @@ export class SceneManager {
   private rightBoundary!: GameBoundary;
 
   constructor(
-    renderer: GameRenderer,
+    renderer: DisplayManager,
     physics: PhysicsEngine,
     gameState: GameState
   ) {
@@ -37,12 +38,15 @@ export class SceneManager {
   }
 
   private addBall(): void {
-    this.ball = new Ball(
+    const ball = new Ball(
       this.gameState.ballStartPosition,
       this.physics.getWorld()
     );
+    this.ball = ball;
+    // 렌더링 대상 엔티티 등록
+    activeEntities.push(ball);
 
-    this.renderer.getGameViewport().addChild(this.ball.getGraphics());
+    this.renderer.getGameViewport().addChild(ball.getGraphics());
   }
 
   private addGameBoundaries(): void {

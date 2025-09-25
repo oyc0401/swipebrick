@@ -1,5 +1,6 @@
 import { PhysicsComponent } from "../physics/PhysicsComponent";
 import { RenderComponent } from "../render/RenderComponent";
+import type { ActiveEntity } from "./ActiveEntity";
 
 export class Entity {
   public readonly id: string;
@@ -19,3 +20,5 @@ export class Entity {
     }
   }
 }
+
+export const activeEntities: ActiveEntity[] = [];

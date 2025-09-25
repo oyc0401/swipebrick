@@ -1,4 +1,6 @@
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
+import { activeEntities } from "../entity/Entity";
+import { ActiveEntity } from "../entity/ActiveEntity";
 
 const GAME_WIDTH = 360;
 const GAME_HEIGHT = 360;
@@ -16,7 +18,7 @@ function getInnerWidth() {
   return innerWidth;
 }
 
-export class GameRenderer {
+export class DisplayManager {
   private app: Application;
   private centerLayer: Container;
   private gameViewport: Container;
@@ -107,5 +109,18 @@ export class GameRenderer {
 
   public getApp(): Application {
     return this.app;
+  }
+
+  public startRenderLoop(): void {
+    const renderLoop = () => {
+      // 모든 MovingEntity 업데이트
+      activeEntities.forEach((entity) => {
+        entity.updateGraphics();
+      });
+
+      requestAnimationFrame(renderLoop);
+    };
+
+    renderLoop();
   }
 }
