@@ -31,7 +31,7 @@ export class Game {
     // 물리 엔진 시작
     this.physics.startLoop();
 
-    // 렌더링 시작 (엔티티 배열 전달)
-    this.renderer.startRenderLoop();
+    // 렌더링 시작
+    this.renderer.startLoop();
   }
 }

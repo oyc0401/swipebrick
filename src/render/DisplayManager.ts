@@ -110,7 +110,7 @@ export class DisplayManager {
     return this.app;
   }
 
-  public startRenderLoop(): void {
+  public startLoop(): void {
     const renderLoop = () => {
       // 모든 MovingEntity 업데이트
       activeEntities.forEach((entity) => {
