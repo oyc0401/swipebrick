@@ -92,7 +92,7 @@ export class Game {
   private setupBallManagerCallbacks(): void {
     // 공이 도착했을 때 이벤트
     this.ballManager.onBallLanded((landedBall) => {
-      // 첫번째 공
+      // 첫번째 공이 도착했을 때
       if (!this.gameState.isBallLanded) {
         this.gameState.setIsBallLanded(true);
         const position = landedBall.getPosition();
@@ -100,13 +100,15 @@ export class Game {
         this.ballManager.showPreviewBall();
         console.log("First ball landed at:", position.x, position.y);
       }
-    });
 
-    // 모든 공이 도착했을 때 이벤트
-    this.ballManager.onAllBallsFinished(() => {
-      this.gameState.setIsBallLanded(false);
-      this.gameState.setWaiting(true);
-      console.log("All balls removed. Ready for next shot.");
+      // 모든 공이 도착했을 때 이벤트 (이벤트가 발생한 이후에 공이 삭제됨, 그래서 1이 도착임)
+      if (this.ballManager.getActiveBallCount() === 1) {
+        setTimeout(() => {
+          this.gameState.setIsBallLanded(false);
+          this.gameState.setWaiting(true);
+          console.log("All balls removed. Ready for next shot.");
+        }, 100);
+      }
     });
   }
 }

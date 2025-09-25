@@ -1,4 +1,4 @@
-import type { Container, Graphics } from "pixi.js";
+import type { Container } from "pixi.js";
 import { World } from "matter-js";
 import { Ball } from "../entity/Ball";
 import type { GameState } from "../GameState";
@@ -6,10 +6,6 @@ import type { PhysicsEngine } from "../physics/PhysicsEngine";
 
 interface BallLandingCallback {
   (landedBall: Ball): void;
-}
-
-interface AllBallsRemovedCallback {
-  (): void;
 }
 
 export class BallManager {
@@ -20,7 +16,6 @@ export class BallManager {
   private gameState: GameState;
 
   private onBallLanding?: BallLandingCallback;
-  private onAllBallsRemoved?: AllBallsRemovedCallback;
 
   constructor(
     gameViewport: Container,
@@ -33,14 +28,9 @@ export class BallManager {
     this.createPreviewBall();
   }
 
-  /** 첫번째 공이 도착했을 때 이벤트 */
+  /** 공이 도착했을 때 이벤트 */
   public onBallLanded(callback: BallLandingCallback): void {
     this.onBallLanding = callback;
-  }
-
-  /** 모든 공이 도착했을 때 이벤트 */
-  public onAllBallsFinished(callback: AllBallsRemovedCallback): void {
-    this.onAllBallsRemoved = callback;
   }
 
   public createBalls(count: number): void {
@@ -76,7 +66,6 @@ export class BallManager {
     }
 
     this.removeBall(landedBall);
-    this.checkAllBallsRemoved();
   }
 
   public showPreviewBall(): void {
@@ -104,14 +93,8 @@ export class BallManager {
     }
   }
 
-  private checkAllBallsRemoved(): void {
-    if (this.activeBalls.length === 0 && this.onAllBallsRemoved) {
-      setTimeout(() => {
-        if (this.onAllBallsRemoved) {
-          this.onAllBallsRemoved();
-        }
-      }, 100);
-    }
+  public getActiveBallCount() {
+    return this.activeBalls.length;
   }
 
   public destroy(): void {
