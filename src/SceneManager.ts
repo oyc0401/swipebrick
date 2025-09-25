@@ -1,10 +1,10 @@
 import type { FederatedPointerEvent } from "pixi.js";
 import { Events, World } from "matter-js";
-import { DisplayManager } from "../render/DisplayManager";
-import { GameBoundary } from "../entity/GameBoundary";
-import { Ball } from "../entity/Ball";
-import { PhysicsEngine } from "../physics/PhysicsEngine";
-import { GameState } from "../GameState";
+import { DisplayManager } from "./render/DisplayManager";
+import { GameBoundary } from "./entity/GameBoundary";
+import { Ball } from "./entity/Ball";
+import { PhysicsEngine } from "./physics/PhysicsEngine";
+import { GameState } from "./GameState";
 
 const GAME_WIDTH = 360;
 const GAME_HEIGHT = 360;
@@ -14,7 +14,8 @@ export class SceneManager {
   private physics: PhysicsEngine;
   private gameState: GameState;
   private balls: Ball[] = []; // 여러 공을 관리하기 위한 배열
-  private firstLandedBall: Ball | null = null; // 첫 번째로 바닥에 도착한 공
+  private isBallLanded = false; // 첫번째 공이 도착했는지 여부
+  private previewBall!: Ball; // 미리보기 공 (물리엔진 미포함)
 
   private topBoundary!: GameBoundary;
   private bottomBoundary!: GameBoundary;
@@ -36,10 +37,11 @@ export class SceneManager {
     this.addClickListener();
     this.setupPhysicsEventListeners();
     this.renderer.addDebugGuide();
+    this.createPreviewBall();
+    this.showPreviewBall();
   }
 
   private addGameBoundaries(): void {
-    const world = this.physics.getWorld();
     const centerLayer = this.renderer.getCenterLayer();
 
     this.topBoundary = new GameBoundary(0, -5, GAME_WIDTH, 5, 0x000000);
@@ -87,26 +89,15 @@ export class SceneManager {
       // 대기 상태 해제
       this.gameState.setWaiting(false);
 
+      // 미리보기 공 숨김
+      this.hidePreviewBall();
+
       // 공 2개 생성
       this.createNewBalls();
 
       // 공들을 목표 지점으로 발사
       this.launchBalls(localPosition.x, localPosition.y);
     });
-  }
-
-  private createNewBalls(): void {
-    // 공 2개 생성
-    for (let i = 0; i < 2; i++) {
-      const ball = new Ball(this.gameState.ballStartPosition);
-      World.add(this.physics.getWorld(), ball.getPhysicsBody());
-      this.renderer.getGameViewport().addChild(ball.getGraphics());
-
-      this.balls.push(ball);
-    }
-
-    // 첫 번째 도착 공 초기화
-    this.firstLandedBall = null;
   }
 
   private launchBalls(targetX: number, targetY: number): void {
@@ -146,19 +137,16 @@ export class SceneManager {
     );
     if (!landedBall) return;
 
-    if (!this.firstLandedBall) {
+    if (!this.isBallLanded) {
       // 첫 번째 도착한 공 설정 및 시작 위치 업데이트
-      this.firstLandedBall = landedBall;
+      this.isBallLanded = true;
       const position = landedBall.getPosition();
       this.gameState.setBallStartPosition(position.x, position.y);
+      this.showPreviewBall();
       console.log("First ball landed at:", position.x, position.y);
-
-      // 첫 번째 공도 제거
-      this.removeBall(landedBall);
-    } else {
-      // 두 번째부터 도착하는 공들 제거
-      this.removeBall(landedBall);
     }
+
+    this.removeBall(landedBall);
 
     // 모든 공이 제거되었는지 확인
     this.checkAllBallsRemoved();
@@ -174,6 +162,20 @@ export class SceneManager {
     }
   }
 
+  private createNewBalls(): void {
+    // 공 2개 생성
+    for (let i = 0; i < 2; i++) {
+      const ball = new Ball(this.gameState.ballStartPosition);
+      World.add(this.physics.getWorld(), ball.getPhysicsBody());
+      this.renderer.getGameViewport().addChild(ball.getGraphics());
+
+      this.balls.push(ball);
+    }
+
+    // 첫 번째 도착 공 초기화
+    this.isBallLanded = false;
+  }
+
   private removeBall(ball: Ball): void {
     // 렌더링에서 제거
     this.renderer.getGameViewport().removeChild(ball.getGraphics());
@@ -187,5 +189,25 @@ export class SceneManager {
     if (index > -1) {
       this.balls.splice(index, 1);
     }
+  }
+
+  private createPreviewBall(): void {
+    // 미리보기 공 생성 (물리엔진에 추가하지 않음)
+    this.previewBall = new Ball(this.gameState.ballStartPosition);
+    // 렌더링만 추가
+    this.renderer.getGameViewport().addChild(this.previewBall.getGraphics());
+  }
+
+  private showPreviewBall(): void {
+    // 기존 미리보기 공이 있으면 보이게 만들기
+    this.previewBall.getGraphics().visible = true;
+    // 위치 업데이트
+    const startPos = this.gameState.ballStartPosition;
+
+    this.previewBall.setPosition(startPos);
+  }
+
+  private hidePreviewBall(): void {
+    this.previewBall.getGraphics().visible = false;
   }
 }

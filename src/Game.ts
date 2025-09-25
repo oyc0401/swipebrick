@@ -1,7 +1,7 @@
 import { GameState } from "./GameState";
 import { DisplayManager } from "./render/DisplayManager";
 import { PhysicsEngine } from "./physics/PhysicsEngine";
-import { SceneManager } from "./view/SceneManager";
+import { SceneManager } from "./SceneManager";
 
 export class Game {
   private renderer: DisplayManager;

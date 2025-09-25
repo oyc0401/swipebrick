@@ -38,6 +38,12 @@ export class Ball extends ActiveEntity {
     return this.physicsComponent.getPosition();
   }
 
+  public setPosition(pos: Position) {
+    this.getGraphics().x = pos.x;
+    this.getGraphics().y = pos.y;
+    this.physicsComponent.setPosition(pos.x, pos.y);
+  }
+
   public destroy(): void {
     // activeEntities 배열에서 제거
     const index = activeEntities.indexOf(this);

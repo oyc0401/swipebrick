@@ -55,7 +55,7 @@ export class PhysicsEngine {
           Body.setAngularVelocity(ballBody, 0);
 
           // 공의 높이 확인
-          console.log("Ball position after stop:", ballBody.position.y);
+          // console.log("Ball position after stop:", ballBody.position.y);
 
           // 추가 안전장치: 공을 정지 상태로 만들기
           Sleeping.set(ballBody, true);
