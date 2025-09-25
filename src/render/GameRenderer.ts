@@ -23,8 +23,8 @@ export class GameRenderer {
 
   constructor() {
     this.app = new Application();
-    this.centerLayer = new Container();
-    this.gameViewport = new Container();
+    this.centerLayer = new Container(); // 캔버스 전체영역.
+    this.gameViewport = new Container(); // 게임영역 내부 화면
   }
 
   public async init(): Promise<void> {

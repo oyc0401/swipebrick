@@ -3,31 +3,46 @@ import { GameRenderer } from "../render/GameRenderer";
 import { GameBoundary } from "../entity/GameBoundary";
 import { Ball } from "../entity/Ball";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
+import { GameState } from "../GameState";
 
 const GAME_WIDTH = 360;
 const GAME_HEIGHT = 360;
 
-export class GameView {
+export class SceneManager {
   private renderer: GameRenderer;
   private physics: PhysicsEngine;
-  private ball: Ball;
+  private gameState: GameState;
+  private ball!: Ball;
 
   private topBoundary!: GameBoundary;
   private bottomBoundary!: GameBoundary;
   private leftBoundary!: GameBoundary;
   private rightBoundary!: GameBoundary;
 
-  constructor(renderer: GameRenderer, physics: PhysicsEngine, ball: Ball) {
+  constructor(
+    renderer: GameRenderer,
+    physics: PhysicsEngine,
+    gameState: GameState
+  ) {
     this.renderer = renderer;
     this.physics = physics;
-    this.ball = ball;
+    this.gameState = gameState;
   }
 
   public init(): void {
+    this.addBall();
     this.addGameBoundaries();
-    this.addBallToScene();
     this.addClickListener();
     this.renderer.addDebugGuide();
+  }
+
+  private addBall(): void {
+    this.ball = new Ball(
+      this.gameState.ballStartPosition,
+      this.physics.getWorld()
+    );
+
+    this.renderer.getGameViewport().addChild(this.ball.getGraphics());
   }
 
   private addGameBoundaries(): void {
@@ -69,10 +84,6 @@ export class GameView {
     centerLayer.addChild(this.rightBoundary.getGraphics());
   }
 
-  private addBallToScene(): void {
-    this.renderer.getGameViewport().addChild(this.ball.getGraphics());
-  }
-
   private addClickListener(): void {
     const gameViewport = this.renderer.getGameViewport();
     gameViewport.eventMode = "static";
@@ -81,5 +92,9 @@ export class GameView {
       console.log("Clicked at:", localPosition.x, localPosition.y);
       this.ball.moveTowards(localPosition.x, localPosition.y);
     });
+  }
+
+  public getBall(): Ball {
+    return this.ball;
   }
 }
