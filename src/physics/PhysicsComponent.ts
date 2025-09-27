@@ -38,7 +38,7 @@ export class BallPhysicsComponent extends PhysicsComponent {
       frictionAir: 0,
       frictionStatic: 0,
       inertia: Infinity,
-      slop: 0.01,
+      slop: 0.0,
       label: "ball",
       collisionFilter: {
         category: 0x0001, // 공 카테고리
@@ -50,24 +50,24 @@ export class BallPhysicsComponent extends PhysicsComponent {
   public moveTowards(targetX: number, targetY: number): void {
     if (this.body.isSleeping) {
       Sleeping.set(this.body, false);
-      this.body.restitution = 1;
     }
 
-    const currentPos = this.body.position;
-    const dx = targetX - currentPos.x;
-    const dy = targetY - currentPos.y;
+    const pos = this.body.position;
+    const dx = targetX - pos.x;
+    const dy = targetY - pos.y;
 
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance > 0) {
-      const force = 0.005;
-      const forceX = (dx / distance) * force;
-      const forceY = (dy / distance) * force;
+    const distance = Math.hypot(dx, dy);
+    if (distance === 0) return;
 
-      Body.applyForce(this.body, this.body.position, {
-        x: forceX,
-        y: forceY,
-      });
-    }
+    // 원하는 이동 속도(px/초 단위)
+    const SPEED = 10;
+
+    // 방향을 단위 벡터로 만들고 속도 적용
+    const vx = (dx / distance) * SPEED;
+    const vy = (dy / distance) * SPEED;
+
+    // 현재 바디의 속도를 직접 세팅
+    Body.setVelocity(this.body, { x: vx, y: vy });
   }
 }
 
@@ -98,7 +98,7 @@ export class BoundaryPhysicsComponent extends PhysicsComponent {
       restitution: 1, // 완전 탄성 반사
       friction: 0, // 마찰 완전 제거
       frictionStatic: 0, // 정적 마찰 완전 제거
-      slop: 0.01,
+      slop: 0.0,
       label: label,
       collisionFilter: {
         category: category, // 벽돌: 0x0004, 벽: 0x0002

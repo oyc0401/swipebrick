@@ -21,7 +21,7 @@ export class GameState {
       x: GAME_WIDTH / 2,
       y: GAME_HEIGHT - BALL_RADIUS,
     }; // 사각형 하단에서 반지름만큼 위
-    this.ballCount = 8;
+    this.ballCount = 1;
     this.level = 1;
     this.score = 0;
     this.isWaiting = true; // 초기에는 대기 상태 (공이 준비된 상태)

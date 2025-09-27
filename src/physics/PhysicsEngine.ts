@@ -1,4 +1,4 @@
-import { Engine, World, Events, Body, Sleeping } from "matter-js";
+import { Engine, World, Events, Body, Sleeping, Runner } from "matter-js";
 
 import Matter from "matter-js";
 import { BALL_RADIUS, GAME_HEIGHT } from "../GameState";
@@ -10,7 +10,7 @@ export class PhysicsEngine {
   private engine: Engine;
   private world: World;
   private collisionCallbacks: Array<
-    (bodyA: Matter.Body, bodyB: Matter.Body) => void
+    (bodyA: Matter.Body, bodyB: Matter.Body, pair: Matter.Pair) => void
   > = [];
 
   constructor() {
@@ -22,12 +22,12 @@ export class PhysicsEngine {
     this.engine.gravity.x = 0;
 
     // Matter.js 정밀도 최적화
-    this.engine.constraintIterations = 8; // 기본값 2 → 8
-    this.engine.positionIterations = 8; // 기본값 6 → 8
-    this.engine.timing.timeScale = 1.0; // 정확한 타이밍
+    this.engine.constraintIterations = 6;
+    this.engine.positionIterations = 12;
+    this.engine.velocityIterations = 2;
 
+    this.engine.timing.timeScale = 1.0; // 정확한 타이밍
     this.engine.enableSleeping = false; // 미세한 움직임 자동 정지 막음
-    this.engine.velocityIterations = 4; // 속도 해상도 개선
 
     this.setupCollisionEvents();
   }
@@ -68,14 +68,14 @@ export class PhysicsEngine {
 
         // 모든 충돌 콜백 호출
         this.collisionCallbacks.forEach((callback) => {
-          callback(bodyA, bodyB);
+          callback(bodyA, bodyB, pair);
         });
       }
     });
   }
 
-  public update(deltaTime: number): void {
-    Engine.update(this.engine, deltaTime);
+  public update(deltaTime: number, c?: number): void {
+    Engine.update(this.engine, deltaTime, c);
   }
 
   public getWorld(): World {
@@ -88,27 +88,13 @@ export class PhysicsEngine {
 
   // 60 프레임 고정
   public startLoop(): void {
-    let lastTime = performance.now();
-    let accumulator = 0;
-    const FIXED_TIMESTEP = 16.66; // 고정 타임스텝
+    const FIXED_TIMESTEP = 1000 / 60;
 
-    const physicsLoop = () => {
-      const currentTime = performance.now();
-      const deltaTime = currentTime - lastTime;
-      lastTime = currentTime;
-
-      accumulator += deltaTime;
-
-      // 고정 타임스텝으로 물리 업데이트
-      while (accumulator >= FIXED_TIMESTEP) {
-        this.update(FIXED_TIMESTEP); // 항상 16.67ms
-        accumulator -= FIXED_TIMESTEP;
-      }
-
-      setTimeout(physicsLoop, FIXED_TIMESTEP);
-    };
-
-    physicsLoop();
+    const subStep = 16;
+    const runner = Runner.create({
+      delta: FIXED_TIMESTEP / subStep, // 고정 타임스텝 (ms)
+    });
+    Runner.run(runner, this.engine);
   }
 
   public addBody(body: Matter.Body): void {
@@ -120,7 +106,11 @@ export class PhysicsEngine {
   }
 
   public onCollision(
-    callback: (bodyA: Matter.Body, bodyB: Matter.Body) => void
+    callback: (
+      bodyA: Matter.Body,
+      bodyB: Matter.Body,
+      pair: Matter.Pair
+    ) => void
   ): void {
     this.collisionCallbacks.push(callback);
   }

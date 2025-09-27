@@ -23,8 +23,11 @@ export class InputManager {
     this.layer.on("pointerdown", (event: FederatedPointerEvent) => {
       const localPosition = event.getLocalPosition(this.layer);
       console.log("Clicked at:", localPosition.x, localPosition.y);
-
+      // 349.38704182330827 93.55791823308269
+      let testX = 349.38704182330827;
+      let testY = 93.55791823308269;
       if (this.onGameClick) {
+        // this.onGameClick(testX, testY);
         this.onGameClick(localPosition.x, localPosition.y);
       }
     });

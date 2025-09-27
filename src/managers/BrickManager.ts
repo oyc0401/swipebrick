@@ -29,6 +29,7 @@ export class BrickManager {
   }
 
   private generateRandomBrickData(): (number | null)[] {
+    // return [8000, 8000, 8000, 8000, 8000, null];
     // 2~5개 사이의 랜덤 개수
     const brickCount = Math.floor(Math.random() * 4) + 2; // 2, 3, 4, 5
 
@@ -69,7 +70,7 @@ export class BrickManager {
   }
 
   private setupCollisionListener(): void {
-    this.physics.onCollision((bodyA, bodyB) => {
+    this.physics.onCollision((bodyA, bodyB, pair) => {
       let ballBody: Matter.Body | null = null;
       let brickBody: Matter.Body | null = null;
 
@@ -82,7 +83,15 @@ export class BrickManager {
         brickBody = bodyA;
       }
 
-      if (ballBody && brickBody) {
+      if (ballBody && brickBody && pair.collision) {
+        const hitPoint = pair.collision.supports[0];
+        console.log("Ball hit brick!", {
+          timestamp: new Date().toISOString(),
+          ballId: ballBody.id,
+          brickId: brickBody.id,
+          ballVelocity: ballBody.velocity.x / ballBody.velocity.y,
+          hitPoint: hitPoint ? { x: hitPoint.x, y: hitPoint.y } : null,
+        });
         this.handleBrickCollision(brickBody);
       }
     });
