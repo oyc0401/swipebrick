@@ -46,18 +46,38 @@ export class RectangleRenderComponent extends RenderComponent {
   private width: number;
   private height: number;
   private color: number;
+  private innerMargin: number;
 
-  constructor(width: number, height: number, color: number = 0x000000) {
+  constructor(width: number, height: number, color: number = 0x000000, innerMargin: number = 0) {
     super();
     this.width = width;
     this.height = height;
     this.color = color;
+    this.innerMargin = innerMargin;
     this.createRectangle();
   }
 
   private createRectangle(): void {
     this.graphics.clear();
-    this.graphics.rect(0, 0, this.width, this.height);
+
+    if (this.innerMargin > 0) {
+      // 마진이 있으면 내부에 더 작은 사각형 그리기
+      this.graphics.rect(
+        this.innerMargin,
+        this.innerMargin,
+        this.width - (this.innerMargin * 2),
+        this.height - (this.innerMargin * 2)
+      );
+    } else {
+      // 마진이 없으면 전체 크기로 그리기
+      this.graphics.rect(0, 0, this.width, this.height);
+    }
+
     this.graphics.fill({ color: this.color });
+  }
+
+  public updateColor(newColor: number): void {
+    this.color = newColor;
+    this.createRectangle();
   }
 }

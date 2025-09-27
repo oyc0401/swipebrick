@@ -9,6 +9,9 @@ import { BALL_RADIUS, GAME_HEIGHT } from "../GameState";
 export class PhysicsEngine {
   private engine: Engine;
   private world: World;
+  private collisionCallbacks: Array<
+    (bodyA: Matter.Body, bodyB: Matter.Body) => void
+  > = [];
 
   constructor() {
     this.engine = Engine.create();
@@ -62,6 +65,11 @@ export class PhysicsEngine {
           // 추가 안전장치: 공을 정지 상태로 만들기
           Sleeping.set(ballBody, true);
         }
+
+        // 모든 충돌 콜백 호출
+        this.collisionCallbacks.forEach((callback) => {
+          callback(bodyA, bodyB);
+        });
       }
     });
   }
@@ -103,8 +111,23 @@ export class PhysicsEngine {
     physicsLoop();
   }
 
+  public addBody(body: Matter.Body): void {
+    World.add(this.world, body);
+  }
+
+  public removeBody(body: Matter.Body): void {
+    World.remove(this.world, body);
+  }
+
+  public onCollision(
+    callback: (bodyA: Matter.Body, bodyB: Matter.Body) => void
+  ): void {
+    this.collisionCallbacks.push(callback);
+  }
+
   public destroy(): void {
     // 이벤트 리스너 제거
     Events.off(this.engine, "collisionStart");
+    this.collisionCallbacks = [];
   }
 }

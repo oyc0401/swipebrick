@@ -4,6 +4,7 @@ import { PhysicsEngine } from "./physics/PhysicsEngine";
 
 import { BallManager } from "./managers/BallManager";
 import { BoundaryManager } from "./managers/BoundaryManager";
+import { BrickManager } from "./managers/BrickManager";
 import { InputManager } from "./managers/InputManager";
 
 export class Game {
@@ -13,6 +14,7 @@ export class Game {
 
   private ballManager: BallManager;
   private boundaryManager: BoundaryManager;
+  private brickManager: BrickManager;
   private inputManager: InputManager;
 
   constructor() {
@@ -31,6 +33,10 @@ export class Game {
       GAME_WIDTH,
       GAME_HEIGHT
     );
+    this.brickManager = new BrickManager(
+      this.renderer.getGameViewport(),
+      this.physics
+    );
     this.inputManager = new InputManager(this.renderer.getCenterLayer());
 
     this.setupBallManagerCallbacks();
@@ -42,7 +48,8 @@ export class Game {
     await this.renderer.init();
 
     this.boundaryManager.createGameBoundaries();
-    this.renderer.addDebugGuide();
+    this.brickManager.createBricks();
+    // this.renderer.addDebugGuide();
     this.ballManager.showPreviewBall();
 
     const startGameLoop = (): void => {
@@ -102,6 +109,8 @@ export class Game {
       if (this.ballManager.getActiveBallCount() === 1) {
         setTimeout(() => {
           this.gameState.setIsBallLanded(false);
+          this.brickManager.shift();
+          this.brickManager.createBricks();
           this.gameState.setWaiting(true);
           console.log("All balls removed. Ready for next shot.");
         }, 30);

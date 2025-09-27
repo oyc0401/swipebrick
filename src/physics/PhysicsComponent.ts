@@ -90,6 +90,9 @@ export class BoundaryPhysicsComponent extends PhysicsComponent {
     height: number,
     label: string
   ): void {
+    // 벽돌인 경우 다른 카테고리 사용
+    const category = label === "brick" ? 0x0004 : 0x0002;
+
     this.body = Bodies.rectangle(x + width / 2, y + height / 2, width, height, {
       isStatic: true, // 정적 객체
       restitution: 1, // 완전 탄성 반사
@@ -98,7 +101,7 @@ export class BoundaryPhysicsComponent extends PhysicsComponent {
       slop: 0.01,
       label: label,
       collisionFilter: {
-        category: 0x0002, // 벽 카테고리
+        category: category, // 벽돌: 0x0004, 벽: 0x0002
         mask: 0x0001, // 공과만 충돌
       },
     });
