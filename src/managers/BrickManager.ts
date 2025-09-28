@@ -20,8 +20,7 @@ export class BrickManager {
     // 렌더링에 추가
     this.container.addChild(brick.getGraphics());
 
-    // 물리 엔진에 추가
-    this.physics.addBody(brick.getPhysicsBody());
+    // PhysicsEngine에 자동 등록되므로 physics.addBody 제거
 
     // 내부 관리용 맵에 추가
     this.bricks.set(brick.id, brick);
@@ -179,9 +178,9 @@ export class BrickManager {
     if (!brick) return;
 
     // 벽돌 타격
-    const isDestroyed = brick.hit();
+    brick.hit();
 
-    if (isDestroyed) {
+    if (brick.getHealth() == 0) {
       this.destroyBrick(brick);
     }
   }
@@ -198,9 +197,6 @@ export class BrickManager {
   private destroyBrick(brick: Brick): void {
     // 렌더링에서 제거
     this.container.removeChild(brick.getGraphics());
-
-    // 물리 엔진에서 제거
-    this.physics.removeBody(brick.getPhysicsBody());
 
     // 내부 맵에서 제거
     this.bricks.delete(brick.id);

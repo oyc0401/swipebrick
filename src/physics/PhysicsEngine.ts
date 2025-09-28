@@ -7,13 +7,15 @@ import { BALL_RADIUS, GAME_HEIGHT } from "../GameState";
 (Matter.Resolver as any)._restingThresh = 0; // 기본 2 → 0
 
 export class PhysicsEngine {
+  private static instance: PhysicsEngine | null = null;
+
   private engine: Engine;
   private world: World;
   private ballCollisionCallbacks: Array<
     (ball: Matter.Body, bodies: Matter.Body[]) => void
   > = [];
 
-  constructor() {
+  private constructor() {
     this.engine = Engine.create();
     this.world = this.engine.world;
 
@@ -31,6 +33,20 @@ export class PhysicsEngine {
 
     this.setupBeforeUpdateEvents();
     this.setupCollisionEvents();
+  }
+
+  public static getInstance(): PhysicsEngine {
+    if (!PhysicsEngine.instance) {
+      PhysicsEngine.instance = new PhysicsEngine();
+    }
+    return PhysicsEngine.instance;
+  }
+
+  public static destroy(): void {
+    if (PhysicsEngine.instance) {
+      PhysicsEngine.instance.destroy();
+      PhysicsEngine.instance = null;
+    }
   }
 
   private setupBeforeUpdateEvents(): void {

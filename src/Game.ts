@@ -19,12 +19,11 @@ export class Game {
 
   constructor() {
     this.renderer = new DisplayManager(GAME_WIDTH, GAME_HEIGHT);
-    this.physics = new PhysicsEngine();
+    this.physics = PhysicsEngine.getInstance();
     this.gameState = new GameState();
 
     this.ballManager = new BallManager(
       this.renderer.getGameViewport(),
-      this.physics,
       this.gameState
     );
     this.boundaryManager = new BoundaryManager(

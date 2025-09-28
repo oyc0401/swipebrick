@@ -1,6 +1,7 @@
 import { Entity } from "../core/entity/Entity";
 import { RectangleRenderComponent } from "../render/RenderComponent";
 import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
+import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { Graphics } from "pixi.js";
 
 export class Brick extends Entity {
@@ -31,20 +32,14 @@ export class Brick extends Entity {
       this.height,
       "brick"
     );
+
+    // PhysicsEngine 싱글톤의 world에 자동 추가
+    PhysicsEngine.getInstance().addBody(this.getPhysicsBody());
   }
 
-  public hit(): boolean {
-    if (this.isDestroyed) return false;
-
+  public hit(): void {
     this.hitCount++;
     this.updateVisuals();
-
-    if (this.hitCount >= this.maxHits) {
-      this.isDestroyed = true;
-      return true; // 파괴됨
-    }
-
-    return false; // 아직 파괴되지 않음
   }
 
   private updateVisuals(): void {
@@ -76,12 +71,8 @@ export class Brick extends Entity {
     return this.physicsComponent.getBody();
   }
 
-  public getHitCount(): number {
-    return this.hitCount;
-  }
-
-  public isDestroyedBrick(): boolean {
-    return this.isDestroyed;
+  public getHealth(): number {
+    return this.maxHits - this.hitCount;
   }
 
   public shift(amount: number): void {
@@ -97,9 +88,9 @@ export class Brick extends Entity {
   }
 
   public destroy(): void {
-    if (!this.isDestroyed) {
-      this.isDestroyed = true;
-      super.destroy();
-    }
+    // PhysicsEngine에서 바디 제거
+    PhysicsEngine.getInstance().removeBody(this.getPhysicsBody());
+
+    super.destroy();
   }
 }

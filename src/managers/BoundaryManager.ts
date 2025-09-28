@@ -1,5 +1,5 @@
 import type { Container } from "pixi.js";
-import { World, Events } from "matter-js";
+import { Events } from "matter-js";
 import { GameBoundary } from "../entity/GameBoundary";
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 
@@ -109,8 +109,7 @@ export class BoundaryManager {
       config.label
     );
 
-    // 물리 엔진에 추가
-    World.add(this.physicsWorld, boundary.getPhysicsBody());
+    // PhysicsEngine에 자동 등록되므로 World.add 제거
 
     // 렌더링 레이어에 추가
     this.renderLayer.addChild(boundary.getGraphics());
@@ -152,8 +151,7 @@ export class BoundaryManager {
       // 렌더링에서 제거
       this.renderLayer.removeChild(boundary.getGraphics());
 
-      // 물리 엔진에서 제거
-      World.remove(this.physicsWorld, boundary.getPhysicsBody());
+      // PhysicsEngine에서 자동 제거되므로 World.remove 제거
 
       // 경계벽 객체 정리
       boundary.destroy();

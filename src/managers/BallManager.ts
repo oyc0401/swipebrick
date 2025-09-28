@@ -1,8 +1,6 @@
 import type { Container } from "pixi.js";
-import { World } from "matter-js";
 import { Ball } from "../entity/Ball";
 import type { GameState } from "../GameState";
-import type { PhysicsEngine } from "../physics/PhysicsEngine";
 
 interface BallLandingCallback {
   (landedBall: Ball): void;
@@ -12,18 +10,15 @@ export class BallManager {
   private activeBalls: Ball[] = [];
   private previewBall!: Ball;
   private gameViewport: Container;
-  private physicsWorld: Matter.World;
   private gameState: GameState;
 
   private onBallLanding?: BallLandingCallback;
 
   constructor(
     gameViewport: Container,
-    physics: PhysicsEngine,
     gameState: GameState
   ) {
     this.gameViewport = gameViewport;
-    this.physicsWorld = physics.getWorld();
     this.gameState = gameState;
     this.createPreviewBall();
   }
@@ -36,7 +31,7 @@ export class BallManager {
   public createBalls(count: number): void {
     for (let i = 0; i < count; i++) {
       const ball = new Ball(this.gameState.ballStartPosition);
-      World.add(this.physicsWorld, ball.getPhysicsBody());
+      // PhysicsEngine에 자동 등록되므로 World.add 제거
       this.gameViewport.addChild(ball.getGraphics());
       this.activeBalls.push(ball);
     }
@@ -78,13 +73,13 @@ export class BallManager {
   }
 
   private createPreviewBall(): void {
-    this.previewBall = new Ball(this.gameState.ballStartPosition);
+    this.previewBall = Ball.createWithoutPhysics(this.gameState.ballStartPosition);
 
     this.gameViewport.addChild(this.previewBall.getGraphics());
   }
   private removeBall(ball: Ball): void {
     this.gameViewport.removeChild(ball.getGraphics());
-    World.remove(this.physicsWorld, ball.getPhysicsBody());
+    // PhysicsEngine에서 자동 제거되므로 World.remove 제거
     ball.destroy();
 
     const index = this.activeBalls.indexOf(ball);
