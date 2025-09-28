@@ -139,13 +139,13 @@ export class PhysicsEngine {
 
       if (brickBodies.length === 0) return;
 
-      console.log("Ball hit bricks!", {
-        timestamp: new Date().toISOString(),
-        ballId: ball.id,
-        ballVelocity: ball.velocity,
-        brickCount: brickBodies.length,
-        brickIds: brickBodies.map((body) => body.id),
-      });
+      // console.log("Ball hit bricks!", {
+      //   timestamp: new Date().toISOString(),
+      //   ballId: ball.id,
+      //   ballVelocity: ball.velocity,
+      //   brickCount: brickBodies.length,
+      //   brickIds: brickBodies.map((body) => body.id),
+      // });
 
       // 2개 벽돌 동시 충돌 시 특별 처리
       if (brickBodies.length === 2) {

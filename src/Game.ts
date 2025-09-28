@@ -29,6 +29,7 @@ export class Game {
 
     this.setupBallManagerCallbacks();
     this.setupInputManagerCallbacks();
+    this.setupBrickManagerCallbacks();
   }
 
   public async init(): Promise<void> {
@@ -107,6 +108,29 @@ export class Game {
           console.log("All balls removed. Ready for next shot.");
         }, 30);
       }
+    });
+  }
+
+  // 벽돌 충돌 이벤트
+  private setupBrickManagerCallbacks(): void {
+    this.brickManager.onBrickCollision((brick) => {
+      console.log("Brick hit!", {
+        timestamp: new Date().toISOString(),
+        brickId: brick.id,
+        remainingHealth: brick.getHealth(),
+        currentLevel: this.gameState.level,
+        position: brick.physicsComponent.getPosition(),
+      });
+    });
+
+    this.brickManager.onBrickDestroy((brick) => {
+      console.log("Brick destroyed!", {
+        timestamp: new Date().toISOString(),
+        brickId: brick.id,
+        finalHealth: brick.getHealth(),
+        currentLevel: this.gameState.level,
+        position: brick.physicsComponent.getPosition(),
+      });
     });
   }
 }

@@ -2,10 +2,20 @@ import type { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { GameState } from "../GameState";
 import { Brick } from "../entity/Brick";
 
+interface BrickCollisionCallback {
+  (brick: Brick): void;
+}
+
+interface BrickDestroyCallback {
+  (brick: Brick): void;
+}
+
 export class BrickManager {
   private physics: PhysicsEngine;
   private gameState: GameState;
   private bricks: Map<string, Brick> = new Map();
+  private brickCollisionCallbacks: BrickCollisionCallback[] = [];
+  private brickDestroyCallbacks: BrickDestroyCallback[] = [];
 
   constructor(physics: PhysicsEngine, gameState: GameState) {
     this.physics = physics;
@@ -109,12 +119,22 @@ export class BrickManager {
     const color = this.calculateBrickColor(brickHealth, this.gameState.level);
     brick.setColor(color);
 
+    // 외부 콜백 호출
+    this.brickCollisionCallbacks.forEach((callback) => {
+      callback(brick);
+    });
+
     if (brick.getHealth() == 0) {
       this.destroyBrick(brick);
     }
   }
 
   private destroyBrick(brick: Brick): void {
+    // 외부 파괴 콜백 호출 (벽돌이 실제로 파괴되기 전에)
+    this.brickDestroyCallbacks.forEach((callback) => {
+      callback(brick);
+    });
+
     // 내부 맵에서 제거
     this.bricks.delete(brick.id);
 
@@ -170,11 +190,21 @@ export class BrickManager {
     return (r << 16) | (g << 8) | b;
   }
 
+  public onBrickCollision(callback: BrickCollisionCallback): void {
+    this.brickCollisionCallbacks.push(callback);
+  }
+
+  public onBrickDestroy(callback: BrickDestroyCallback): void {
+    this.brickDestroyCallbacks.push(callback);
+  }
+
   public destroy(): void {
     // 모든 벽돌 파괴
     for (const brick of this.bricks.values()) {
       this.destroyBrick(brick);
     }
     this.bricks.clear();
+    this.brickCollisionCallbacks = [];
+    this.brickDestroyCallbacks = [];
   }
 }
