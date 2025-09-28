@@ -16,5 +16,8 @@ export class Entity {
     if (this.renderComponent) {
       this.renderComponent.destroy();
     }
+    if (this.physicsComponent) {
+      this.physicsComponent.destroy();
+    }
   }
 }

@@ -1,7 +1,6 @@
 import { Entity } from "../core/entity/Entity";
 import { RectangleRenderComponent } from "../render/RenderComponent";
 import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
-import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { Graphics } from "pixi.js";
 
 export class Brick extends Entity {
@@ -32,9 +31,6 @@ export class Brick extends Entity {
       this.height,
       "brick"
     );
-
-    // PhysicsEngine 싱글톤의 world에 자동 추가
-    PhysicsEngine.getInstance().addBody(this.getPhysicsBody());
   }
 
   public hit(): void {
@@ -88,9 +84,6 @@ export class Brick extends Entity {
   }
 
   public destroy(): void {
-    // PhysicsEngine에서 바디 제거
-    PhysicsEngine.getInstance().removeBody(this.getPhysicsBody());
-
     super.destroy();
   }
 }

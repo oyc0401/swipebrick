@@ -1,11 +1,16 @@
 import { Body, Bodies, Sleeping } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
+import { PhysicsEngine } from "./PhysicsEngine";
 
-export abstract class PhysicsComponent implements IPhysicsComponent {
+export abstract class MatterJSComponent implements IPhysicsComponent {
   protected body: Matter.Body;
 
   constructor() {
     this.body = Bodies.rectangle(0, 0, 1, 1); // 기본값, 하위 클래스에서 재정의
+  }
+
+  protected registerToPhysics(): void {
+    PhysicsEngine.getInstance().addBody(this.body);
   }
   public getBody(): Matter.Body {
     return this.body;
@@ -19,16 +24,19 @@ export abstract class PhysicsComponent implements IPhysicsComponent {
     return { x: this.body.position.x, y: this.body.position.y };
   }
 
-  public destroy(): void {}
+  public destroy(): void {
+    PhysicsEngine.getInstance().removeBody(this.body);
+  }
 }
 
-export class BallPhysicsComponent extends PhysicsComponent {
+export class BallPhysicsComponent extends MatterJSComponent {
   private radius: number;
 
   constructor(x: number, y: number, radius: number) {
     super();
     this.radius = radius;
     this.createBallBody(x, y);
+    this.registerToPhysics();
   }
 
   private createBallBody(x: number, y: number): void {
@@ -71,7 +79,7 @@ export class BallPhysicsComponent extends PhysicsComponent {
   }
 }
 
-export class BoundaryPhysicsComponent extends PhysicsComponent {
+export class BoundaryPhysicsComponent extends MatterJSComponent {
   constructor(
     x: number,
     y: number,
@@ -81,6 +89,7 @@ export class BoundaryPhysicsComponent extends PhysicsComponent {
   ) {
     super();
     this.createBoundaryBody(x, y, width, height, label);
+    this.registerToPhysics();
   }
 
   private createBoundaryBody(

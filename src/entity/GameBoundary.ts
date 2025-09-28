@@ -5,8 +5,6 @@ import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { Graphics } from "pixi.js";
 
 export class GameBoundary extends Entity {
-  private isDestroyed: boolean = false;
-
   constructor(
     x: number,
     y: number,
@@ -55,9 +53,6 @@ export class GameBoundary extends Entity {
       physicsHeight,
       label || "boundary"
     );
-
-    // PhysicsEngine 싱글톤의 world에 자동 추가
-    PhysicsEngine.getInstance().addBody(this.getPhysicsBody());
   }
 
   public getGraphics(): Graphics {
@@ -69,26 +64,9 @@ export class GameBoundary extends Entity {
   }
 
   public destroy(): void {
-    if (!this.isDestroyed) {
-      this.isDestroyed = true;
+    // PhysicsEngine에서 바디 제거
+    PhysicsEngine.getInstance().removeBody(this.getPhysicsBody());
 
-      // PhysicsEngine에서 바디 제거
-      PhysicsEngine.getInstance().removeBody(this.getPhysicsBody());
-
-      super.destroy();
-    }
-  }
-
-  public playDestroyAnimation(): Promise<void> {
-    return new Promise((resolve) => {
-      // 나중에 부서지는 애니메이션 구현
-      // 지금은 즉시 제거
-      this.destroy();
-      resolve();
-    });
-  }
-
-  public isVisible(): boolean {
-    return !this.isDestroyed;
+    super.destroy();
   }
 }
