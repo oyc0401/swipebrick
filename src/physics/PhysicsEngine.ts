@@ -66,171 +66,161 @@ export class PhysicsEngine {
   private setupCollisionEvents(): void {
     Events.on(this.engine, "collisionStart", (event) => {
       const pairs = event.pairs;
-
-      // 공별로 충돌한 바디들을 그룹화
       const ballCollisions = new Map<Matter.Body, Matter.Body[]>();
 
+      // 충돌 페어 처리 및 그룹화
       for (let pair of pairs) {
         const { bodyA, bodyB } = pair;
 
-        // 바닥과 공의 충돌 확인
-        const isBallBottomCollision =
-          (bodyA.label === "ball" && bodyB.label === "bottom") ||
-          (bodyB.label === "ball" && bodyA.label === "bottom");
-
-        if (isBallBottomCollision) {
-          const ballBody = bodyA.label === "ball" ? bodyA : bodyB;
-
-          // 공을 바닥에 딱 붙여서 위치 조정 (공의 반지름 8을 고려)
-          const ballRadius = BALL_RADIUS;
-          const bottomY = GAME_HEIGHT; // 바닥의 상단 위치
-          Body.setPosition(ballBody, {
-            x: ballBody.position.x,
-            y: bottomY - ballRadius, // 352 (바닥에서 공 반지름만큼 위)
-          });
-
-          // 공을 완전히 멈춤
-          Body.setVelocity(ballBody, { x: 0, y: 0 });
-          Body.setAngularVelocity(ballBody, 0);
-
-          // 공의 높이 확인
-          // console.log("Ball position after stop:", ballBody.position.y);
-
-          // 추가 안전장치: 공을 정지 상태로 만들기
-          Sleeping.set(ballBody, true);
-
-          // 바닥 충돌 콜백 호출
-          this.bottomCollisionCallbacks.forEach((callback) => {
-            callback(ballBody);
-          });
-        }
+        // 바닥 충돌 처리
+        this.handleBottomCollision(bodyA, bodyB);
 
         // 공별 충돌 그룹화
-        const ballBody =
-          bodyA.label === "ball"
-            ? bodyA
-            : bodyB.label === "ball"
-            ? bodyB
-            : null;
-        const otherBody =
-          bodyA.label === "ball"
-            ? bodyB
-            : bodyB.label === "ball"
-            ? bodyA
-            : null;
-
-        if (ballBody && otherBody) {
-          if (!ballCollisions.has(ballBody)) {
-            ballCollisions.set(ballBody, []);
-          }
-          ballCollisions.get(ballBody)!.push(otherBody);
-        }
+        this.groupBallCollisions(bodyA, bodyB, ballCollisions);
       }
 
-      // 공별 충돌 콜백 호출
-      ballCollisions.forEach((bodies, ball) => {
-        // 공이 충돌한 바디들 중 벽돌들만 필터링
-        const brickBodies = bodies.filter((body) => body.label === "brick");
-
-        if (brickBodies.length > 0) {
-          console.log("Ball hit bricks!", {
-            timestamp: new Date().toISOString(),
-            ballId: ball.id,
-            ballVelocity: ball.velocity,
-            brickCount: brickBodies.length,
-            brickIds: brickBodies.map((body) => body.id),
-          });
-
-          // 벽돌 충돌 처리
-          if (brickBodies.length === 2) {
-            const brick1 = brickBodies[0];
-            const brick2 = brickBodies[1];
-
-            // 두 벽돌의 ID가 모두 "brick"으로 시작하는지 확인
-            const bothAreBricks =
-              brick1.label.startsWith("brick") &&
-              brick2.label.startsWith("brick");
-            const sameYPosition =
-              Math.abs(brick1.position.y - brick2.position.y) < 1;
-            const sameXPosition =
-              Math.abs(brick1.position.x - brick2.position.x) < 1;
-
-            if (bothAreBricks && (sameYPosition || sameXPosition)) {
-              // 속도 조작: 이전 속도 가져오기
-              const previousVelocity = (ball as any).previousVelocity;
-
-              if (previousVelocity) {
-                if (sameYPosition) {
-                  // y좌표가 같으면: vx = 이전속도.x, vy = -이전속도.y
-                  Body.setVelocity(ball, {
-                    x: previousVelocity.x,
-                    y: -previousVelocity.y,
-                  });
-                } else if (sameXPosition) {
-                  // x좌표가 같으면: vx = -이전속도.x, vy = 이전속도.y
-                  Body.setVelocity(ball, {
-                    x: -previousVelocity.x,
-                    y: previousVelocity.y,
-                  });
-                }
-              }
-
-              // 공과 더 가까운 벽돌만 처리
-              const ballPos = ball.position;
-              const distance1 = Math.sqrt(
-                Math.pow(ballPos.x - brick1.position.x, 2) +
-                  Math.pow(ballPos.y - brick1.position.y, 2)
-              );
-              const distance2 = Math.sqrt(
-                Math.pow(ballPos.x - brick2.position.x, 2) +
-                  Math.pow(ballPos.y - brick2.position.y, 2)
-              );
-
-              const closestBrick = distance1 <= distance2 ? brick1 : brick2;
-              this.brickCollisionCallbacks.forEach((callback) => {
-                callback(closestBrick);
-              });
-
-              console.log("Velocity manipulated and hit closest brick:", {
-                previousVelocity,
-                newVelocity: ball.velocity,
-                sameY: sameYPosition,
-                sameX: sameXPosition,
-                brick1Distance: distance1,
-                brick2Distance: distance2,
-                chosenBrick: closestBrick.id,
-              });
-            } else {
-              // x, y가 다른 경우 모든 벽돌 처리
-              brickBodies.forEach((brickBody) => {
-                this.brickCollisionCallbacks.forEach((callback) => {
-                  callback(brickBody);
-                });
-              });
-            }
-          } else {
-            // 벽돌이 2개가 아닌 경우 모든 벽돌 처리
-            brickBodies.forEach((brickBody) => {
-              this.brickCollisionCallbacks.forEach((callback) => {
-                callback(brickBody);
-              });
-            });
-          }
-        }
-      });
+      // 벽돌 충돌 처리
+      this.processBrickCollisions(ballCollisions);
     });
   }
 
-  public update(deltaTime: number, c?: number): void {
-    Engine.update(this.engine, deltaTime, c);
+  private handleBottomCollision(bodyA: Matter.Body, bodyB: Matter.Body): void {
+    const isBallBottomCollision =
+      (bodyA.label === "ball" && bodyB.label === "bottom") ||
+      (bodyB.label === "ball" && bodyA.label === "bottom");
+
+    if (!isBallBottomCollision) return;
+
+    const ballBody = bodyA.label === "ball" ? bodyA : bodyB;
+
+    // 공을 바닥에 딱 붙여서 위치 조정
+    const ballRadius = BALL_RADIUS;
+    const bottomY = GAME_HEIGHT;
+    Body.setPosition(ballBody, {
+      x: ballBody.position.x,
+      y: bottomY - ballRadius,
+    });
+
+    // 공을 완전히 멈춤
+    Body.setVelocity(ballBody, { x: 0, y: 0 });
+    Body.setAngularVelocity(ballBody, 0);
+    Sleeping.set(ballBody, true);
+
+    // 바닥 충돌 콜백 호출
+    this.bottomCollisionCallbacks.forEach((callback) => {
+      callback(ballBody);
+    });
   }
 
-  public getWorld(): World {
-    return this.world;
+  private groupBallCollisions(
+    bodyA: Matter.Body,
+    bodyB: Matter.Body,
+    ballCollisions: Map<Matter.Body, Matter.Body[]>
+  ): void {
+    const ballBody =
+      bodyA.label === "ball" ? bodyA : bodyB.label === "ball" ? bodyB : null;
+    const otherBody =
+      bodyA.label === "ball" ? bodyB : bodyB.label === "ball" ? bodyA : null;
+
+    if (ballBody && otherBody) {
+      if (!ballCollisions.has(ballBody)) {
+        ballCollisions.set(ballBody, []);
+      }
+      ballCollisions.get(ballBody)!.push(otherBody);
+    }
   }
 
-  public getEngine(): Engine {
-    return this.engine;
+  private processBrickCollisions(
+    ballCollisions: Map<Matter.Body, Matter.Body[]>
+  ): void {
+    ballCollisions.forEach((bodies, ball) => {
+      const brickBodies = bodies.filter((body) => body.label === "brick");
+
+      if (brickBodies.length === 0) return;
+
+      console.log("Ball hit bricks!", {
+        timestamp: new Date().toISOString(),
+        ballId: ball.id,
+        ballVelocity: ball.velocity,
+        brickCount: brickBodies.length,
+        brickIds: brickBodies.map((body) => body.id),
+      });
+
+      // 2개 벽돌 동시 충돌 시 특별 처리
+      if (brickBodies.length === 2) {
+        this.handleDualBrickCollision(ball, brickBodies);
+      } else {
+        // 일반적인 벽돌 충돌 처리
+        brickBodies.forEach((brickBody) => {
+          this.brickCollisionCallbacks.forEach((callback) => {
+            callback(brickBody);
+          });
+        });
+      }
+    });
+  }
+
+  private handleDualBrickCollision(
+    ball: Matter.Body,
+    brickBodies: Matter.Body[]
+  ): void {
+    const [brick1, brick2] = brickBodies;
+
+    const bothAreBricks =
+      brick1.label.startsWith("brick") && brick2.label.startsWith("brick");
+    const sameYPosition = Math.abs(brick1.position.y - brick2.position.y) < 1;
+    const sameXPosition = Math.abs(brick1.position.x - brick2.position.x) < 1;
+
+    if (bothAreBricks && (sameYPosition || sameXPosition)) {
+      // 속도 조작
+      const previousVelocity = (ball as any).previousVelocity;
+      if (previousVelocity) {
+        if (sameYPosition) {
+          Body.setVelocity(ball, {
+            x: previousVelocity.x,
+            y: -previousVelocity.y,
+          });
+        } else if (sameXPosition) {
+          Body.setVelocity(ball, {
+            x: -previousVelocity.x,
+            y: previousVelocity.y,
+          });
+        }
+      }
+
+      // 가장 가까운 벽돌만 처리
+      const ballPos = ball.position;
+      const distance1 = Math.sqrt(
+        Math.pow(ballPos.x - brick1.position.x, 2) +
+          Math.pow(ballPos.y - brick1.position.y, 2)
+      );
+      const distance2 = Math.sqrt(
+        Math.pow(ballPos.x - brick2.position.x, 2) +
+          Math.pow(ballPos.y - brick2.position.y, 2)
+      );
+
+      const closestBrick = distance1 <= distance2 ? brick1 : brick2;
+      this.brickCollisionCallbacks.forEach((callback) => {
+        callback(closestBrick);
+      });
+
+      console.log("Velocity manipulated and hit closest brick:", {
+        previousVelocity,
+        newVelocity: ball.velocity,
+        sameY: sameYPosition,
+        sameX: sameXPosition,
+        brick1Distance: distance1,
+        brick2Distance: distance2,
+        chosenBrick: closestBrick.id,
+      });
+    } else {
+      // 정렬되지 않은 두 벽돌의 경우 모든 벽돌 처리
+      brickBodies.forEach((brickBody) => {
+        this.brickCollisionCallbacks.forEach((callback) => {
+          callback(brickBody);
+        });
+      });
+    }
   }
 
   // 60 프레임 고정

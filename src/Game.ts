@@ -28,7 +28,6 @@ export class Game {
     );
     this.boundaryManager = new BoundaryManager(
       this.renderer.getCenterLayer(),
-      this.physics,
       GAME_WIDTH,
       GAME_HEIGHT
     );
@@ -39,7 +38,6 @@ export class Game {
     this.inputManager = new InputManager(this.renderer.getCenterLayer());
 
     this.setupBallManagerCallbacks();
-    this.setupBoundaryManagerCallbacks();
     this.setupInputManagerCallbacks();
   }
 
@@ -80,14 +78,6 @@ export class Game {
 
       // 공들을 목표 지점으로 발사
       this.ballManager.launchBalls(x, y);
-    });
-  }
-
-  // 공과 벽의 충돌 이벤트
-  private setupBoundaryManagerCallbacks(): void {
-    // 공이 바닥에 부딪쳤을 때 이벤트
-    this.boundaryManager.setBottomCollisionCallback((ballBody) => {
-      this.ballManager.handleBallLanding(ballBody);
     });
   }
 

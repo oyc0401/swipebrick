@@ -1,6 +1,5 @@
 import type { Container } from "pixi.js";
 import { GameBoundary } from "../entity/GameBoundary";
-import type { PhysicsEngine } from "../physics/PhysicsEngine";
 
 interface BoundaryConfig {
   x: number;
@@ -11,29 +10,16 @@ interface BoundaryConfig {
   label: string;
 }
 
-interface BottomCollisionCallback {
-  (ballBody: Matter.Body): void;
-}
-
 export class BoundaryManager {
   private boundaries: Map<string, GameBoundary> = new Map();
   private renderLayer: Container;
-  private physicsEngine: PhysicsEngine;
   private gameWidth: number;
   private gameHeight: number;
-  private onBottomCollision?: BottomCollisionCallback;
 
-  constructor(
-    renderLayer: Container,
-    physics: PhysicsEngine,
-    gameWidth: number,
-    gameHeight: number
-  ) {
+  constructor(renderLayer: Container, gameWidth: number, gameHeight: number) {
     this.renderLayer = renderLayer;
-    this.physicsEngine = physics;
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
-    this.setupPhysicsEventListeners();
   }
 
   public createGameBoundaries(): void {
@@ -91,11 +77,6 @@ export class BoundaryManager {
     return this.boundaries.has(type);
   }
 
-  /** 공이 바닥에 부딫쳤을 때 이벤트 */
-  public setBottomCollisionCallback(callback: BottomCollisionCallback): void {
-    this.onBottomCollision = callback;
-  }
-
   private createBoundary(config: BoundaryConfig): void {
     const boundary = new GameBoundary(
       config.x,
@@ -113,26 +94,15 @@ export class BoundaryManager {
     this.boundaries.set(config.label, boundary);
   }
 
-  private setupPhysicsEventListeners(): void {
-    this.physicsEngine.onCollisionBottom((ballBody) => {
-      if (this.onBottomCollision) {
-        this.onBottomCollision(ballBody);
-      }
-    });
-  }
-
   public destroy(): void {
     this.boundaries.forEach((boundary) => {
       // 렌더링에서 제거
       this.renderLayer.removeChild(boundary.getGraphics());
-
-      // PhysicsEngine에서 자동 제거되므로 World.remove 제거
 
       // 경계벽 객체 정리
       boundary.destroy();
     });
 
     this.boundaries.clear();
-    this.onBottomCollision = undefined;
   }
 }

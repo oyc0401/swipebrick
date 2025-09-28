@@ -1,6 +1,7 @@
 import type { Container } from "pixi.js";
 import { Ball } from "../entity/Ball";
 import type { GameState } from "../GameState";
+import { PhysicsEngine } from "../physics/PhysicsEngine";
 
 interface BallLandingCallback {
   (landedBall: Ball): void;
@@ -18,6 +19,7 @@ export class BallManager {
     this.gameViewport = gameViewport;
     this.gameState = gameState;
     this.createPreviewBall();
+    this.setupPhysicsEventListeners();
   }
 
   /** 공이 도착했을 때 이벤트 */
@@ -67,6 +69,12 @@ export class BallManager {
 
   public hidePreviewBall(): void {
     this.previewBall.getGraphics().visible = false;
+  }
+
+  private setupPhysicsEventListeners(): void {
+    PhysicsEngine.getInstance().onCollisionBottom((ballBody) => {
+      this.handleBallLanding(ballBody);
+    });
   }
 
   private createPreviewBall(): void {
