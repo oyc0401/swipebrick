@@ -1,4 +1,4 @@
-import { Graphics, Container } from "pixi.js";
+import { Graphics, Container, Text, TextStyle } from "pixi.js";
 import type { IRenderComponent } from "../core/components/IComponent";
 import { GraphicEngine } from "./GraphicEngine";
 
@@ -71,6 +71,7 @@ export class RectangleRenderComponent extends RenderComponent {
   private height: number;
   private color: number;
   private innerMargin: number;
+  private healthText: Text | null = null;
 
   constructor(
     width: number,
@@ -108,5 +109,48 @@ export class RectangleRenderComponent extends RenderComponent {
   public updateColor(newColor: number): void {
     this.color = newColor;
     this.createRectangle();
+    // 색상 변경 시 텍스트도 다시 그리기
+    if (this.healthText) {
+      const currentHealth = parseInt(this.healthText.text);
+      this.updateHealthText(currentHealth);
+    }
+  }
+
+  public updateHealthText(health: number): void {
+    // 기존 텍스트 제거
+    if (this.healthText) {
+      this.graphics.removeChild(this.healthText);
+      this.healthText.destroy();
+    }
+
+    // 새 텍스트 생성
+    const textStyle = new TextStyle({
+      fontFamily: 'Arial',
+      fontSize: 16,
+      fill: 0xffffff, // 흰색
+      fontWeight: 'bold',
+      align: 'center',
+    });
+
+    this.healthText = new Text({
+      text: health.toString(),
+      style: textStyle,
+    });
+
+    // 텍스트를 사각형 중앙에 배치
+    this.healthText.anchor.set(0.5, 0.5);
+    this.healthText.x = this.width / 2;
+    this.healthText.y = this.height / 2;
+
+    // Graphics에 텍스트 추가
+    this.graphics.addChild(this.healthText);
+  }
+
+  public destroy(): void {
+    if (this.healthText) {
+      this.healthText.destroy();
+      this.healthText = null;
+    }
+    super.destroy();
   }
 }

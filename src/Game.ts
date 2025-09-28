@@ -24,7 +24,7 @@ export class Game {
 
     this.ballManager = new BallManager(this.gameState);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
-    this.brickManager = new BrickManager(this.physics);
+    this.brickManager = new BrickManager(this.physics, this.gameState);
     this.inputManager = new InputManager(this.renderer, this.gameState);
 
     this.setupBallManagerCallbacks();

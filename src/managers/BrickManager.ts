@@ -1,12 +1,15 @@
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
+import type { GameState } from "../GameState";
 import { Brick } from "../entity/Brick";
 
 export class BrickManager {
   private physics: PhysicsEngine;
+  private gameState: GameState;
   private bricks: Map<string, Brick> = new Map();
 
-  constructor(physics: PhysicsEngine) {
+  constructor(physics: PhysicsEngine, gameState: GameState) {
     this.physics = physics;
+    this.gameState = gameState;
     this.setupCollisionListener();
   }
 
@@ -74,6 +77,9 @@ export class BrickManager {
         this.createBrick(x, BRICK_Y, hits);
       }
     });
+
+    // 새 스테이지마다 모든 벽돌 색상 업데이트
+    this.updateAllBrickColors();
   }
 
   private setupCollisionListener(): void {
@@ -98,6 +104,11 @@ export class BrickManager {
     // 벽돌 타격
     brick.hit();
 
+    // 벽돌 색상 업데이트 (체력 변화 반영)
+    const brickHealth = brick.getHealth();
+    const color = this.calculateBrickColor(brickHealth, this.gameState.level);
+    brick.setColor(color);
+
     if (brick.getHealth() == 0) {
       this.destroyBrick(brick);
     }
@@ -118,6 +129,45 @@ export class BrickManager {
     for (const brick of this.bricks.values()) {
       brick.shift(SHIFT_AMOUNT);
     }
+  }
+
+  public updateAllBrickColors(): void {
+    const currentLevel = this.gameState.level;
+
+    for (const brick of this.bricks.values()) {
+      const brickHealth = brick.getHealth();
+      const color = this.calculateBrickColor(brickHealth, currentLevel);
+      brick.setColor(color);
+    }
+  }
+
+  private calculateBrickColor(currentHealth: number, stage: number): number {
+    // stage를 기준으로 색상 계산
+    // 체력이 높을수록 진한 파란색, 낮을수록 연한 파란색
+    const maxColor = 0x1f4ef5; // 진한 파란색 (#1F4EF5)
+    const minColor = 0x83b4f9; // 연한 파란색 (#83B4F9)
+
+    // currentHealth/stage 비율로 색상 보간 (0~1)
+    const ratio = Math.min(currentHealth / stage, 1);
+
+    return this.interpolateColor(minColor, maxColor, ratio);
+  }
+
+  private interpolateColor(color1: number, color2: number, ratio: number): number {
+    // color1에서 color2로 ratio만큼 보간 (ratio: 0~1)
+    const r1 = (color1 >> 16) & 0xff;
+    const g1 = (color1 >> 8) & 0xff;
+    const b1 = color1 & 0xff;
+
+    const r2 = (color2 >> 16) & 0xff;
+    const g2 = (color2 >> 8) & 0xff;
+    const b2 = color2 & 0xff;
+
+    const r = Math.floor(r1 + (r2 - r1) * ratio);
+    const g = Math.floor(g1 + (g2 - g1) * ratio);
+    const b = Math.floor(b1 + (b2 - b1) * ratio);
+
+    return (r << 16) | (g << 8) | b;
   }
 
   public destroy(): void {
