@@ -1,7 +1,6 @@
 import type { Container } from "pixi.js";
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 import { Brick } from "../entity/Brick";
-import { Body } from "matter-js";
 
 export class BrickManager {
   private container: Container;
@@ -86,103 +85,12 @@ export class BrickManager {
   }
 
   private setupCollisionListener(): void {
-    this.physics.onCollisionBall((ball, bodies) => {
-      // 공이 충돌한 바디들 중 벽돌들만 필터링
-      const brickBodies = bodies.filter((body) => body.label === "brick");
+    this.physics.onCollisionBrick((brickBody) => {
+      const brick = this.findBrickByBody(brickBody);
+      if (!brick) return;
 
-      if (brickBodies.length > 0) {
-        console.log("Ball hit bricks!", {
-          timestamp: new Date().toISOString(),
-          ballId: ball.id,
-          ballVelocity: ball.velocity,
-          brickCount: brickBodies.length,
-          brickIds: brickBodies.map((body) => body.id),
-        });
-
-        // 벽돌 충돌 처리
-        if (brickBodies.length === 2) {
-          const brick1 = brickBodies[0];
-          const brick2 = brickBodies[1];
-
-          // 두 벽돌의 ID가 모두 "brick"으로 시작하는지 확인
-          const bothAreBricks =
-            brick1.label.startsWith("brick") &&
-            brick2.label.startsWith("brick");
-          const sameYPosition =
-            Math.abs(brick1.position.y - brick2.position.y) < 1;
-          const sameXPosition =
-            Math.abs(brick1.position.x - brick2.position.x) < 1;
-
-          if (bothAreBricks && (sameYPosition || sameXPosition)) {
-            // 속도 조작: 이전 속도 가져오기
-            const previousVelocity = (ball as any).previousVelocity;
-
-            if (previousVelocity) {
-              if (sameYPosition) {
-                // y좌표가 같으면: vx = 이전속도.x, vy = -이전속도.y
-                Body.setVelocity(ball, {
-                  x: previousVelocity.x,
-                  y: -previousVelocity.y,
-                });
-              } else if (sameXPosition) {
-                // x좌표가 같으면: vx = -이전속도.x, vy = 이전속도.y
-                Body.setVelocity(ball, {
-                  x: -previousVelocity.x,
-                  y: previousVelocity.y,
-                });
-              }
-            }
-
-            // 공과 더 가까운 벽돌만 처리
-            const ballPos = ball.position;
-            const distance1 = Math.sqrt(
-              Math.pow(ballPos.x - brick1.position.x, 2) +
-                Math.pow(ballPos.y - brick1.position.y, 2)
-            );
-            const distance2 = Math.sqrt(
-              Math.pow(ballPos.x - brick2.position.x, 2) +
-                Math.pow(ballPos.y - brick2.position.y, 2)
-            );
-
-            const closestBrick = distance1 <= distance2 ? brick1 : brick2;
-            this.handleBrickCollision(closestBrick);
-
-            console.log("Velocity manipulated and hit closest brick:", {
-              previousVelocity,
-              newVelocity: ball.velocity,
-              sameY: sameYPosition,
-              sameX: sameXPosition,
-              brick1Distance: distance1,
-              brick2Distance: distance2,
-              chosenBrick: closestBrick.id,
-            });
-          } else {
-            // x, y가 다른 경우 모든 벽돌 처리
-            brickBodies.forEach((brickBody) => {
-              this.handleBrickCollision(brickBody);
-            });
-          }
-        } else {
-          // 벽돌이 2개가 아닌 경우 모든 벽돌 처리
-          brickBodies.forEach((brickBody) => {
-            this.handleBrickCollision(brickBody);
-          });
-        }
-      }
+      this.handleBrickCollision(brick);
     });
-  }
-
-  private handleBrickCollision(brickBody: Matter.Body): void {
-    // 바디에 해당하는 벽돌 찾기
-    const brick = this.findBrickByBody(brickBody);
-    if (!brick) return;
-
-    // 벽돌 타격
-    brick.hit();
-
-    if (brick.getHealth() == 0) {
-      this.destroyBrick(brick);
-    }
   }
 
   private findBrickByBody(body: Matter.Body): Brick | null {
@@ -192,6 +100,15 @@ export class BrickManager {
       }
     }
     return null;
+  }
+
+  private handleBrickCollision(brick: Brick): void {
+    // 벽돌 타격
+    brick.hit();
+
+    if (brick.getHealth() == 0) {
+      this.destroyBrick(brick);
+    }
   }
 
   private destroyBrick(brick: Brick): void {

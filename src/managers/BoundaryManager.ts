@@ -1,5 +1,4 @@
 import type { Container } from "pixi.js";
-import { Events } from "matter-js";
 import { GameBoundary } from "../entity/GameBoundary";
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 
@@ -19,7 +18,6 @@ interface BottomCollisionCallback {
 export class BoundaryManager {
   private boundaries: Map<string, GameBoundary> = new Map();
   private renderLayer: Container;
-  private physicsWorld: Matter.World;
   private physicsEngine: PhysicsEngine;
   private gameWidth: number;
   private gameHeight: number;
@@ -33,7 +31,6 @@ export class BoundaryManager {
   ) {
     this.renderLayer = renderLayer;
     this.physicsEngine = physics;
-    this.physicsWorld = physics.getWorld();
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
     this.setupPhysicsEventListeners();
@@ -109,8 +106,6 @@ export class BoundaryManager {
       config.label
     );
 
-    // PhysicsEngine에 자동 등록되므로 World.add 제거
-
     // 렌더링 레이어에 추가
     this.renderLayer.addChild(boundary.getGraphics());
 
@@ -119,34 +114,14 @@ export class BoundaryManager {
   }
 
   private setupPhysicsEventListeners(): void {
-    Events.on(
-      this.physicsEngine.getEngine(),
-      "collisionStart",
-      (event: Matter.IEventCollision<Matter.Engine>) => {
-        event.pairs.forEach((pair) => {
-          const { bodyA, bodyB } = pair;
-
-          // 바닥과의 충돌 감지
-          if (bodyA.label === "bottom" || bodyB.label === "bottom") {
-            const ballBody =
-              bodyA.label === "ball"
-                ? bodyA
-                : bodyB.label === "ball"
-                ? bodyB
-                : null;
-            if (ballBody && this.onBottomCollision) {
-              this.onBottomCollision(ballBody);
-            }
-          }
-        });
+    this.physicsEngine.onCollisionBottom((ballBody) => {
+      if (this.onBottomCollision) {
+        this.onBottomCollision(ballBody);
       }
-    );
+    });
   }
 
   public destroy(): void {
-    // 이벤트 리스너 제거
-    Events.off(this.physicsEngine.getEngine(), "collisionStart");
-
     this.boundaries.forEach((boundary) => {
       // 렌더링에서 제거
       this.renderLayer.removeChild(boundary.getGraphics());

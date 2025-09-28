@@ -14,10 +14,7 @@ export class BallManager {
 
   private onBallLanding?: BallLandingCallback;
 
-  constructor(
-    gameViewport: Container,
-    gameState: GameState
-  ) {
+  constructor(gameViewport: Container, gameState: GameState) {
     this.gameViewport = gameViewport;
     this.gameState = gameState;
     this.createPreviewBall();
@@ -73,7 +70,9 @@ export class BallManager {
   }
 
   private createPreviewBall(): void {
-    this.previewBall = Ball.createWithoutPhysics(this.gameState.ballStartPosition);
+    this.previewBall = Ball.createWithoutPhysics(
+      this.gameState.ballStartPosition
+    );
 
     this.gameViewport.addChild(this.previewBall.getGraphics());
   }
