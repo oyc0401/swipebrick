@@ -109,8 +109,8 @@ export class Game {
       if (this.ballManager.getActiveBallCount() === 1) {
         setTimeout(() => {
           this.gameState.setIsBallLanded(false);
-          // this.gameState.level++;
-          // this.gameState.ballCount++;
+          this.gameState.level++;
+          this.gameState.ballCount++;
           this.brickManager.shift();
           this.brickManager.createBricks(this.gameState.level);
           this.gameState.setWaiting(true);

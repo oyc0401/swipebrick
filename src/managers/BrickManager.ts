@@ -30,9 +30,10 @@ export class BrickManager {
   }
 
   private generateRandomBrickData(health: number): (number | null)[] {
-    return [8000, 8000, 8000, 8000, 8000, null];
-    // 2~5개 사이의 랜덤 개수
-    const brickCount = Math.floor(Math.random() * 4) + 2; // 2, 3, 4, 5
+    // return [8000, 8000, 8000, 8000, 8000, null];
+
+    // 확률 분포에 따라 벽돌 개수 결정
+    const brickCount = this.selectBrickCountByProbability();
 
     // 6개 슬롯 배열 생성
     const slots: (number | null)[] = [null, null, null, null, null, null];
@@ -51,6 +52,24 @@ export class BrickManager {
     }
 
     return slots;
+  }
+
+  private selectBrickCountByProbability(): number {
+    // 벽돌 개수별 확률 (1개, 2개, 3개, 4개, 5개)
+    const BRICK_COUNT_PROBABILITIES = [0.2, 0.3, 0.2, 0.2, 0.1];
+
+    const random = Math.random();
+    let cumulativeProbability = 0;
+
+    for (let i = 0; i < BRICK_COUNT_PROBABILITIES.length; i++) {
+      cumulativeProbability += BRICK_COUNT_PROBABILITIES[i];
+      if (random <= cumulativeProbability) {
+        return i + 1; // 1개부터 5개까지
+      }
+    }
+
+    // 기본값 (확률 합이 1이 아닌 경우 대비)
+    return 3;
   }
 
   public createBricks(health: number): void {
@@ -81,7 +100,7 @@ export class BrickManager {
           brickIds: brickBodies.map((body) => body.id),
         });
 
-        // 두 개의 벽돌에 동시 충돌하고 y좌표가 같은 경우 속도 조작
+        // 벽돌 충돌 처리
         if (brickBodies.length === 2) {
           const brick1 = brickBodies[0];
           const brick2 = brickBodies[1];
@@ -91,15 +110,14 @@ export class BrickManager {
             brick1.label.startsWith("brick") &&
             brick2.label.startsWith("brick");
           const sameYPosition =
-            Math.abs(brick1.position.y - brick2.position.y) < 1; // 부동소수점 오차 고려
+            Math.abs(brick1.position.y - brick2.position.y) < 1;
           const sameXPosition =
-            Math.abs(brick1.position.x - brick2.position.x) < 1; // 부동소수점 오차 고려
+            Math.abs(brick1.position.x - brick2.position.x) < 1;
 
           if (bothAreBricks && (sameYPosition || sameXPosition)) {
-            // 이전 속도 가져오기
+            // 속도 조작: 이전 속도 가져오기
             const previousVelocity = (ball as any).previousVelocity;
 
-            // previousVelocity가 존재하는 경우에만 속도 조작
             if (previousVelocity) {
               if (sameYPosition) {
                 // y좌표가 같으면: vx = 이전속도.x, vy = -이전속도.y
@@ -116,24 +134,41 @@ export class BrickManager {
               }
             }
 
-            console.log(
-              "Velocity manipulated for simultaneous brick collision:",
-              {
-                previousVelocity,
-                newVelocity: ball.velocity,
-                sameY: sameYPosition,
-                sameX: sameXPosition,
-                brick1Pos: { x: brick1.position.x, y: brick1.position.y },
-                brick2Pos: { x: brick2.position.x, y: brick2.position.y },
-              }
+            // 공과 더 가까운 벽돌만 처리
+            const ballPos = ball.position;
+            const distance1 = Math.sqrt(
+              Math.pow(ballPos.x - brick1.position.x, 2) +
+                Math.pow(ballPos.y - brick1.position.y, 2)
             );
-          }
-        }
+            const distance2 = Math.sqrt(
+              Math.pow(ballPos.x - brick2.position.x, 2) +
+                Math.pow(ballPos.y - brick2.position.y, 2)
+            );
 
-        // 충돌한 모든 벽돌들 처리
-        brickBodies.forEach((brickBody) => {
-          this.handleBrickCollision(brickBody);
-        });
+            const closestBrick = distance1 <= distance2 ? brick1 : brick2;
+            this.handleBrickCollision(closestBrick);
+
+            console.log("Velocity manipulated and hit closest brick:", {
+              previousVelocity,
+              newVelocity: ball.velocity,
+              sameY: sameYPosition,
+              sameX: sameXPosition,
+              brick1Distance: distance1,
+              brick2Distance: distance2,
+              chosenBrick: closestBrick.id,
+            });
+          } else {
+            // x, y가 다른 경우 모든 벽돌 처리
+            brickBodies.forEach((brickBody) => {
+              this.handleBrickCollision(brickBody);
+            });
+          }
+        } else {
+          // 벽돌이 2개가 아닌 경우 모든 벽돌 처리
+          brickBodies.forEach((brickBody) => {
+            this.handleBrickCollision(brickBody);
+          });
+        }
       }
     });
   }

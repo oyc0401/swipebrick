@@ -27,8 +27,8 @@ export class InputManager {
       let testX = 349.38704182330827;
       let testY = 93.55791823308269;
       if (this.onGameClick) {
-        this.onGameClick(testX, testY);
-        // this.onGameClick(localPosition.x, localPosition.y);
+        // this.onGameClick(testX, testY);
+        this.onGameClick(localPosition.x, localPosition.y);
       }
     });
   }
