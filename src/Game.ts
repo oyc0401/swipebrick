@@ -48,7 +48,7 @@ export class Game {
     await this.renderer.init();
 
     this.boundaryManager.createGameBoundaries();
-    this.brickManager.createBricks();
+    this.brickManager.createBricks(this.gameState.level);
     // this.renderer.addDebugGuide();
     this.ballManager.showPreviewBall();
 
@@ -109,8 +109,10 @@ export class Game {
       if (this.ballManager.getActiveBallCount() === 1) {
         setTimeout(() => {
           this.gameState.setIsBallLanded(false);
+          // this.gameState.level++;
+          // this.gameState.ballCount++;
           this.brickManager.shift();
-          this.brickManager.createBricks();
+          this.brickManager.createBricks(this.gameState.level);
           this.gameState.setWaiting(true);
           console.log("All balls removed. Ready for next shot.");
         }, 30);

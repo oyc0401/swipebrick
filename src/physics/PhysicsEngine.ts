@@ -9,8 +9,8 @@ import { BALL_RADIUS, GAME_HEIGHT } from "../GameState";
 export class PhysicsEngine {
   private engine: Engine;
   private world: World;
-  private collisionCallbacks: Array<
-    (bodyA: Matter.Body, bodyB: Matter.Body, pair: Matter.Pair) => void
+  private ballCollisionCallbacks: Array<
+    (ball: Matter.Body, bodies: Matter.Body[]) => void
   > = [];
 
   constructor() {
@@ -29,12 +29,31 @@ export class PhysicsEngine {
     this.engine.timing.timeScale = 1.0; // 정확한 타이밍
     this.engine.enableSleeping = false; // 미세한 움직임 자동 정지 막음
 
+    this.setupBeforeUpdateEvents();
     this.setupCollisionEvents();
+  }
+
+  private setupBeforeUpdateEvents(): void {
+    Events.on(this.engine, "beforeUpdate", () => {
+      // 모든 공들의 이전 속도 저장
+      for (const body of this.world.bodies) {
+        if (body.label === "ball") {
+          // Ball 엔티티의 previousVelocity 업데이트
+          (body as any).previousVelocity = {
+            x: body.velocity.x,
+            y: body.velocity.y,
+          };
+        }
+      }
+    });
   }
 
   private setupCollisionEvents(): void {
     Events.on(this.engine, "collisionStart", (event) => {
       const pairs = event.pairs;
+
+      // 공별로 충돌한 바디들을 그룹화
+      const ballCollisions = new Map<Matter.Body, Matter.Body[]>();
 
       for (let pair of pairs) {
         const { bodyA, bodyB } = pair;
@@ -66,11 +85,34 @@ export class PhysicsEngine {
           Sleeping.set(ballBody, true);
         }
 
-        // 모든 충돌 콜백 호출
-        this.collisionCallbacks.forEach((callback) => {
-          callback(bodyA, bodyB, pair);
-        });
+        // 공별 충돌 그룹화
+        const ballBody =
+          bodyA.label === "ball"
+            ? bodyA
+            : bodyB.label === "ball"
+            ? bodyB
+            : null;
+        const otherBody =
+          bodyA.label === "ball"
+            ? bodyB
+            : bodyB.label === "ball"
+            ? bodyA
+            : null;
+
+        if (ballBody && otherBody) {
+          if (!ballCollisions.has(ballBody)) {
+            ballCollisions.set(ballBody, []);
+          }
+          ballCollisions.get(ballBody)!.push(otherBody);
+        }
       }
+
+      // 공별 충돌 콜백 호출
+      ballCollisions.forEach((bodies, ball) => {
+        this.ballCollisionCallbacks.forEach((callback) => {
+          callback(ball, bodies);
+        });
+      });
     });
   }
 
@@ -90,7 +132,7 @@ export class PhysicsEngine {
   public startLoop(): void {
     const FIXED_TIMESTEP = 1000 / 60;
 
-    const subStep = 16;
+    const subStep = 1;
     const runner = Runner.create({
       delta: FIXED_TIMESTEP / subStep, // 고정 타임스텝 (ms)
     });
@@ -105,19 +147,16 @@ export class PhysicsEngine {
     World.remove(this.world, body);
   }
 
-  public onCollision(
-    callback: (
-      bodyA: Matter.Body,
-      bodyB: Matter.Body,
-      pair: Matter.Pair
-    ) => void
+  public onCollisionBall(
+    callback: (ball: Matter.Body, bodies: Matter.Body[]) => void
   ): void {
-    this.collisionCallbacks.push(callback);
+    this.ballCollisionCallbacks.push(callback);
   }
 
   public destroy(): void {
     // 이벤트 리스너 제거
+    Events.off(this.engine, "beforeUpdate");
     Events.off(this.engine, "collisionStart");
-    this.collisionCallbacks = [];
+    this.ballCollisionCallbacks = [];
   }
 }

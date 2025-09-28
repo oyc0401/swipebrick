@@ -1,6 +1,7 @@
 import type { Container } from "pixi.js";
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 import { Brick } from "../entity/Brick";
+import { Body } from "matter-js";
 
 export class BrickManager {
   private container: Container;
@@ -28,13 +29,10 @@ export class BrickManager {
     return brick;
   }
 
-  private generateRandomBrickData(): (number | null)[] {
-    // return [8000, 8000, 8000, 8000, 8000, null];
+  private generateRandomBrickData(health: number): (number | null)[] {
+    return [8000, 8000, 8000, 8000, 8000, null];
     // 2~5개 사이의 랜덤 개수
     const brickCount = Math.floor(Math.random() * 4) + 2; // 2, 3, 4, 5
-
-    // 모든 벽돌의 동일한 체력
-    const hp = 8;
 
     // 6개 슬롯 배열 생성
     const slots: (number | null)[] = [null, null, null, null, null, null];
@@ -49,14 +47,14 @@ export class BrickManager {
       } while (usedIndices.has(randomIndex));
 
       usedIndices.add(randomIndex);
-      slots[randomIndex] = hp;
+      slots[randomIndex] = health;
     }
 
     return slots;
   }
 
-  public createBricks(): void {
-    const brickData = this.generateRandomBrickData();
+  public createBricks(health: number): void {
+    const brickData = this.generateRandomBrickData(health);
 
     const BRICK_WIDTH = 60;
     const BRICK_Y = 40;
@@ -70,29 +68,72 @@ export class BrickManager {
   }
 
   private setupCollisionListener(): void {
-    this.physics.onCollision((bodyA, bodyB, pair) => {
-      let ballBody: Matter.Body | null = null;
-      let brickBody: Matter.Body | null = null;
+    this.physics.onCollisionBall((ball, bodies) => {
+      // 공이 충돌한 바디들 중 벽돌들만 필터링
+      const brickBodies = bodies.filter((body) => body.label === "brick");
 
-      // 충돌한 바디 중 공과 벽돌 찾기
-      if (bodyA.label === "ball" && bodyB.label === "brick") {
-        ballBody = bodyA;
-        brickBody = bodyB;
-      } else if (bodyA.label === "brick" && bodyB.label === "ball") {
-        ballBody = bodyB;
-        brickBody = bodyA;
-      }
-
-      if (ballBody && brickBody && pair.collision) {
-        const hitPoint = pair.collision.supports[0];
-        console.log("Ball hit brick!", {
+      if (brickBodies.length > 0) {
+        console.log("Ball hit bricks!", {
           timestamp: new Date().toISOString(),
-          ballId: ballBody.id,
-          brickId: brickBody.id,
-          ballVelocity: ballBody.velocity.x / ballBody.velocity.y,
-          hitPoint: hitPoint ? { x: hitPoint.x, y: hitPoint.y } : null,
+          ballId: ball.id,
+          ballVelocity: ball.velocity,
+          brickCount: brickBodies.length,
+          brickIds: brickBodies.map((body) => body.id),
         });
-        this.handleBrickCollision(brickBody);
+
+        // 두 개의 벽돌에 동시 충돌하고 y좌표가 같은 경우 속도 조작
+        if (brickBodies.length === 2) {
+          const brick1 = brickBodies[0];
+          const brick2 = brickBodies[1];
+
+          // 두 벽돌의 ID가 모두 "brick"으로 시작하는지 확인
+          const bothAreBricks =
+            brick1.label.startsWith("brick") &&
+            brick2.label.startsWith("brick");
+          const sameYPosition =
+            Math.abs(brick1.position.y - brick2.position.y) < 1; // 부동소수점 오차 고려
+          const sameXPosition =
+            Math.abs(brick1.position.x - brick2.position.x) < 1; // 부동소수점 오차 고려
+
+          if (bothAreBricks && (sameYPosition || sameXPosition)) {
+            // 이전 속도 가져오기
+            const previousVelocity = (ball as any).previousVelocity;
+
+            // previousVelocity가 존재하는 경우에만 속도 조작
+            if (previousVelocity) {
+              if (sameYPosition) {
+                // y좌표가 같으면: vx = 이전속도.x, vy = -이전속도.y
+                Body.setVelocity(ball, {
+                  x: previousVelocity.x,
+                  y: -previousVelocity.y,
+                });
+              } else if (sameXPosition) {
+                // x좌표가 같으면: vx = -이전속도.x, vy = 이전속도.y
+                Body.setVelocity(ball, {
+                  x: -previousVelocity.x,
+                  y: previousVelocity.y,
+                });
+              }
+            }
+
+            console.log(
+              "Velocity manipulated for simultaneous brick collision:",
+              {
+                previousVelocity,
+                newVelocity: ball.velocity,
+                sameY: sameYPosition,
+                sameX: sameXPosition,
+                brick1Pos: { x: brick1.position.x, y: brick1.position.y },
+                brick2Pos: { x: brick2.position.x, y: brick2.position.y },
+              }
+            );
+          }
+        }
+
+        // 충돌한 모든 벽돌들 처리
+        brickBodies.forEach((brickBody) => {
+          this.handleBrickCollision(brickBody);
+        });
       }
     });
   }
