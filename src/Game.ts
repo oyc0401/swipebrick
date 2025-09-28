@@ -122,15 +122,5 @@ export class Game {
         position: brick.physicsComponent.getPosition(),
       });
     });
-
-    this.brickManager.onBrickDestroy((brick) => {
-      console.log("Brick destroyed!", {
-        timestamp: new Date().toISOString(),
-        brickId: brick.id,
-        finalHealth: brick.getHealth(),
-        currentLevel: this.gameState.level,
-        position: brick.physicsComponent.getPosition(),
-      });
-    });
   }
 }

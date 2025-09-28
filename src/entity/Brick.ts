@@ -22,7 +22,9 @@ export class Brick extends Entity {
     this.renderComponent.updatePosition(x, y);
 
     // 초기 체력 텍스트 표시
-    (this.renderComponent as RectangleRenderComponent).updateHealthText(this.getHealth());
+    (this.renderComponent as RectangleRenderComponent).updateHealthText(
+      this.getHealth()
+    );
 
     this.physicsComponent = new BoundaryPhysicsComponent(
       x,
@@ -44,7 +46,9 @@ export class Brick extends Entity {
 
   private updateHealthText(): void {
     // 체력 텍스트만 업데이트 (색상은 BrickManager에서 관리)
-    (this.renderComponent as RectangleRenderComponent).updateHealthText(this.getHealth());
+    (this.renderComponent as RectangleRenderComponent).updateHealthText(
+      this.getHealth()
+    );
   }
 
   public getPhysicsBody(): Matter.Body {

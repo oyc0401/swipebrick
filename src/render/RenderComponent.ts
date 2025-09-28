@@ -4,47 +4,50 @@ import { GraphicEngine } from "./GraphicEngine";
 
 export abstract class RenderComponent implements IRenderComponent {
   protected graphics: Graphics;
+  protected container: Container;
   private parentContainer: Container | null = null;
 
   constructor() {
+    this.container = new Container();
     this.graphics = new Graphics();
+    this.container.addChild(this.graphics);
     this.addToViewport();
   }
 
-  public getGraphics(): Graphics {
-    return this.graphics;
+  public getGraphics(): Container {
+    return this.container;
   }
 
   public updatePosition(x: number, y: number): void {
-    if (this.graphics && !this.graphics.destroyed) {
-      this.graphics.x = x;
-      this.graphics.y = y;
+    if (this.container && !this.container.destroyed) {
+      this.container.x = x;
+      this.container.y = y;
     }
   }
 
   public setVisible(visible: boolean): void {
-    if (this.graphics && !this.graphics.destroyed) {
-      this.graphics.visible = visible;
+    if (this.container && !this.container.destroyed) {
+      this.container.visible = visible;
     }
   }
 
   public addToViewport(): void {
     if (!this.parentContainer) {
       this.parentContainer = GraphicEngine.getInstance().getGameViewport();
-      this.parentContainer.addChild(this.graphics);
+      this.parentContainer.addChild(this.container);
     }
   }
 
   public removeFromViewport(): void {
-    if (this.parentContainer && this.graphics.parent) {
-      this.parentContainer.removeChild(this.graphics);
+    if (this.parentContainer && this.container.parent) {
+      this.parentContainer.removeChild(this.container);
       this.parentContainer = null;
     }
   }
 
   public destroy(): void {
     this.removeFromViewport();
-    this.graphics.destroy();
+    this.container.destroy();
   }
 }
 
@@ -119,17 +122,17 @@ export class RectangleRenderComponent extends RenderComponent {
   public updateHealthText(health: number): void {
     // 기존 텍스트 제거
     if (this.healthText) {
-      this.graphics.removeChild(this.healthText);
+      this.container.removeChild(this.healthText);
       this.healthText.destroy();
     }
 
     // 새 텍스트 생성
     const textStyle = new TextStyle({
-      fontFamily: 'Arial',
+      fontFamily: "Arial",
       fontSize: 16,
       fill: 0xffffff, // 흰색
-      fontWeight: 'bold',
-      align: 'center',
+      fontWeight: "bold",
+      align: "center",
     });
 
     this.healthText = new Text({
@@ -142,8 +145,8 @@ export class RectangleRenderComponent extends RenderComponent {
     this.healthText.x = this.width / 2;
     this.healthText.y = this.height / 2;
 
-    // Graphics에 텍스트 추가
-    this.graphics.addChild(this.healthText);
+    // 컨테이너에 텍스트 추가
+    this.container.addChild(this.healthText);
   }
 
   public destroy(): void {

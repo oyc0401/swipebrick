@@ -1,11 +1,11 @@
-import type { Graphics } from "pixi.js";
+import type { Container } from "pixi.js";
 
 export interface IComponent {
   destroy(): void;
 }
 
 export interface IRenderComponent extends IComponent {
-  getGraphics(): Graphics;
+  getGraphics(): Container;
   updatePosition(x: number, y: number): void;
   setVisible(visible: boolean): void;
 }

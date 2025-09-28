@@ -190,6 +190,11 @@ export class GraphicEngine {
     clientX: number,
     clientY: number
   ): { x: number; y: number } {
+    try {
+      this.app.canvas;
+    } catch (e) {
+      return { x: 0, y: 0 };
+    }
     // 캔버스의 DOM 위치 정보 가져오기
     const canvasRect = this.app.canvas.getBoundingClientRect();
 
@@ -241,7 +246,9 @@ export class GraphicEngine {
 
     // 게임 뷰포트 경계까지 직선을 연장
     const endPoint = this.calculateLineEndPoint(fromX, fromY, angle);
-    const distance = Math.sqrt((endPoint.x - fromX) ** 2 + (endPoint.y - fromY) ** 2);
+    const distance = Math.sqrt(
+      (endPoint.x - fromX) ** 2 + (endPoint.y - fromY) ** 2
+    );
 
     // 점선 패턴 그리기
     let currentDistance = 0;
@@ -269,7 +276,11 @@ export class GraphicEngine {
     }
   }
 
-  private calculateLineEndPoint(startX: number, startY: number, angle: number): { x: number; y: number } {
+  private calculateLineEndPoint(
+    startX: number,
+    startY: number,
+    angle: number
+  ): { x: number; y: number } {
     // 게임 뷰포트 경계 (0, 0, gameWidth, gameHeight)
     const minX = 0;
     const minY = 0;
