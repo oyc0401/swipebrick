@@ -32,6 +32,7 @@ export class PhysicsEngine {
 
     this.setupBeforeUpdateEvents();
     this.setupCollisionEvents();
+    this.setupAfterUpdateEvents();
   }
 
   public static getInstance(): PhysicsEngine {
@@ -223,6 +224,88 @@ export class PhysicsEngine {
     }
   }
 
+  private setupAfterUpdateEvents(): void {
+    Events.on(this.engine, "afterUpdate", () => {
+      // 모든 공들의 각도 후처리
+      for (const body of this.world.bodies) {
+        if (body.label === "ball" && !body.isSleeping) {
+          this.correctBallAngleIfNeeded(body);
+        }
+      }
+    });
+  }
+
+  private correctBallAngleIfNeeded(ballBody: Matter.Body): void {
+    const velocity = ballBody.velocity;
+    const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
+
+    // 속도가 너무 작으면 각도 보정 안함
+    if (speed < 0.1) return;
+
+    // 현재 각도 계산 (도 단위, 0~360)
+    let angle = Math.atan2(velocity.y, velocity.x) * (180 / Math.PI);
+    if (angle < 0) angle += 360;
+
+    // 금지 각도 범위 확인
+    const isInvalidAngle = this.isInvalidAngle(angle);
+    if (!isInvalidAngle) return;
+
+    // 가장 가까운 유효 각도로 보정
+    const correctedAngle = this.findNearestValidAngle(angle);
+    const correctedAngleRad = correctedAngle * (Math.PI / 180);
+
+    // 보정된 속도 계산 (속도 크기는 유지)
+    const newVelocity = {
+      x: Math.cos(correctedAngleRad) * speed,
+      y: Math.sin(correctedAngleRad) * speed,
+    };
+
+    Body.setVelocity(ballBody, newVelocity);
+
+    console.log("Ball angle corrected:", {
+      timestamp: new Date().toISOString(),
+      ballId: ballBody.id,
+      originalAngle: angle.toFixed(2),
+      correctedAngle: correctedAngle.toFixed(2),
+      originalVelocity: velocity,
+      newVelocity,
+      speed: speed.toFixed(2),
+    });
+  }
+
+  private isInvalidAngle(angle: number): boolean {
+    // 금지 각도 범위: 350.5°~9.5° (거의 수평 우향), 170.5°~189.5° (거의 수평 좌향)
+    const isNearHorizontalRight = angle >= 350.5 || angle <= 9.5;
+    const isNearHorizontalLeft = angle >= 170.5 && angle <= 189.5;
+
+    return isNearHorizontalRight || isNearHorizontalLeft;
+  }
+
+  private findNearestValidAngle(angle: number): number {
+    if (angle >= 350.5 || angle <= 9.5) {
+      // 0도 근처 (수평 우향) → 금지 구간 가장자리로 보정
+      if (angle >= 350.5) {
+        // 350.5~360도 → 350도로
+        return 350;
+      } else {
+        // 0~9.5도 → 10도로
+        return 10;
+      }
+    } else if (angle >= 170.5 && angle <= 189.5) {
+      // 180도 근처 (수평 좌향) → 금지 구간 가장자리로 보정
+      if (angle <= 180) {
+        // 170.5~180도 → 170도로
+        return 170;
+      } else {
+        // 180~189.5도 → 190도로
+        return 190;
+      }
+    }
+
+    // 이미 유효한 각도면 그대로 반환 (9.6도 등은 그대로 둠)
+    return angle;
+  }
+
   // 60 프레임 고정
   public startLoop(): void {
     const FIXED_TIMESTEP = 1000 / 60;
@@ -254,6 +337,7 @@ export class PhysicsEngine {
     // 이벤트 리스너 제거
     Events.off(this.engine, "beforeUpdate");
     Events.off(this.engine, "collisionStart");
+    Events.off(this.engine, "afterUpdate");
     this.brickCollisionCallbacks = [];
     this.bottomCollisionCallbacks = [];
   }
