@@ -7,6 +7,7 @@ export interface IComponent {
 export interface IRenderComponent extends IComponent {
   getGraphics(): Graphics;
   updatePosition(x: number, y: number): void;
+  setVisible(visible: boolean): void;
 }
 
 export interface IPhysicsComponent extends IComponent {

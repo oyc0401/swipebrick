@@ -1,11 +1,14 @@
-import { Graphics } from "pixi.js";
+import { Graphics, Container } from "pixi.js";
 import type { IRenderComponent } from "../core/components/IComponent";
+import { GraphicEngine } from "./GraphicEngine";
 
 export abstract class RenderComponent implements IRenderComponent {
   protected graphics: Graphics;
+  private parentContainer: Container | null = null;
 
   constructor() {
     this.graphics = new Graphics();
+    this.addToViewport();
   }
 
   public getGraphics(): Graphics {
@@ -19,7 +22,28 @@ export abstract class RenderComponent implements IRenderComponent {
     }
   }
 
+  public setVisible(visible: boolean): void {
+    if (this.graphics && !this.graphics.destroyed) {
+      this.graphics.visible = visible;
+    }
+  }
+
+  public addToViewport(): void {
+    if (!this.parentContainer) {
+      this.parentContainer = GraphicEngine.getInstance().getGameViewport();
+      this.parentContainer.addChild(this.graphics);
+    }
+  }
+
+  public removeFromViewport(): void {
+    if (this.parentContainer && this.graphics.parent) {
+      this.parentContainer.removeChild(this.graphics);
+      this.parentContainer = null;
+    }
+  }
+
   public destroy(): void {
+    this.removeFromViewport();
     this.graphics.destroy();
   }
 }
@@ -48,7 +72,12 @@ export class RectangleRenderComponent extends RenderComponent {
   private color: number;
   private innerMargin: number;
 
-  constructor(width: number, height: number, color: number = 0x000000, innerMargin: number = 0) {
+  constructor(
+    width: number,
+    height: number,
+    color: number = 0x000000,
+    innerMargin: number = 0
+  ) {
     super();
     this.width = width;
     this.height = height;
@@ -65,8 +94,8 @@ export class RectangleRenderComponent extends RenderComponent {
       this.graphics.rect(
         this.innerMargin,
         this.innerMargin,
-        this.width - (this.innerMargin * 2),
-        this.height - (this.innerMargin * 2)
+        this.width - this.innerMargin * 2,
+        this.height - this.innerMargin * 2
       );
     } else {
       // 마진이 없으면 전체 크기로 그리기

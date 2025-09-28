@@ -1,4 +1,3 @@
-import type { Container } from "pixi.js";
 import { Ball } from "../entity/Ball";
 import type { GameState } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
@@ -10,13 +9,11 @@ interface BallLandingCallback {
 export class BallManager {
   private activeBalls: Ball[] = [];
   private previewBall!: Ball;
-  private gameViewport: Container;
   private gameState: GameState;
 
   private onBallLanding?: BallLandingCallback;
 
-  constructor(gameViewport: Container, gameState: GameState) {
-    this.gameViewport = gameViewport;
+  constructor(gameState: GameState) {
     this.gameState = gameState;
     this.createPreviewBall();
     this.setupPhysicsEventListeners();
@@ -30,8 +27,6 @@ export class BallManager {
   public createBalls(count: number): void {
     for (let i = 0; i < count; i++) {
       const ball = new Ball(this.gameState.ballStartPosition);
-      // PhysicsEngine에 자동 등록되므로 World.add 제거
-      this.gameViewport.addChild(ball.getGraphics());
       this.activeBalls.push(ball);
     }
   }
@@ -63,12 +58,12 @@ export class BallManager {
   }
 
   public showPreviewBall(): void {
-    this.previewBall.getGraphics().visible = true;
+    this.previewBall.setVisible(true);
     this.previewBall.setPosition(this.gameState.ballStartPosition);
   }
 
   public hidePreviewBall(): void {
-    this.previewBall.getGraphics().visible = false;
+    this.previewBall.setVisible(false);
   }
 
   private setupPhysicsEventListeners(): void {
@@ -81,12 +76,8 @@ export class BallManager {
     this.previewBall = Ball.createWithoutPhysics(
       this.gameState.ballStartPosition
     );
-
-    this.gameViewport.addChild(this.previewBall.getGraphics());
   }
   private removeBall(ball: Ball): void {
-    this.gameViewport.removeChild(ball.getGraphics());
-    // PhysicsEngine에서 자동 제거되므로 World.remove 제거
     ball.destroy();
 
     const index = this.activeBalls.indexOf(ball);
@@ -105,7 +96,6 @@ export class BallManager {
     });
 
     if (this.previewBall) {
-      this.gameViewport.removeChild(this.previewBall.getGraphics());
       this.previewBall.destroy();
     }
 

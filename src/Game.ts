@@ -1,5 +1,5 @@
 import { GAME_HEIGHT, GAME_WIDTH, GameState } from "./GameState";
-import { DisplayManager } from "./render/DisplayManager";
+import { GraphicEngine } from "./render/GraphicEngine";
 import { PhysicsEngine } from "./physics/PhysicsEngine";
 
 import { BallManager } from "./managers/BallManager";
@@ -8,7 +8,7 @@ import { BrickManager } from "./managers/BrickManager";
 import { InputManager } from "./managers/InputManager";
 
 export class Game {
-  private renderer: DisplayManager;
+  private renderer: GraphicEngine;
   private physics: PhysicsEngine;
   private gameState: GameState;
 
@@ -18,23 +18,13 @@ export class Game {
   private inputManager: InputManager;
 
   constructor() {
-    this.renderer = new DisplayManager(GAME_WIDTH, GAME_HEIGHT);
+    this.renderer = GraphicEngine.getInstance(GAME_WIDTH, GAME_HEIGHT);
     this.physics = PhysicsEngine.getInstance();
     this.gameState = new GameState();
 
-    this.ballManager = new BallManager(
-      this.renderer.getGameViewport(),
-      this.gameState
-    );
-    this.boundaryManager = new BoundaryManager(
-      this.renderer.getCenterLayer(),
-      GAME_WIDTH,
-      GAME_HEIGHT
-    );
-    this.brickManager = new BrickManager(
-      this.renderer.getGameViewport(),
-      this.physics
-    );
+    this.ballManager = new BallManager(this.gameState);
+    this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
+    this.brickManager = new BrickManager(this.physics);
     this.inputManager = new InputManager(this.renderer.getCenterLayer());
 
     this.setupBallManagerCallbacks();

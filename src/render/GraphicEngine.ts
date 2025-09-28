@@ -18,7 +18,9 @@ function getSize() {
   };
 }
 
-export class DisplayManager {
+export class GraphicEngine {
+  private static instance: GraphicEngine | null = null;
+
   private app: Application;
   private centerLayer: Container;
   private gameViewport: Container;
@@ -28,12 +30,29 @@ export class DisplayManager {
   private debugGuide: Graphics | null = null;
   private cleanupTasks: (() => void)[] = [];
 
-  constructor(gameWidth: number, gameHeight: number) {
+  private constructor(gameWidth: number, gameHeight: number) {
     this.app = new Application();
-    this.centerLayer = new Container(); // 캔버스 전체영역.
-    this.gameViewport = new Container(); // 게임영역 내부 화면
+    this.centerLayer = new Container();
+    this.gameViewport = new Container();
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
+  }
+
+  public static getInstance(gameWidth?: number, gameHeight?: number): GraphicEngine {
+    if (!GraphicEngine.instance) {
+      if (gameWidth === undefined || gameHeight === undefined) {
+        throw new Error("GraphicEngine: gameWidth and gameHeight are required for first initialization");
+      }
+      GraphicEngine.instance = new GraphicEngine(gameWidth, gameHeight);
+    }
+    return GraphicEngine.instance;
+  }
+
+  public static destroy(): void {
+    if (GraphicEngine.instance) {
+      GraphicEngine.instance.destroy();
+      GraphicEngine.instance = null;
+    }
   }
 
   public async init(): Promise<void> {
@@ -174,7 +193,7 @@ export class DisplayManager {
     renderLoop();
   }
 
-  public destroy(): void {
+  private destroy(): void {
     // 이벤트 리스너 정리
     this.cleanupTasks.forEach((cleanup) => cleanup());
     this.cleanupTasks = [];

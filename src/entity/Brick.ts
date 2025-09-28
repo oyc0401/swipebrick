@@ -59,10 +59,6 @@ export class Brick extends Entity {
     return (newR << 16) | (newG << 8) | newB;
   }
 
-  public getGraphics(): Graphics {
-    return this.renderComponent.getGraphics();
-  }
-
   public getPhysicsBody(): Matter.Body {
     return this.physicsComponent.getBody();
   }

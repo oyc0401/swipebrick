@@ -47,10 +47,6 @@ export class Ball extends ActiveEntity {
     );
   }
 
-  public getGraphics(): Graphics {
-    return this.renderComponent.getGraphics();
-  }
-
   public getPhysicsBody(): Matter.Body {
     return this.physicsComponent.getBody();
   }
@@ -60,9 +56,13 @@ export class Ball extends ActiveEntity {
   }
 
   public setPosition(pos: Position) {
-    this.getGraphics().x = pos.x;
-    this.getGraphics().y = pos.y;
+    this.renderComponent.getGraphics().x = pos.x;
+    this.renderComponent.getGraphics().y = pos.y;
     this.physicsComponent.setPosition(pos.x, pos.y);
+  }
+
+  public setVisible(visible: boolean): void {
+    this.renderComponent.setVisible(visible);
   }
 
   public destroy(): void {

@@ -1,25 +1,17 @@
-import type { Container } from "pixi.js";
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 import { Brick } from "../entity/Brick";
 
 export class BrickManager {
-  private container: Container;
   private physics: PhysicsEngine;
   private bricks: Map<string, Brick> = new Map();
 
-  constructor(container: Container, physics: PhysicsEngine) {
-    this.container = container;
+  constructor(physics: PhysicsEngine) {
     this.physics = physics;
     this.setupCollisionListener();
   }
 
   public createBrick(x: number, y: number, maxHits: number = 3): Brick {
     const brick = new Brick(x, y, maxHits);
-
-    // 렌더링에 추가
-    this.container.addChild(brick.getGraphics());
-
-    // PhysicsEngine에 자동 등록되므로 physics.addBody 제거
 
     // 내부 관리용 맵에 추가
     this.bricks.set(brick.id, brick);
@@ -112,9 +104,6 @@ export class BrickManager {
   }
 
   private destroyBrick(brick: Brick): void {
-    // 렌더링에서 제거
-    this.container.removeChild(brick.getGraphics());
-
     // 내부 맵에서 제거
     this.bricks.delete(brick.id);
 

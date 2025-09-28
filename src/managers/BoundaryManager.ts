@@ -1,4 +1,3 @@
-import type { Container } from "pixi.js";
 import { GameBoundary } from "../entity/GameBoundary";
 
 interface BoundaryConfig {
@@ -12,12 +11,10 @@ interface BoundaryConfig {
 
 export class BoundaryManager {
   private boundaries: Map<string, GameBoundary> = new Map();
-  private renderLayer: Container;
   private gameWidth: number;
   private gameHeight: number;
 
-  constructor(renderLayer: Container, gameWidth: number, gameHeight: number) {
-    this.renderLayer = renderLayer;
+  constructor(gameWidth: number, gameHeight: number) {
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
   }
@@ -87,18 +84,12 @@ export class BoundaryManager {
       config.label
     );
 
-    // 렌더링 레이어에 추가
-    this.renderLayer.addChild(boundary.getGraphics());
-
     // 매니저에 등록
     this.boundaries.set(config.label, boundary);
   }
 
   public destroy(): void {
     this.boundaries.forEach((boundary) => {
-      // 렌더링에서 제거
-      this.renderLayer.removeChild(boundary.getGraphics());
-
       // 경계벽 객체 정리
       boundary.destroy();
     });
