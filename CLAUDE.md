@@ -83,4 +83,5 @@
 
 ## 개발 프로세스 규칙
 
-- **Claude는 `npm run dev`, `npm run build`, `npm run lint` 등 빌드/테스트 명령어를 실행하지 않음**
+- **Claude는 `npm run dev`, `npm run build`, `npm run lint`, `vite` 등 빌드/테스트/개발서버 명령어를 실행하지 않음**
+- **BashOutput으로 실행 중인 셸 출력 읽기는 허용됨**

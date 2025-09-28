@@ -25,7 +25,7 @@ export class Game {
     this.ballManager = new BallManager(this.gameState);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
     this.brickManager = new BrickManager(this.physics);
-    this.inputManager = new InputManager(this.renderer.getCenterLayer());
+    this.inputManager = new InputManager(this.renderer, this.gameState);
 
     this.setupBallManagerCallbacks();
     this.setupInputManagerCallbacks();
@@ -60,6 +60,9 @@ export class Game {
       // 대기 상태 해제
       this.gameState.setWaiting(false);
 
+      // 점선 숨김
+      this.renderer.clearAimLine();
+
       // 공들 생성
       this.ballManager.createBalls(this.gameState.ballCount);
 
@@ -68,6 +71,14 @@ export class Game {
 
       // 공들을 목표 지점으로 발사
       this.ballManager.launchBalls(x, y);
+    });
+
+    this.inputManager.onMouseMove((x, y) => {
+      // 대기 상태일 때만 점선 표시
+      if (this.gameState.isWaiting) {
+        const ballPos = this.gameState.ballStartPosition;
+        this.renderer.drawAimLine(ballPos.x, ballPos.y, x, y);
+      }
     });
   }
 

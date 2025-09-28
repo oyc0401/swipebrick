@@ -3,7 +3,6 @@ import { ActiveEntity } from "../core/entity/ActiveEntity";
 import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 import { EntityManager } from "../core/entity/EntityManager";
-import type { Graphics } from "pixi.js";
 
 export class Ball extends ActiveEntity {
   private radius: number = BALL_RADIUS;
