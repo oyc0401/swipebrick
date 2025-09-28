@@ -35,7 +35,7 @@ export class Ball extends ActiveEntity {
   }
 
   // 물리 엔진에 등록하지 않는 Ball 생성 (프리뷰용)
-  public static createWith저outPhysics(position: Position): Ball {
+  public static createWithoutPhysics(position: Position): Ball {
     return new Ball(position, false);
   }
 
