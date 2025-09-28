@@ -24,7 +24,7 @@ export class Ball extends ActiveEntity {
       // 프리뷰용 더미 physicsComponent (물리 등록 없음)
       this.physicsComponent = {
         getBody: () => ({ position: { x: position.x, y: position.y } }),
-        setPosition: (x: number, y: number) => {},
+        setPosition: (_x: number, _y: number) => {},
         getPosition: () => ({ x: position.x, y: position.y }),
         destroy: () => {},
       } as any;
@@ -35,7 +35,7 @@ export class Ball extends ActiveEntity {
   }
 
   // 물리 엔진에 등록하지 않는 Ball 생성 (프리뷰용)
-  public static createWithoutPhysics(position: Position): Ball {
+  public static createWith저outPhysics(position: Position): Ball {
     return new Ball(position, false);
   }
 

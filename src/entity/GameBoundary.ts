@@ -2,7 +2,7 @@ import { Entity } from "../core/entity/Entity";
 import { RectangleRenderComponent } from "../render/RenderComponent";
 import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
-import type { Graphics } from "pixi.js";
+import type { Container } from "pixi.js";
 
 export class GameBoundary extends Entity {
   constructor(
@@ -55,7 +55,7 @@ export class GameBoundary extends Entity {
     );
   }
 
-  public getGraphics(): Graphics {
+  public getGraphics(): Container {
     return this.renderComponent.getGraphics();
   }
 
