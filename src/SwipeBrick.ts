@@ -21,11 +21,14 @@ export class SwipeBrick {
   private bricks: (GridElement | null)[][];
   private level: number;
   private ballCount: number;
+  private ballStartPosition: number;
 
   constructor() {
     this.bricks = this.initializeGrid();
     this.level = 1;
     this.ballCount = 1;
+    // CRITICAL: 게임 영역 중앙 x좌표 - 공 발사 시작점
+    this.ballStartPosition = 280; // GAME_WIDTH / 2
   }
 
   private initializeGrid(): (GridElement | null)[][] {
@@ -193,6 +196,14 @@ export class SwipeBrick {
 
   getBallCount(): number {
     return this.ballCount;
+  }
+
+  setBallStartPosition(x: number): void {
+    this.ballStartPosition = x;
+  }
+
+  getBallStartPosition(): number {
+    return this.ballStartPosition;
   }
 
   isEndGame(): boolean {

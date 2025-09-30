@@ -1,4 +1,4 @@
-import { GAME_HEIGHT, GAME_WIDTH, GameState } from "./GameState";
+import { GAME_HEIGHT, GAME_WIDTH, BALL_RADIUS, GameState } from "./GameState";
 import { GraphicEngine } from "./render/GraphicEngine";
 import { PhysicsEngine } from "./physics/PhysicsEngine";
 
@@ -27,10 +27,14 @@ export class Game {
 
     this.swipeBrick = new SwipeBrick();
 
-    this.ballManager = new BallManager(this.gameState);
+    this.ballManager = new BallManager(this.swipeBrick);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
     this.brickManager = new BrickManager(this.physics, this.swipeBrick);
-    this.inputManager = new InputManager(this.renderer, this.gameState);
+    this.inputManager = new InputManager(
+      this.renderer,
+
+      this.swipeBrick
+    );
 
     this.setupBallManagerCallbacks();
     this.setupInputManagerCallbacks();
@@ -82,8 +86,8 @@ export class Game {
     this.inputManager.onMouseMove((x, y) => {
       // 대기 상태일 때만 점선 표시
       if (this.gameState.isWaiting) {
-        const ballPos = this.gameState.ballStartPosition;
-        this.renderer.drawAimLine(ballPos.x, ballPos.y, x, y);
+        const ballStartX = this.swipeBrick.getBallStartPosition();
+        this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
       }
     });
   }
@@ -96,7 +100,7 @@ export class Game {
       if (!this.gameState.isBallLanded) {
         this.gameState.setIsBallLanded(true);
         const position = landedBall.getPosition();
-        this.gameState.setBallStartPosition(position.x, position.y);
+        this.swipeBrick.setBallStartPosition(position.x);
         this.ballManager.showPreviewBall();
         console.log("First ball landed at:", position.x, position.y);
       }

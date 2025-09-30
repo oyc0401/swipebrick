@@ -1,5 +1,7 @@
 import type { GraphicEngine } from "../render/GraphicEngine";
 import type { GameState } from "../GameState";
+import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
+import type { SwipeBrick } from "../SwipeBrick";
 
 interface ClickCallback {
   (x: number, y: number): void;
@@ -11,7 +13,8 @@ interface MouseMoveCallback {
 
 export class InputManager {
   private renderer: GraphicEngine;
-  private gameState: GameState;
+
+  private swipeBrick: SwipeBrick;
   private onGameClick?: ClickCallback;
   private onMouseMoveCallback?: MouseMoveCallback;
   private clickHandler: (event: MouseEvent) => void;
@@ -20,9 +23,9 @@ export class InputManager {
   private readonly MIN_ANGLE = 10; // 최소 각도 (도)
   private readonly MAX_ANGLE = 180 - 10; // 최대 각도 (도)
 
-  constructor(renderer: GraphicEngine, gameState: GameState) {
+  constructor(renderer: GraphicEngine, swipeBrick: SwipeBrick) {
     this.renderer = renderer;
-    this.gameState = gameState;
+    this.swipeBrick = swipeBrick;
     this.clickHandler = this.handleClick.bind(this);
     this.mouseMoveHandler = this.handleMouseMove.bind(this);
     this.setupEventListeners();
@@ -85,10 +88,9 @@ export class InputManager {
     targetX: number,
     targetY: number
   ): { x: number; y: number } {
-    // GameState에서 공의 시작 위치 가져오기
-    const ballPosition = this.gameState.ballStartPosition;
-    const ballX = ballPosition.x;
-    const ballY = ballPosition.y;
+    // SwipeBrick에서 공의 시작 위치 가져오기
+    const ballX = this.swipeBrick.getBallStartPosition();
+    const ballY = GAME_HEIGHT - BALL_RADIUS;
 
     // 벡터 계산
     const dx = targetX - ballX;
