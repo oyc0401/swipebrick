@@ -9,6 +9,8 @@ interface BoundaryConfig {
   label: string;
 }
 
+const BOUNDARY_THICKNESS = 15;
+
 export class BoundaryManager {
   private boundaries: Map<string, GameBoundary> = new Map();
   private gameWidth: number;
@@ -20,37 +22,38 @@ export class BoundaryManager {
   }
 
   public createGameBoundaries(): void {
+    const color = 0xf2f4f6;
     const boundaryConfigs: BoundaryConfig[] = [
       {
         x: 0,
-        y: -5,
+        y: -BOUNDARY_THICKNESS,
         width: this.gameWidth,
-        height: 5,
-        color: 0x000000,
+        height: BOUNDARY_THICKNESS,
+        color,
         label: "top",
       },
       {
         x: 0,
         y: this.gameHeight,
         width: this.gameWidth,
-        height: 5,
-        color: 0x000000,
+        height: BOUNDARY_THICKNESS,
+        color,
         label: "bottom",
       },
       {
-        x: -5,
+        x: -BOUNDARY_THICKNESS,
         y: 0,
-        width: 5,
+        width: BOUNDARY_THICKNESS,
         height: this.gameHeight,
-        color: 0x000000,
+        color,
         label: "left",
       },
       {
         x: this.gameWidth,
         y: 0,
-        width: 5,
+        width: BOUNDARY_THICKNESS,
         height: this.gameHeight,
-        color: 0x000000,
+        color,
         label: "right",
       },
     ];

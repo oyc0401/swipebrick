@@ -149,7 +149,7 @@ export class GraphicEngine {
     this.background.clear();
     this.background
       .rect(0, h, this.gameWidth, scaledCanvasHeight)
-      .fill(0xececec); // 하늘색
+      .fill(0xffffff); // 흰색
   }
 
   public addDebugGuide(): void {
