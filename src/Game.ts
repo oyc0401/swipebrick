@@ -6,6 +6,7 @@ import { BallManager } from "./managers/BallManager";
 import { BoundaryManager } from "./managers/BoundaryManager";
 import { BrickManager } from "./managers/BrickManager";
 import { InputManager } from "./managers/InputManager";
+import { SwipeBrick } from "./SwipeBrick";
 
 export class Game {
   private renderer: GraphicEngine;
@@ -17,14 +18,18 @@ export class Game {
   private brickManager: BrickManager;
   private inputManager: InputManager;
 
+  private swipeBrick: SwipeBrick;
+
   constructor() {
     this.renderer = GraphicEngine.getInstance(GAME_WIDTH, GAME_HEIGHT);
     this.physics = PhysicsEngine.getInstance();
     this.gameState = new GameState();
 
+    this.swipeBrick = new SwipeBrick();
+
     this.ballManager = new BallManager(this.gameState);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
-    this.brickManager = new BrickManager(this.physics, this.gameState);
+    this.brickManager = new BrickManager(this.physics, this.swipeBrick);
     this.inputManager = new InputManager(this.renderer, this.gameState);
 
     this.setupBallManagerCallbacks();
@@ -36,7 +41,7 @@ export class Game {
     await this.renderer.init();
 
     this.boundaryManager.createGameBoundaries();
-    this.brickManager.createBricks(this.gameState.level);
+    this.brickManager.createBricks();
     // this.renderer.addDebugGuide();
     this.ballManager.showPreviewBall();
 
@@ -65,7 +70,7 @@ export class Game {
       this.renderer.clearAimLine();
 
       // 공들 생성
-      this.ballManager.createBalls(this.gameState.ballCount);
+      this.ballManager.createBalls(this.swipeBrick.getBallCount());
 
       // 미리보기 공 숨김
       this.ballManager.hidePreviewBall();
@@ -100,10 +105,10 @@ export class Game {
       if (this.ballManager.getActiveBallCount() === 1) {
         setTimeout(() => {
           this.gameState.setIsBallLanded(false);
-          this.gameState.level++;
-          this.gameState.ballCount++;
+          this.swipeBrick.incrementLevel();
+          this.swipeBrick.incrementBallCount();
           this.brickManager.shift();
-          this.brickManager.createBricks(this.gameState.level);
+          this.brickManager.createBricks();
           this.gameState.setWaiting(true);
           console.log("All balls removed. Ready for next shot.");
         }, 30);
@@ -118,7 +123,7 @@ export class Game {
         timestamp: new Date().toISOString(),
         brickId: brick.id,
         remainingHealth: brick.getHealth(),
-        currentLevel: this.gameState.level,
+        currentLevel: this.swipeBrick.getLevel(),
         position: brick.physicsComponent.getPosition(),
       });
     });

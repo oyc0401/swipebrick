@@ -8,8 +8,8 @@ export class BrickEntity extends Entity {
   private hitCount: number = 0;
   private maxHits: number = 300; // 3번 맞으면 파괴
 
-  constructor(x: number, y: number, maxHits: number = 3) {
-    super(`brick-${Date.now()}-${Math.random()}`);
+  constructor(x: number, y: number, maxHits: number = 3, customId?: string) {
+    super(customId || `brick-${Date.now()}-${Math.random()}`);
 
     this.maxHits = maxHits;
 
@@ -57,6 +57,40 @@ export class BrickEntity extends Entity {
 
   public getHealth(): number {
     return this.maxHits - this.hitCount;
+  }
+
+  public setHealth(health: number): void {
+    this.hitCount = this.maxHits - health;
+    this.updateHealthText();
+  }
+
+  public calculateBrickColor(stage: number): void {
+    const currentHealth = this.getHealth();
+    const maxColor = 0x1f4ef5; // 진한 파란색 (#1F4EF5)
+    const minColor = 0x83b4f9; // 연한 파란색 (#83B4F9)
+
+    // currentHealth/stage 비율로 색상 보간 (0~1)
+    const ratio = Math.min(currentHealth / stage, 1);
+
+    const color = this.interpolateColor(minColor, maxColor, ratio);
+    this.setColor(color);
+  }
+
+  private interpolateColor(color1: number, color2: number, ratio: number): number {
+    // color1에서 color2로 ratio만큼 보간 (ratio: 0~1)
+    const r1 = (color1 >> 16) & 0xff;
+    const g1 = (color1 >> 8) & 0xff;
+    const b1 = color1 & 0xff;
+
+    const r2 = (color2 >> 16) & 0xff;
+    const g2 = (color2 >> 8) & 0xff;
+    const b2 = color2 & 0xff;
+
+    const r = Math.floor(r1 + (r2 - r1) * ratio);
+    const g = Math.floor(g1 + (g2 - g1) * ratio);
+    const b = Math.floor(b1 + (b2 - b1) * ratio);
+
+    return (r << 16) | (g << 8) | b;
   }
 
   public shift(amount: number): void {

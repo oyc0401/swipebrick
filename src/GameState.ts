@@ -9,8 +9,6 @@ export const BALL_RADIUS = 8;
 
 export class GameState {
   public ballStartPosition: Position;
-  public ballCount: number;
-  public level: number;
   public isWaiting: boolean; // 대기 상태 플래그
   public isBallLanded = false; // 공이 하나라도 바닥에 도착했는지 여부
 
@@ -20,22 +18,12 @@ export class GameState {
       x: GAME_WIDTH / 2,
       y: GAME_HEIGHT - BALL_RADIUS,
     }; // 사각형 하단에서 반지름만큼 위
-    this.ballCount = 1;
-    this.level = 1;
     this.isWaiting = true; // 초기에는 대기 상태 (공이 준비된 상태)
   }
 
   public setBallStartPosition(x: number, y: number): void {
     this.ballStartPosition.x = x;
     this.ballStartPosition.y = y;
-  }
-
-  public incrementBallCount(): void {
-    this.ballCount++;
-  }
-
-  public incrementLevel(): void {
-    this.level++;
   }
 
   public setWaiting(waiting: boolean): void {
