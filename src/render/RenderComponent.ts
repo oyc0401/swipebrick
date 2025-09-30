@@ -74,22 +74,19 @@ export class RectangleRenderComponent extends RenderComponent {
   private height: number;
   private color: number;
   private innerMargin: number;
-  private borderRadius: number;
   private healthText: Text | null = null;
 
   constructor(
     width: number,
     height: number,
     color: number = 0x000000,
-    innerMargin: number = 0,
-    borderRadius: number = 0
+    innerMargin: number = 0
   ) {
     super();
     this.width = width;
     this.height = height;
     this.color = color;
     this.innerMargin = innerMargin;
-    this.borderRadius = borderRadius;
     this.createRectangle();
   }
 
@@ -242,7 +239,7 @@ export class RoundedRectangleRenderComponent extends RenderComponent {
       fontFamily: "Arial",
       fontSize: 16,
       fill: 0xffffff, // 흰색
-      fontWeight: "bold",
+      fontWeight: "normal",
       align: "center",
     });
 
