@@ -26,14 +26,14 @@ export class BrickManager {
 
   public createBricks(): void {
     // CRITICAL: SwipeBrick에서 논리적 상태 생성 후 BrickEntity로 시각화
-    const elements = this.swipeBrick.createRow();
+    const elements = this.swipeBrick.createNewRow();
 
     const BRICK_WIDTH = 60;
     const BRICK_Y = 40;
 
-    elements.forEach((element) => {
-      if (element.type === "brick") {
-        const x = element.x * BRICK_WIDTH + BRICK_WIDTH / 2;
+    elements.forEach((element, index) => {
+      if (element !== null && element.type === "brick") {
+        const x = index * BRICK_WIDTH + BRICK_WIDTH / 2;
         const y = BRICK_Y + 20; // 40px 높이의 절반
 
         // CRITICAL: SwipeBrick의 ID를 BrickEntity에 전달하여 동기화
@@ -70,7 +70,7 @@ export class BrickManager {
     const index = parseInt(idParts[2]);
 
     // CRITICAL: SwipeBrick이 논리적 상태 관리, BrickEntity는 시각적 동기화만
-    const hitResult = this.swipeBrick.hitBrick(stage, index);
+    const hitResult = this.swipeBrick.damageBrick(stage, index);
 
     if (hitResult === null) {
       // SwipeBrick에서 파괴됨 - BrickEntity도 제거
@@ -103,14 +103,14 @@ export class BrickManager {
 
   public shift(): void {
     // SwipeBrick에서 shift 수행하고 마지막 행 요소들 확인
-    const lastRowElements = this.swipeBrick.shiftBrick();
+    const lastRowElements = this.swipeBrick.shiftRowsDown();
 
     // 마지막 행에 있던 아이템들 자동 수집
     lastRowElements.forEach((element, index) => {
       if (element !== null && element.type === "item") {
         const idParts = element.id.split("-");
         const stage = parseInt(idParts[1]);
-        this.swipeBrick.hitItem(stage, index);
+        this.swipeBrick.collectItem(stage, index);
       }
     });
 
@@ -121,7 +121,7 @@ export class BrickManager {
     }
 
     // 게임 오버 체크
-    if (this.swipeBrick.isEndGame()) {
+    if (this.swipeBrick.isGameOver()) {
       console.log("Game Over - Brick reached bottom!");
     }
   }

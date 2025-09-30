@@ -89,7 +89,7 @@ export class InputManager {
     targetY: number
   ): { x: number; y: number } {
     // SwipeBrick에서 공의 시작 위치 가져오기
-    const ballX = this.swipeBrick.getBallStartPosition();
+    const ballX = this.swipeBrick.getBallStartX();
     const ballY = GAME_HEIGHT - BALL_RADIUS;
 
     // 벡터 계산

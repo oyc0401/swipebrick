@@ -13,26 +13,27 @@ type Item = {
   y: number;
 };
 
-type GridElement = Brick | Item;
+type GameObject = Brick | Item;
 
 export class SwipeBrick {
   private readonly GRID_WIDTH = 6;
   private readonly GRID_HEIGHT = 8;
-  private bricks: (GridElement | null)[][];
+  private readonly GAME_CENTER_X = 180; // GAME_WIDTH / 2
+
+  private objects: (GameObject | null)[][];
   private level: number;
   private ballCount: number;
-  private ballStartPosition: number;
+  private ballStartX: number;
 
   constructor() {
-    this.bricks = this.initializeGrid();
+    this.objects = this.initializeGrid();
     this.level = 1;
     this.ballCount = 1;
-    // CRITICAL: 게임 영역 중앙 x좌표 - 공 발사 시작점
-    this.ballStartPosition = 180; // GAME_WIDTH / 2
+    this.ballStartX = this.GAME_CENTER_X;
   }
 
-  private initializeGrid(): (GridElement | null)[][] {
-    const grid: (GridElement | null)[][] = [];
+  private initializeGrid(): (GameObject | null)[][] {
+    const grid: (GameObject | null)[][] = [];
     for (let y = 0; y < this.GRID_HEIGHT; y++) {
       grid[y] = [];
       for (let x = 0; x < this.GRID_WIDTH; x++) {
@@ -42,23 +43,70 @@ export class SwipeBrick {
     return grid;
   }
 
-  createRow(): GridElement[] {
+  // ===== 게임 상태 관리 =====
+
+  /** 현재 레벨 반환 */
+  getLevel(): number {
+    return this.level;
+  }
+
+  /** 레벨 1 증가 */
+  incrementLevel(): void {
+    this.level++;
+  }
+
+  /** 공 개수 반환 */
+  getBallCount(): number {
+    return this.ballCount;
+  }
+
+  /** 공 개수 1 증가 */
+  incrementBallCount(): void {
+    this.ballCount++;
+  }
+
+  /** 게임 종료 여부 확인 */
+  isGameOver(): boolean {
+    const lastRowIndex = this.GRID_HEIGHT - 1;
+    for (let x = 0; x < this.GRID_WIDTH; x++) {
+      const element = this.objects[lastRowIndex][x];
+      if (element !== null && element.type === "brick") {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ===== 공 위치 관리 =====
+
+  /** 공 시작 X좌표 반환 */
+  getBallStartX(): number {
+    return this.ballStartX;
+  }
+
+  /** 공 시작 X좌표 설정 */
+  setBallStartX(x: number): void {
+    this.ballStartX = x;
+  }
+
+  // ===== 게임 오브젝트 관리 =====
+
+  /** 새로운 행 생성 */
+  createNewRow(): (GameObject | null)[] {
     const createdElements = this.generateRandomElement();
     const y = 0;
 
     createdElements.forEach((element, index) => {
       if (element !== null) {
-        this.bricks[y][index] = element;
+        this.objects[y][index] = element;
       }
     });
 
-    return createdElements.filter(
-      (element) => element !== null
-    ) as GridElement[];
+    return createdElements;
   }
 
-  private generateRandomElement(): (GridElement | null)[] {
-    const slots: (GridElement | null)[] = [null, null, null, null, null, null];
+  private generateRandomElement(): (GameObject | null)[] {
+    const slots: (GameObject | null)[] = [null, null, null, null, null, null];
     const y = 0;
 
     const itemIndex = Math.floor(Math.random() * this.GRID_WIDTH);
@@ -109,7 +157,8 @@ export class SwipeBrick {
     return 3;
   }
 
-  hitBrick(stage: number, index: number): Brick | null {
+  /** 벽돌 데미지 처리 */
+  damageBrick(stage: number, index: number): Brick | null {
     const targetId = `brick-${stage}-${index}`;
     // CRITICAL: 스테이지 차이로 현재 행 위치 계산 - 제작(0행) → shift → 제작(0행) 순서 의존
     const y = this.level - stage;
@@ -123,7 +172,7 @@ export class SwipeBrick {
       throw new Error(`Invalid position: y=${y}, x=${index}`);
     }
 
-    const element = this.bricks[y][index];
+    const element = this.objects[y][index];
     if (element === null) {
       throw new Error(`No element at position y=${y}, x=${index}`);
     }
@@ -140,14 +189,15 @@ export class SwipeBrick {
 
     element.health--;
     if (element.health <= 0) {
-      this.bricks[y][index] = null;
+      this.objects[y][index] = null;
       return null;
     }
 
     return element;
   }
 
-  hitItem(stage: number, index: number): Item {
+  /** 아이템 수집 */
+  collectItem(stage: number, index: number): Item {
     const targetId = `item-${stage}-${index}`;
     // CRITICAL: hitBrick과 동일한 위치 계산 로직
     const y = this.level - stage;
@@ -161,7 +211,7 @@ export class SwipeBrick {
       throw new Error(`Invalid position: y=${y}, x=${index}`);
     }
 
-    const element = this.bricks[y][index];
+    const element = this.objects[y][index];
     if (element === null) {
       throw new Error(`No element at position y=${y}, x=${index}`);
     }
@@ -176,65 +226,31 @@ export class SwipeBrick {
       );
     }
 
-    this.bricks[y][index] = null;
-    // CRITICAL: 아이템 수집 시 볼 개수 증가 - 게임 플레이의 핵심 메커니즘
+    this.objects[y][index] = null;
+    // 아이템 수집 시 볼 개수 증가 - 게임 플레이의 핵심 메커니즘
     this.ballCount++;
     return element;
   }
 
-  incrementLevel(): void {
-    this.level++;
-  }
-
-  getLevel(): number {
-    return this.level;
-  }
-
-  incrementBallCount(): void {
-    this.ballCount++;
-  }
-
-  getBallCount(): number {
-    return this.ballCount;
-  }
-
-  setBallStartPosition(x: number): void {
-    this.ballStartPosition = x;
-  }
-
-  getBallStartPosition(): number {
-    return this.ballStartPosition;
-  }
-
-  isEndGame(): boolean {
-    const lastRowIndex = this.GRID_HEIGHT - 1;
-    for (let x = 0; x < this.GRID_WIDTH; x++) {
-      const element = this.bricks[lastRowIndex][x];
-      if (element !== null && element.type === "brick") {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  shiftBrick(): (GridElement | null)[] {
+  /** 모든 행을 아래로 이동 */
+  shiftRowsDown(): (GameObject | null)[] {
     // CRITICAL: 반드시 아래(GRID_HEIGHT-1)부터 위(1)로 이동해야 함 - 순서 바뀌면 데이터 덮어씀
     for (let y = this.GRID_HEIGHT - 1; y >= 1; y--) {
       for (let x = 0; x < this.GRID_WIDTH; x++) {
-        this.bricks[y][x] = this.bricks[y - 1][x];
-        if (this.bricks[y][x] !== null) {
+        this.objects[y][x] = this.objects[y - 1][x];
+        if (this.objects[y][x] !== null) {
           // CRITICAL: y 좌표 업데이트 필수 - hitBrick/hitItem 위치 계산에 영향
-          this.bricks[y][x]!.y = y;
+          this.objects[y][x]!.y = y;
         }
       }
     }
 
     // CRITICAL: 0행 초기화 - 새로운 브릭/아이템 생성을 위한 공간 확보
     for (let x = 0; x < this.GRID_WIDTH; x++) {
-      this.bricks[0][x] = null;
+      this.objects[0][x] = null;
     }
 
     const lastRowIndex = this.GRID_HEIGHT - 1;
-    return this.bricks[lastRowIndex];
+    return this.objects[lastRowIndex];
   }
 }

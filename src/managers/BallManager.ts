@@ -29,7 +29,7 @@ export class BallManager {
 
   public createBalls(count: number): void {
     for (let i = 0; i < count; i++) {
-      const ballStartX = this.swipeBrick.getBallStartPosition();
+      const ballStartX = this.swipeBrick.getBallStartX();
       const ballStartPosition: Position = {
         x: ballStartX,
         y: GAME_HEIGHT - BALL_RADIUS,
@@ -67,7 +67,7 @@ export class BallManager {
 
   public showPreviewBall(): void {
     this.previewBall.setVisible(true);
-    const ballStartX = this.swipeBrick.getBallStartPosition();
+    const ballStartX = this.swipeBrick.getBallStartX();
     console.log("ballStartX", ballStartX);
     this.previewBall.setPosition({
       x: ballStartX,
@@ -86,7 +86,7 @@ export class BallManager {
   }
 
   private createPreviewBall(): void {
-    const ballStartX = this.swipeBrick.getBallStartPosition();
+    const ballStartX = this.swipeBrick.getBallStartX();
     this.previewBall = BallEntity.createWithoutPhysics({
       x: ballStartX,
       y: GAME_HEIGHT - BALL_RADIUS,

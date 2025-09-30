@@ -86,7 +86,7 @@ export class Game {
     this.inputManager.onMouseMove((x, y) => {
       // 대기 상태일 때만 점선 표시
       if (this.gameState.isWaiting) {
-        const ballStartX = this.swipeBrick.getBallStartPosition();
+        const ballStartX = this.swipeBrick.getBallStartX();
         this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
       }
     });
@@ -100,7 +100,7 @@ export class Game {
       if (!this.gameState.isBallLanded) {
         this.gameState.setIsBallLanded(true);
         const position = landedBall.getPosition();
-        this.swipeBrick.setBallStartPosition(position.x);
+        this.swipeBrick.setBallStartX(position.x);
         this.ballManager.showPreviewBall();
         console.log("First ball landed at:", position.x, position.y);
       }
