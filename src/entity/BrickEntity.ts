@@ -6,13 +6,12 @@ import type { Position } from "../GameState";
 export class BrickEntity extends Entity {
   private width: number = 60;
   private height: number = 40;
-  private hitCount: number = 0;
-  private maxHits: number = 300; // 3번 맞으면 파괴
+  private health: number;
 
-  constructor(position: Position, maxHits: number = 3, customId?: string) {
-    super(customId || `brick-${Date.now()}-${Math.random()}`);
+  constructor(position: Position, health: number = 3, customId: string) {
+    super(customId);
 
-    this.maxHits = maxHits;
+    this.health = health;
 
     this.renderComponent = new RectangleRenderComponent(
       this.width,
@@ -37,7 +36,7 @@ export class BrickEntity extends Entity {
   }
 
   public hit(): void {
-    this.hitCount++;
+    this.health--;
     this.updateHealthText();
   }
 
@@ -57,11 +56,11 @@ export class BrickEntity extends Entity {
   }
 
   public getHealth(): number {
-    return this.maxHits - this.hitCount;
+    return this.health;
   }
 
   public setHealth(health: number): void {
-    this.hitCount = this.maxHits - health;
+    this.health = health;
     this.updateHealthText();
   }
 

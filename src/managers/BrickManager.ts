@@ -102,8 +102,6 @@ export class BrickManager {
   }
 
   public shift(): void {
-    console.log("shift");
-
     // SwipeBrick에서 shift 수행하고 마지막 행 요소들 확인
     const lastRowElements = this.swipeBrick.shiftBrick();
 
