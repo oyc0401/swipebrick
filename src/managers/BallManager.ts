@@ -1,14 +1,14 @@
-import { Ball } from "../entity/Ball";
+import { BallEntity } from "../entity/BallEntity";
 import type { GameState } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
 
 interface BallLandingCallback {
-  (landedBall: Ball): void;
+  (landedBall: BallEntity): void;
 }
 
 export class BallManager {
-  private activeBalls: Ball[] = [];
-  private previewBall!: Ball;
+  private activeBalls: BallEntity[] = [];
+  private previewBall!: BallEntity;
   private gameState: GameState;
 
   private onBallLanding?: BallLandingCallback;
@@ -26,7 +26,7 @@ export class BallManager {
 
   public createBalls(count: number): void {
     for (let i = 0; i < count; i++) {
-      const ball = new Ball(this.gameState.ballStartPosition);
+      const ball = new BallEntity(this.gameState.ballStartPosition);
       this.activeBalls.push(ball);
     }
   }
@@ -73,11 +73,11 @@ export class BallManager {
   }
 
   private createPreviewBall(): void {
-    this.previewBall = Ball.createWithoutPhysics(
+    this.previewBall = BallEntity.createWithoutPhysics(
       this.gameState.ballStartPosition
     );
   }
-  private removeBall(ball: Ball): void {
+  private removeBall(ball: BallEntity): void {
     ball.destroy();
 
     const index = this.activeBalls.indexOf(ball);

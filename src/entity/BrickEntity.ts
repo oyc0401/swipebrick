@@ -2,7 +2,7 @@ import { Entity } from "../core/entity/Entity";
 import { RectangleRenderComponent } from "../render/RenderComponent";
 import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
 
-export class Brick extends Entity {
+export class BrickEntity extends Entity {
   private width: number = 60;
   private height: number = 40;
   private hitCount: number = 0;

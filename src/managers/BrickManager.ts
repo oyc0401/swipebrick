@@ -1,19 +1,19 @@
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { GameState } from "../GameState";
-import { Brick } from "../entity/Brick";
+import { BrickEntity } from "../entity/BrickEntity";
 
 interface BrickCollisionCallback {
-  (brick: Brick): void;
+  (brick: BrickEntity): void;
 }
 
 interface BrickDestroyCallback {
-  (brick: Brick): void;
+  (brick: BrickEntity): void;
 }
 
 export class BrickManager {
   private physics: PhysicsEngine;
   private gameState: GameState;
-  private bricks: Map<string, Brick> = new Map();
+  private bricks: Map<string, BrickEntity> = new Map();
   private brickCollisionCallbacks: BrickCollisionCallback[] = [];
   private brickDestroyCallbacks: BrickDestroyCallback[] = [];
 
@@ -23,8 +23,8 @@ export class BrickManager {
     this.setupCollisionListener();
   }
 
-  public createBrick(x: number, y: number, maxHits: number = 3): Brick {
-    const brick = new Brick(x, y, maxHits);
+  public createBrick(x: number, y: number, maxHits: number = 3): BrickEntity {
+    const brick = new BrickEntity(x, y, maxHits);
 
     // 내부 관리용 맵에 추가
     this.bricks.set(brick.id, brick);
@@ -101,7 +101,7 @@ export class BrickManager {
     });
   }
 
-  private findBrickByBody(body: Matter.Body): Brick | null {
+  private findBrickByBody(body: Matter.Body): BrickEntity | null {
     for (const brick of this.bricks.values()) {
       if (brick.getPhysicsBody() === body) {
         return brick;
@@ -110,7 +110,7 @@ export class BrickManager {
     return null;
   }
 
-  private handleBrickCollision(brick: Brick): void {
+  private handleBrickCollision(brick: BrickEntity): void {
     // 벽돌 타격
     brick.hit();
 
@@ -129,7 +129,7 @@ export class BrickManager {
     }
   }
 
-  private destroyBrick(brick: Brick): void {
+  private destroyBrick(brick: BrickEntity): void {
     // 외부 파괴 콜백 호출 (벽돌이 실제로 파괴되기 전에)
     this.brickDestroyCallbacks.forEach((callback) => {
       callback(brick);
@@ -173,7 +173,11 @@ export class BrickManager {
     return this.interpolateColor(minColor, maxColor, ratio);
   }
 
-  private interpolateColor(color1: number, color2: number, ratio: number): number {
+  private interpolateColor(
+    color1: number,
+    color2: number,
+    ratio: number
+  ): number {
     // color1에서 color2로 ratio만큼 보간 (ratio: 0~1)
     const r1 = (color1 >> 16) & 0xff;
     const g1 = (color1 >> 8) & 0xff;
