@@ -7,7 +7,7 @@ import { EntityManager } from "../core/entity/EntityManager";
 function getSize() {
   const size = { width: window.innerWidth, height: window.innerHeight };
   // -> 세로 / 가로
-  const RATIO = 1.8; // 2도 좋음
+  const RATIO = 1.6; // 2도 좋음
   let innerWidth = size.width;
   if (size.height / size.width < RATIO) {
     innerWidth = size.height / RATIO;
