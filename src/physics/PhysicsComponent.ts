@@ -102,7 +102,7 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
     // 벽돌인 경우 다른 카테고리 사용
     const category = label === "brick" ? 0x0004 : 0x0002;
 
-    this.body = Bodies.rectangle(x + width / 2, y + height / 2, width, height, {
+    this.body = Bodies.rectangle(x, y, width, height, {
       isStatic: true, // 정적 객체
       restitution: 1, // 완전 탄성 반사
       friction: 0, // 마찰 완전 제거

@@ -18,7 +18,7 @@ export abstract class RenderComponent implements IRenderComponent {
     return this.container;
   }
 
-  public updatePosition(x: number, y: number): void {
+  public setPosition(x: number, y: number): void {
     if (this.container && !this.container.destroyed) {
       this.container.x = x;
       this.container.y = y;
@@ -94,16 +94,23 @@ export class RectangleRenderComponent extends RenderComponent {
     this.graphics.clear();
 
     if (this.innerMargin > 0) {
-      // 마진이 있으면 내부에 더 작은 사각형 그리기
+      // 마진이 있으면 내부에 더 작은 사각형 그리기 (중심점 기준)
+      const innerWidth = this.width - this.innerMargin * 2;
+      const innerHeight = this.height - this.innerMargin * 2;
       this.graphics.rect(
-        this.innerMargin,
-        this.innerMargin,
-        this.width - this.innerMargin * 2,
-        this.height - this.innerMargin * 2
+        -innerWidth / 2,
+        -innerHeight / 2,
+        innerWidth,
+        innerHeight
       );
     } else {
-      // 마진이 없으면 전체 크기로 그리기
-      this.graphics.rect(0, 0, this.width, this.height);
+      // 마진이 없으면 전체 크기로 그리기 (중심점 기준)
+      this.graphics.rect(
+        -this.width / 2,
+        -this.height / 2,
+        this.width,
+        this.height
+      );
     }
 
     this.graphics.fill({ color: this.color });
@@ -140,10 +147,10 @@ export class RectangleRenderComponent extends RenderComponent {
       style: textStyle,
     });
 
-    // 텍스트를 사각형 중앙에 배치
+    // 텍스트를 사각형 중앙에 배치 (중심점 기준)
     this.healthText.anchor.set(0.5, 0.5);
-    this.healthText.x = this.width / 2;
-    this.healthText.y = this.height / 2;
+    this.healthText.x = 0;
+    this.healthText.y = 0;
 
     // 컨테이너에 텍스트 추가
     this.container.addChild(this.healthText);

@@ -1,5 +1,4 @@
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
-import type { GameState } from "../GameState";
 import { BrickEntity } from "../entity/BrickEntity";
 import type { SwipeBrick } from "../SwipeBrick";
 
@@ -34,10 +33,11 @@ export class BrickManager {
 
     elements.forEach((element) => {
       if (element.type === "brick") {
-        const x = element.x * BRICK_WIDTH;
+        const x = element.x * BRICK_WIDTH + BRICK_WIDTH / 2;
+        const y = BRICK_Y + 20; // 40px 높이의 절반
 
         // CRITICAL: SwipeBrick의 ID를 BrickEntity에 전달하여 동기화
-        const brick = new BrickEntity(x, BRICK_Y, element.health, element.id);
+        const brick = new BrickEntity({ x, y }, element.health, element.id);
         this.brickEntities.set(brick.id, brick);
       }
     });

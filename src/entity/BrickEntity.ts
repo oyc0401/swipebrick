@@ -1,6 +1,7 @@
 import { Entity } from "../core/entity/Entity";
 import { RectangleRenderComponent } from "../render/RenderComponent";
 import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
+import type { Position } from "../GameState";
 
 export class BrickEntity extends Entity {
   private width: number = 60;
@@ -8,7 +9,7 @@ export class BrickEntity extends Entity {
   private hitCount: number = 0;
   private maxHits: number = 300; // 3번 맞으면 파괴
 
-  constructor(x: number, y: number, maxHits: number = 3, customId?: string) {
+  constructor(position: Position, maxHits: number = 3, customId?: string) {
     super(customId || `brick-${Date.now()}-${Math.random()}`);
 
     this.maxHits = maxHits;
@@ -19,7 +20,7 @@ export class BrickEntity extends Entity {
       0x1f4ef5, // 초기 색상은 진한 파란색
       1 // 1px 마진
     );
-    this.renderComponent.updatePosition(x, y);
+    this.renderComponent.setPosition(position.x, position.y);
 
     // 초기 체력 텍스트 표시
     (this.renderComponent as RectangleRenderComponent).updateHealthText(
@@ -27,8 +28,8 @@ export class BrickEntity extends Entity {
     );
 
     this.physicsComponent = new BoundaryPhysicsComponent(
-      x,
-      y,
+      position.x,
+      position.y,
       this.width,
       this.height,
       "brick"
@@ -76,7 +77,11 @@ export class BrickEntity extends Entity {
     this.setColor(color);
   }
 
-  private interpolateColor(color1: number, color2: number, ratio: number): number {
+  private interpolateColor(
+    color1: number,
+    color2: number,
+    ratio: number
+  ): number {
     // color1에서 color2로 ratio만큼 보간 (ratio: 0~1)
     const r1 = (color1 >> 16) & 0xff;
     const g1 = (color1 >> 8) & 0xff;
@@ -102,7 +107,7 @@ export class BrickEntity extends Entity {
     this.physicsComponent.setPosition(currentPos.x, newY);
 
     // 렌더링 위치 동기화
-    this.renderComponent.getGraphics().y += amount;
+    this.renderComponent.setPosition(currentPos.x, newY);
   }
 
   public destroy(): void {

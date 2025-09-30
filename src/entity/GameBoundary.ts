@@ -16,7 +16,7 @@ export class GameBoundary extends Entity {
     super(`boundary-${Date.now()}-${Math.random()}`);
 
     this.renderComponent = new RectangleRenderComponent(width, height, color);
-    this.renderComponent.updatePosition(x, y);
+    this.renderComponent.setPosition(x, y);
 
     this.physicsComponent = new BoundaryPhysicsComponent(
       x,

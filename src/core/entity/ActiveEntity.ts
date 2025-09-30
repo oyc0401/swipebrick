@@ -22,6 +22,6 @@ export abstract class ActiveEntity extends Entity {
   public updateGraphics(): void {
     const position = this.physicsComponent.getPosition();
 
-    this.renderComponent.updatePosition(position.x, position.y);
+    this.renderComponent.setPosition(position.x, position.y);
   }
 }
