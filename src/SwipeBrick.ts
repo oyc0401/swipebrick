@@ -28,7 +28,7 @@ export class SwipeBrick {
     this.level = 1;
     this.ballCount = 1;
     // CRITICAL: 게임 영역 중앙 x좌표 - 공 발사 시작점
-    this.ballStartPosition = 280; // GAME_WIDTH / 2
+    this.ballStartPosition = 180; // GAME_WIDTH / 2
   }
 
   private initializeGrid(): (GridElement | null)[][] {

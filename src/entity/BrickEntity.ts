@@ -1,5 +1,5 @@
 import { Entity } from "../core/entity/Entity";
-import { RectangleRenderComponent } from "../render/RenderComponent";
+import { RoundedRectangleRenderComponent } from "../render/RenderComponent";
 import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
 import type { Position } from "../GameState";
 
@@ -13,16 +13,17 @@ export class BrickEntity extends Entity {
 
     this.health = health;
 
-    this.renderComponent = new RectangleRenderComponent(
+    this.renderComponent = new RoundedRectangleRenderComponent(
       this.width,
       this.height,
       0x1f4ef5, // 초기 색상은 진한 파란색
-      1 // 1px 마진
+      1, // 1px 마진
+      6 // 6px 라운드
     );
     this.renderComponent.setPosition(position.x, position.y);
 
     // 초기 체력 텍스트 표시
-    (this.renderComponent as RectangleRenderComponent).updateHealthText(
+    (this.renderComponent as RoundedRectangleRenderComponent).updateHealthText(
       this.getHealth()
     );
 
@@ -41,12 +42,12 @@ export class BrickEntity extends Entity {
   }
 
   public setColor(color: number): void {
-    (this.renderComponent as RectangleRenderComponent).updateColor(color);
+    (this.renderComponent as RoundedRectangleRenderComponent).updateColor(color);
   }
 
   private updateHealthText(): void {
     // 체력 텍스트만 업데이트 (색상은 BrickManager에서 관리)
-    (this.renderComponent as RectangleRenderComponent).updateHealthText(
+    (this.renderComponent as RoundedRectangleRenderComponent).updateHealthText(
       this.getHealth()
     );
   }
