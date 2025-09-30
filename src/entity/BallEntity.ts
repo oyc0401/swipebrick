@@ -22,10 +22,15 @@ export class BallEntity extends ActiveEntity {
       );
     } else {
       // 프리뷰용 더미 physicsComponent (물리 등록 없음)
+      // CRITICAL: position 상태를 내부적으로 관리하여 setPosition/getPosition 동작
+      let currentPosition = { x: position.x, y: position.y };
       this.physicsComponent = {
-        getBody: () => ({ position: { x: position.x, y: position.y } }),
-        setPosition: (_x: number, _y: number) => {},
-        getPosition: () => ({ x: position.x, y: position.y }),
+        getBody: () => ({ position: currentPosition }),
+        setPosition: (x: number, y: number) => {
+          currentPosition.x = x;
+          currentPosition.y = y;
+        },
+        getPosition: () => ({ ...currentPosition }),
         destroy: () => {},
       } as any;
     }
