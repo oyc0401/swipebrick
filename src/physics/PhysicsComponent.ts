@@ -116,3 +116,30 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
     });
   }
 }
+
+export class ItemPhysicsComponent extends MatterJSComponent {
+  private radius: number;
+
+  constructor(x: number, y: number, radius: number) {
+    super();
+    this.radius = radius;
+    this.createItemBody(x, y);
+    this.registerToPhysics();
+  }
+
+  private createItemBody(x: number, y: number): void {
+    this.body = Bodies.circle(x, y, this.radius, {
+      isStatic: true, // 정적 객체 (아이템은 움직이지 않음)
+      isSensor: true, // 센서로 설정 - 물리적 충돌 없음, 감지만
+      restitution: 0, // 아이템은 반사하지 않음
+      friction: 0, // 마찰 완전 제거
+      frictionStatic: 0, // 정적 마찰 완전 제거
+      slop: 0.0,
+      label: "item",
+      collisionFilter: {
+        category: 0x0008, // 아이템 카테고리
+        mask: 0x0001, // 공과만 충돌
+      },
+    });
+  }
+}

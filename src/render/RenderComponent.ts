@@ -265,3 +265,21 @@ export class RoundedRectangleRenderComponent extends RenderComponent {
     super.destroy();
   }
 }
+
+export class ItemRenderComponent extends RenderComponent {
+  private radius: number;
+  private color: number;
+
+  constructor(radius: number = 8, color: number = 0xffd700) {
+    super();
+    this.radius = radius;
+    this.color = color;
+    this.createItem();
+  }
+
+  private createItem(): void {
+    this.graphics.clear();
+    this.graphics.circle(0, 0, this.radius);
+    this.graphics.fill({ color: this.color });
+  }
+}
