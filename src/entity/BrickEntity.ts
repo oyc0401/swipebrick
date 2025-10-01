@@ -8,8 +8,8 @@ export class BrickEntity extends Entity {
   private height: number = 40;
   private health: number;
 
-  constructor(position: Position, health: number = 3, customId: string) {
-    super(customId);
+  constructor(id: string, position: Position, health: number = 3) {
+    super(id);
 
     this.health = health;
 
@@ -32,6 +32,7 @@ export class BrickEntity extends Entity {
       position.y,
       this.width,
       this.height,
+      id,
       "brick"
     );
   }

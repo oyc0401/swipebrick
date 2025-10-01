@@ -95,10 +95,11 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
     y: number,
     width: number,
     height: number,
+    entityId: string,
     label: string = "boundary"
   ) {
     super();
-    this.createBoundaryBody(x, y, width, height, label);
+    this.createBoundaryBody(x, y, width, height, label, entityId);
     this.registerToPhysics();
   }
 
@@ -107,7 +108,8 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
     y: number,
     width: number,
     height: number,
-    label: string
+    label: string,
+    entityId: string
   ): void {
     // 벽돌인 경우 다른 카테고리 사용
     const category =
@@ -122,6 +124,7 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
       frictionStatic: 0, // 정적 마찰 완전 제거
       slop: 0.0,
       label: label,
+      plugin: { entityId }, // 엔티티 ID 저장
       collisionFilter: {
         category: category,
         mask: CollisionCategories.BALL,
@@ -133,14 +136,14 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
 export class ItemPhysicsComponent extends MatterJSComponent {
   private radius: number;
 
-  constructor(x: number, y: number, radius: number) {
+  constructor(x: number, y: number, radius: number, entityId: string) {
     super();
     this.radius = radius;
-    this.createItemBody(x, y);
+    this.createItemBody(x, y, entityId);
     this.registerToPhysics();
   }
 
-  private createItemBody(x: number, y: number): void {
+  private createItemBody(x: number, y: number, entityId: string): void {
     this.body = Bodies.circle(x, y, this.radius, {
       isStatic: true, // 정적 객체 (아이템은 움직이지 않음)
       isSensor: true, // 센서로 설정 - 물리적 충돌 없음, 감지만
@@ -149,6 +152,7 @@ export class ItemPhysicsComponent extends MatterJSComponent {
       frictionStatic: 0, // 정적 마찰 완전 제거
       slop: 0.0,
       label: "item",
+      plugin: { entityId }, // 엔티티 ID 저장
       collisionFilter: {
         category: CollisionCategories.ITEM,
         mask: CollisionCategories.BALL,

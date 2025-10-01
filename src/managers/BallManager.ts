@@ -3,6 +3,7 @@ import type { GameState, Position } from "../GameState";
 import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { SwipeBrick } from "../SwipeBrick";
+import { getNextId } from "../utils/IdGenerator";
 
 interface BallLandingCallback {
   (landedBall: BallEntity): void;
@@ -34,7 +35,7 @@ export class BallManager {
         x: ballStartX,
         y: GAME_HEIGHT - BALL_RADIUS,
       };
-      const ball = new BallEntity(ballStartPosition);
+      const ball = new BallEntity(`ball-${getNextId()}`, ballStartPosition);
       this.activeBalls.push(ball);
     }
   }
@@ -86,7 +87,7 @@ export class BallManager {
 
   private createPreviewBall(): void {
     const ballStartX = this.swipeBrick.getBallStartX();
-    this.previewBall = BallEntity.createWithoutPhysics({
+    this.previewBall = BallEntity.createWithoutPhysics(`ball-preview-${getNextId()}`, {
       x: ballStartX,
       y: GAME_HEIGHT - BALL_RADIUS,
     });

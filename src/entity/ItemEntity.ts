@@ -7,8 +7,8 @@ export class ItemEntity extends Entity {
   private radius: number = 11;
   private color: number = 0xffb433; // 노란 오렌지 색상
 
-  constructor(position: Position, customId: string) {
-    super(customId);
+  constructor(id: string, position: Position) {
+    super(id);
 
     this.renderComponent = new ItemRenderComponent(
       this.radius,
@@ -19,7 +19,8 @@ export class ItemEntity extends Entity {
     this.physicsComponent = new ItemPhysicsComponent(
       position.x,
       position.y,
-      this.radius
+      this.radius,
+      id
     );
   }
 

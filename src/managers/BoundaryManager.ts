@@ -1,4 +1,5 @@
 import { GameBoundary } from "../entity/GameBoundary";
+import { getNextId } from "../utils/IdGenerator";
 
 interface BoundaryConfig {
   x: number;
@@ -79,6 +80,7 @@ export class BoundaryManager {
 
   private createBoundary(config: BoundaryConfig): void {
     const boundary = new GameBoundary(
+      `boundary-${config.label}-${getNextId()}`,
       config.x,
       config.y,
       config.width,

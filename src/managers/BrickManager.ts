@@ -51,11 +51,11 @@ export class BrickManager {
 
         if (element.type === "brick") {
           // CRITICAL: SwipeBrick의 ID를 BrickEntity에 전달하여 동기화
-          const brick = new BrickEntity({ x, y }, element.health, element.id);
+          const brick = new BrickEntity(element.id, { x, y }, element.health);
           this.brickEntities.set(brick.id, brick);
         } else if (element.type === "item") {
           // CRITICAL: SwipeBrick의 ID를 ItemEntity에 전달하여 동기화
-          const item = new ItemEntity({ x, y }, element.id);
+          const item = new ItemEntity(element.id, { x, y });
           this.itemEntities.set(item.id, item);
         }
       }
@@ -101,21 +101,13 @@ export class BrickManager {
   }
 
   private findBrickByBody(body: Matter.Body): BrickEntity | null {
-    for (const brick of this.brickEntities.values()) {
-      if (brick.getPhysicsBody() === body) {
-        return brick;
-      }
-    }
-    return null;
+    const entityId = body.plugin.entityId;
+    return this.brickEntities.get(entityId) || null;
   }
 
   private findItemByBody(body: Matter.Body): ItemEntity | null {
-    for (const item of this.itemEntities.values()) {
-      if (item.getPhysicsBody() === body) {
-        return item;
-      }
-    }
-    return null;
+    const entityId = body.plugin.entityId;
+    return this.itemEntities.get(entityId) || null;
   }
 
   private handleBrickCollision(brick: BrickEntity): void {

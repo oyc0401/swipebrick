@@ -6,14 +6,15 @@ import type { Container } from "pixi.js";
 
 export class GameBoundary extends Entity {
   constructor(
+    id: string,
     x: number,
     y: number,
     width: number,
     height: number,
     color: number = 0x000000,
-    label?: string
+    label: string
   ) {
-    super(`boundary-${Date.now()}-${Math.random()}`);
+    super(id);
 
     this.renderComponent = new RectangleRenderComponent(width, height, color);
     this.renderComponent.setPosition(x, y);
@@ -23,7 +24,8 @@ export class GameBoundary extends Entity {
       y,
       width,
       height,
-      label || "boundary"
+      this.id,
+      label
     );
   }
 
