@@ -66,13 +66,6 @@ export class BrickManager {
 
   private setupCollisionListener(): void {
     this.physics.onCollisionBrick((body) => {
-      console.log("BrickManager collision detected:", {
-        timestamp: new Date().toISOString(),
-        bodyLabel: body.label,
-        bodyId: body.id,
-        position: body.position,
-      });
-
       const brick = this.findBrickByBody(body);
       if (brick) {
         this.handleBrickCollision(brick);
@@ -85,7 +78,7 @@ export class BrickManager {
         return;
       }
 
-      console.log("Unknown collision body:", {
+      console.error("Unknown collision body:", {
         label: body.label,
         id: body.id,
         brickCount: this.brickEntities.size,

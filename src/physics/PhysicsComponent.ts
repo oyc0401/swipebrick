@@ -2,6 +2,13 @@ import { Body, Bodies, Sleeping } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
 import { PhysicsEngine } from "./PhysicsEngine";
 
+const enum CollisionCategories {
+  BALL = 0x0001, // 공
+  BOUNDARY = 0x0002, // 경계벽
+  BRICK = 0x0004, // 벽돌
+  ITEM = 0x0008, // 아이템
+}
+
 export abstract class MatterJSComponent implements IPhysicsComponent {
   protected body: Matter.Body;
 
@@ -49,8 +56,11 @@ export class BallPhysicsComponent extends MatterJSComponent {
       slop: 0.0,
       label: "ball",
       collisionFilter: {
-        category: 0x0001, // 공 카테고리
-        mask: 0x0002 | 0x0004 | 0x0008, // 벽, 벽돌, 아이템과 충돌
+        category: CollisionCategories.BALL,
+        mask:
+          CollisionCategories.BOUNDARY |
+          CollisionCategories.BRICK |
+          CollisionCategories.ITEM,
       },
     });
   }
@@ -100,7 +110,10 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
     label: string
   ): void {
     // 벽돌인 경우 다른 카테고리 사용
-    const category = label === "brick" ? 0x0004 : 0x0002;
+    const category =
+      label === "brick"
+        ? CollisionCategories.BRICK
+        : CollisionCategories.BOUNDARY;
 
     this.body = Bodies.rectangle(x, y, width, height, {
       isStatic: true, // 정적 객체
@@ -110,8 +123,8 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
       slop: 0.0,
       label: label,
       collisionFilter: {
-        category: category, // 벽돌: 0x0004, 벽: 0x0002
-        mask: 0x0001, // 공과만 충돌
+        category: category,
+        mask: CollisionCategories.BALL,
       },
     });
   }
@@ -137,8 +150,8 @@ export class ItemPhysicsComponent extends MatterJSComponent {
       slop: 0.0,
       label: "item",
       collisionFilter: {
-        category: 0x0008, // 아이템 카테고리
-        mask: 0x0001, // 공과만 충돌
+        category: CollisionCategories.ITEM,
+        mask: CollisionCategories.BALL,
       },
     });
   }
