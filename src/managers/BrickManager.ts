@@ -1,5 +1,6 @@
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 import { BrickEntity } from "../entity/BrickEntity";
+import { ItemEntity } from "../entity/ItemEntity";
 import type { SwipeBrick } from "../SwipeBrick";
 
 interface BrickCollisionCallback {
@@ -10,11 +11,17 @@ interface BrickDestroyCallback {
   (brick: BrickEntity): void;
 }
 
+interface ItemCollisionCallback {
+  (item: ItemEntity): void;
+}
+
 export class BrickManager {
   private physics: PhysicsEngine;
   private brickEntities: Map<string, BrickEntity> = new Map();
+  private itemEntities: Map<string, ItemEntity> = new Map();
   private brickCollisionCallbacks: BrickCollisionCallback[] = [];
   private brickDestroyCallbacks: BrickDestroyCallback[] = [];
+  private itemCollisionCallbacks: ItemCollisionCallback[] = [];
 
   private swipeBrick: SwipeBrick;
 
@@ -25,20 +32,32 @@ export class BrickManager {
   }
 
   public createBricks(): void {
-    // CRITICAL: SwipeBrick에서 논리적 상태 생성 후 BrickEntity로 시각화
+    // CRITICAL: SwipeBrick에서 논리적 상태 생성 후 BrickEntity/ItemEntity로 시각화
     const elements = this.swipeBrick.createNewRow();
+
+    console.log("Entities created:", {
+      timestamp: new Date().toISOString(),
+      level: this.swipeBrick.getLevel(),
+      elements,
+    });
 
     const BRICK_WIDTH = 60;
     const BRICK_Y = 40;
 
     elements.forEach((element, index) => {
-      if (element !== null && element.type === "brick") {
+      if (element !== null) {
         const x = index * BRICK_WIDTH + BRICK_WIDTH / 2;
         const y = BRICK_Y + 20; // 40px 높이의 절반
 
-        // CRITICAL: SwipeBrick의 ID를 BrickEntity에 전달하여 동기화
-        const brick = new BrickEntity({ x, y }, element.health, element.id);
-        this.brickEntities.set(brick.id, brick);
+        if (element.type === "brick") {
+          // CRITICAL: SwipeBrick의 ID를 BrickEntity에 전달하여 동기화
+          const brick = new BrickEntity({ x, y }, element.health, element.id);
+          this.brickEntities.set(brick.id, brick);
+        } else if (element.type === "item") {
+          // CRITICAL: SwipeBrick의 ID를 ItemEntity에 전달하여 동기화
+          const item = new ItemEntity({ x, y }, element.id);
+          this.itemEntities.set(item.id, item);
+        }
       }
     });
 
@@ -46,11 +65,32 @@ export class BrickManager {
   }
 
   private setupCollisionListener(): void {
-    this.physics.onCollisionBrick((brickBody) => {
-      const brick = this.findBrickByBody(brickBody);
-      if (!brick) return;
+    this.physics.onCollisionBrick((body) => {
+      console.log("BrickManager collision detected:", {
+        timestamp: new Date().toISOString(),
+        bodyLabel: body.label,
+        bodyId: body.id,
+        position: body.position,
+      });
 
-      this.handleBrickCollision(brick);
+      const brick = this.findBrickByBody(body);
+      if (brick) {
+        this.handleBrickCollision(brick);
+        return;
+      }
+
+      const item = this.findItemByBody(body);
+      if (item) {
+        this.handleItemCollision(item);
+        return;
+      }
+
+      console.log("Unknown collision body:", {
+        label: body.label,
+        id: body.id,
+        brickCount: this.brickEntities.size,
+        itemCount: this.itemEntities.size,
+      });
     });
   }
 
@@ -58,6 +98,15 @@ export class BrickManager {
     for (const brick of this.brickEntities.values()) {
       if (brick.getPhysicsBody() === body) {
         return brick;
+      }
+    }
+    return null;
+  }
+
+  private findItemByBody(body: Matter.Body): ItemEntity | null {
+    for (const item of this.itemEntities.values()) {
+      if (item.getPhysicsBody() === body) {
+        return item;
       }
     }
     return null;
@@ -88,6 +137,23 @@ export class BrickManager {
     });
   }
 
+  private handleItemCollision(item: ItemEntity): void {
+    // CRITICAL: SwipeBrick ID 파싱 - item-{stage}-{index} 형식 의존
+    const idParts = item.id.split("-");
+    const stage = parseInt(idParts[1]);
+    const index = parseInt(idParts[2]);
+
+    // CRITICAL: SwipeBrick에서 아이템 수집 처리 (공 개수 증가)
+    this.swipeBrick.collectItem(stage, index);
+
+    // ItemEntity 제거
+    this.destroyItem(item);
+
+    this.itemCollisionCallbacks.forEach((callback) => {
+      callback(item);
+    });
+  }
+
   private destroyBrick(brick: BrickEntity): void {
     // 외부 파괴 콜백 호출 (벽돌이 실제로 파괴되기 전에)
     this.brickDestroyCallbacks.forEach((callback) => {
@@ -101,23 +167,40 @@ export class BrickManager {
     brick.destroy();
   }
 
+  private destroyItem(item: ItemEntity): void {
+    // 내부 맵에서 제거
+    this.itemEntities.delete(item.id);
+
+    // 아이템 파괴
+    item.destroy();
+  }
+
   public shift(): void {
     // SwipeBrick에서 shift 수행하고 마지막 행 요소들 확인
     const lastRowElements = this.swipeBrick.shiftRowsDown();
 
-    // 마지막 행에 있던 아이템들 자동 수집
+    // 마지막 행에 있던 아이템들 자동 수집 및 ItemEntity 제거
     lastRowElements.forEach((element, index) => {
       if (element !== null && element.type === "item") {
         const idParts = element.id.split("-");
         const stage = parseInt(idParts[1]);
         this.swipeBrick.collectItem(stage, index);
+
+        // 해당 ItemEntity 찾아서 제거
+        const item = this.itemEntities.get(element.id);
+        if (item) {
+          this.destroyItem(item);
+        }
       }
     });
 
-    // 기존 BrickEntity들의 물리적 위치 업데이트
+    // 기존 BrickEntity들과 ItemEntity들의 물리적 위치 업데이트
     const SHIFT_AMOUNT = 40;
     for (const brick of this.brickEntities.values()) {
       brick.shift(SHIFT_AMOUNT);
+    }
+    for (const item of this.itemEntities.values()) {
+      item.shift(SHIFT_AMOUNT);
     }
 
     // 게임 오버 체크
@@ -142,13 +225,23 @@ export class BrickManager {
     this.brickDestroyCallbacks.push(callback);
   }
 
+  public onItemCollision(callback: ItemCollisionCallback): void {
+    this.itemCollisionCallbacks.push(callback);
+  }
+
   public destroy(): void {
     // 모든 벽돌 파괴
     for (const brick of this.brickEntities.values()) {
       this.destroyBrick(brick);
     }
+    // 모든 아이템 파괴
+    for (const item of this.itemEntities.values()) {
+      this.destroyItem(item);
+    }
     this.brickEntities.clear();
+    this.itemEntities.clear();
     this.brickCollisionCallbacks = [];
     this.brickDestroyCallbacks = [];
+    this.itemCollisionCallbacks = [];
   }
 }

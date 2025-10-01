@@ -110,7 +110,6 @@ export class Game {
         setTimeout(() => {
           this.gameState.setIsBallLanded(false);
           this.swipeBrick.incrementLevel();
-          this.swipeBrick.incrementBallCount();
           this.brickManager.shift();
           this.brickManager.createBricks();
           this.gameState.setWaiting(true);
@@ -129,6 +128,16 @@ export class Game {
         remainingHealth: brick.getHealth(),
         currentLevel: this.swipeBrick.getLevel(),
         position: brick.physicsComponent.getPosition(),
+      });
+    });
+
+    this.brickManager.onItemCollision((item) => {
+      console.log("Item collected!", {
+        timestamp: new Date().toISOString(),
+        itemId: item.id,
+        currentLevel: this.swipeBrick.getLevel(),
+        newBallCount: this.swipeBrick.getBallCount(),
+        position: item.physicsComponent.getPosition(),
       });
     });
   }

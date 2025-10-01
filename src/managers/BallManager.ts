@@ -68,7 +68,6 @@ export class BallManager {
   public showPreviewBall(): void {
     this.previewBall.setVisible(true);
     const ballStartX = this.swipeBrick.getBallStartX();
-    console.log("ballStartX", ballStartX);
     this.previewBall.setPosition({
       x: ballStartX,
       y: GAME_HEIGHT - BALL_RADIUS,

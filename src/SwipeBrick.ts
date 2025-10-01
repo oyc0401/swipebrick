@@ -60,11 +60,6 @@ export class SwipeBrick {
     return this.ballCount;
   }
 
-  /** 공 개수 1 증가 */
-  incrementBallCount(): void {
-    this.ballCount++;
-  }
-
   /** 게임 종료 여부 확인 */
   isGameOver(): boolean {
     const lastRowIndex = this.GRID_HEIGHT - 1;

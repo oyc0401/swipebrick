@@ -50,7 +50,7 @@ export class BallPhysicsComponent extends MatterJSComponent {
       label: "ball",
       collisionFilter: {
         category: 0x0001, // 공 카테고리
-        mask: 0x0002 | 0x0004, // 벽과만 충돌, 다른 공과는 충돌 안함
+        mask: 0x0002 | 0x0004 | 0x0008, // 벽, 벽돌, 아이템과 충돌
       },
     });
   }
