@@ -270,7 +270,7 @@ export class ItemRenderComponent extends RenderComponent {
   private radius: number;
   private color: number;
 
-  constructor(radius: number = 8, color: number = 0xffd700) {
+  constructor(radius: number = 11, color: number = 0xffb433) {
     super();
     this.radius = radius;
     this.color = color;
@@ -279,7 +279,13 @@ export class ItemRenderComponent extends RenderComponent {
 
   private createItem(): void {
     this.graphics.clear();
+
+    // 외곽 원 (테두리만, 채우기 투명)
     this.graphics.circle(0, 0, this.radius);
+    this.graphics.stroke({ width: 1, color: this.color });
+
+    // 내부 원 (가득찬 원)
+    this.graphics.circle(0, 0, 8);
     this.graphics.fill({ color: this.color });
   }
 }

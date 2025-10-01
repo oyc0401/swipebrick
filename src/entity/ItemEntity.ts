@@ -4,8 +4,8 @@ import { ItemPhysicsComponent } from "../physics/PhysicsComponent";
 import type { Position } from "../GameState";
 
 export class ItemEntity extends Entity {
-  private radius: number = 8;
-  private color: number = 0xffd700; // 골드 색상
+  private radius: number = 11;
+  private color: number = 0xffb433; // 노란 오렌지 색상
 
   constructor(position: Position, customId: string) {
     super(customId);
