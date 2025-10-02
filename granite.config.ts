@@ -21,5 +21,8 @@ export default defineConfig({
   webViewProps: {
     type: "game",
     overScrollMode: "never",
+    bounces: false,
+    pullToRefreshEnabled: false,
+    allowsBackForwardNavigationGestures: false,
   },
 });

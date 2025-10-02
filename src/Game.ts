@@ -87,6 +87,7 @@ export class Game {
       // 실행 중이 아닐 때만 점선 표시
       if (!this.swipeBrick.getIsRunning()) {
         const ballStartX = this.swipeBrick.getBallStartX();
+        this.renderer.drawDot(x, y);
         this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
       }
     });

@@ -146,8 +146,8 @@ export class InputManager {
   }
 
   public destroy(): void {
-    document.removeEventListener("click", this.clickHandler);
-    document.removeEventListener("mousemove", this.mouseMoveHandler);
+    document.removeEventListener("pointerup", this.clickHandler);
+    document.removeEventListener("pointermove", this.mouseMoveHandler);
     this.onGameClick = undefined;
     this.onMouseMoveCallback = undefined;
   }

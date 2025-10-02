@@ -25,6 +25,7 @@ export class GraphicEngine {
   private background: Graphics | null = null;
   private debugGuide: Graphics | null = null;
   private aimLine: Graphics | null = null;
+  private aimDot: Graphics | null = null;
   private cleanupTasks: (() => void)[] = [];
 
   private constructor(gameWidth: number, gameHeight: number) {
@@ -351,9 +352,29 @@ export class GraphicEngine {
     return { x: endX, y: endY };
   }
 
+  public drawDot(x: number, y: number): void {
+    if (!this.aimDot) {
+      this.aimDot = new Graphics();
+      this.gameViewport.addChild(this.aimDot);
+    }
+
+    this.aimDot.clear();
+
+    // 작은 원점 스타일 (drawAimLine과 동일한 색상)
+    const radius = 4;
+    const color = 0x4a90e2; // 파란색
+
+    this.aimDot
+      .circle(x, y, radius)
+      .fill(color);
+  }
+
   public clearAimLine(): void {
     if (this.aimLine) {
       this.aimLine.clear();
+    }
+    if (this.aimDot) {
+      this.aimDot.clear();
     }
   }
 
@@ -389,6 +410,11 @@ export class GraphicEngine {
     if (this.aimLine) {
       this.aimLine.destroy(true);
       this.aimLine = null;
+    }
+
+    if (this.aimDot) {
+      this.aimDot.destroy(true);
+      this.aimDot = null;
     }
 
     // PixiJS 애플리케이션 완전 정리
