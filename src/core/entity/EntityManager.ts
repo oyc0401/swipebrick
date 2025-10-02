@@ -23,6 +23,24 @@ export class EntityManager {
   }
 
   static forEach(callback: (entity: ActiveEntity) => void): void {
-    this.getInstance().entities.forEach(callback); // O(N) - 어차피 필요
+    // 순회 중 수정 방지를 위해 복사본 생성
+    const snapshot = Array.from(this.getInstance().entities);
+    snapshot.forEach(callback);
+  }
+
+  static filter(predicate: (entity: ActiveEntity) => boolean): ActiveEntity[] {
+    return Array.from(this.getInstance().entities).filter(predicate);
+  }
+
+  static map<T>(mapper: (entity: ActiveEntity) => T): T[] {
+    return Array.from(this.getInstance().entities).map(mapper);
+  }
+
+  static clear(): void {
+    this.getInstance().entities.clear();
+  }
+
+  static size(): number {
+    return this.getInstance().entities.size;
   }
 }

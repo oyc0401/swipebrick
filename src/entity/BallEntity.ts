@@ -20,6 +20,8 @@ export class BallEntity extends ActiveEntity {
         position.y,
         this.radius
       );
+      // 물리 등록이 필요한 경우만 EntityManager에 등록
+      EntityManager.add(this);
     } else {
       // 프리뷰용 더미 physicsComponent (물리 등록 없음)
       // CRITICAL: position 상태를 내부적으로 관리하여 setPosition/getPosition 동작
