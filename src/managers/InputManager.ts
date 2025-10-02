@@ -48,12 +48,23 @@ export class InputManager {
     document.addEventListener("pointermove", this.mouseMoveHandler);
   }
 
+  private toGameCoords(event: MouseEvent) {
+    const containerElement = document.getElementById("container");
+    const containerRect = containerElement?.getBoundingClientRect()!;
+
+    let scale = 360 / containerRect.width;
+    // DOM 좌표를 게임 좌표로 변환
+
+    const gameCoords = {
+      x: event.clientX * scale - containerRect.left,
+      y: event.clientY * scale - (containerRect.height * scale - 360) / 2,
+    };
+
+    return gameCoords;
+  }
   private handleClick(event: MouseEvent): void {
     // DOM 좌표를 게임 좌표로 변환
-    const gameCoords = this.renderer.screenToGameCoordinates(
-      event.clientX,
-      event.clientY
-    );
+    const gameCoords = this.toGameCoords(event);
 
     console.log("Clicked at:", gameCoords.x, gameCoords.y);
     // 349.38704182330827 93.55791823308269
@@ -71,10 +82,7 @@ export class InputManager {
 
   private handleMouseMove(event: MouseEvent): void {
     // DOM 좌표를 게임 좌표로 변환
-    const gameCoords = this.renderer.screenToGameCoordinates(
-      event.clientX,
-      event.clientY
-    );
+    const gameCoords = this.toGameCoords(event);
 
     // 각도 제한: 마우스 위치 보정
     const validCoords = this.applyAngleLimit(gameCoords.x, gameCoords.y);
