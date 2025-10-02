@@ -62,13 +62,13 @@ export class Game {
   // 사용자 입력 이벤트
   private setupInputManagerCallbacks(): void {
     this.inputManager.onClick((x, y) => {
-      // 대기 상태가 아니면 클릭 무시
-      if (!this.gameState.isWaiting) {
+      // 실행 중이면 클릭 무시
+      if (this.swipeBrick.getIsRunning()) {
         return;
       }
 
-      // 대기 상태 해제
-      this.gameState.setWaiting(false);
+      // 실행 상태로 변경
+      this.swipeBrick.setIsRunning(true);
 
       // 점선 숨김
       this.renderer.clearAimLine();
@@ -84,8 +84,8 @@ export class Game {
     });
 
     this.inputManager.onMouseMove((x, y) => {
-      // 대기 상태일 때만 점선 표시
-      if (this.gameState.isWaiting) {
+      // 실행 중이 아닐 때만 점선 표시
+      if (!this.swipeBrick.getIsRunning()) {
         const ballStartX = this.swipeBrick.getBallStartX();
         this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
       }
@@ -112,7 +112,7 @@ export class Game {
           this.swipeBrick.incrementLevel();
           this.brickManager.shift();
           this.brickManager.createBricks();
-          this.gameState.setWaiting(true);
+          this.swipeBrick.setIsRunning(false);
           console.log("All balls removed. Ready for next shot.");
         }, 30);
       }

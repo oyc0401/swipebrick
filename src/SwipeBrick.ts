@@ -15,7 +15,24 @@ type Item = {
 
 type GameObject = Brick | Item;
 
-export class SwipeBrick {
+interface ISwipeBrick {
+  getLevel(): number;
+  incrementLevel(): void;
+  getBallCount(): number;
+  isGameOver(): boolean;
+  getBallStartX(): number;
+  setBallStartX(x: number): void;
+  getIsRunning(): boolean;
+  setIsRunning(running: boolean): void;
+  createNewRow(): (GameObject | null)[];
+  damageBrick(stage: number, index: number): Brick | null;
+  collectItem(stage: number, index: number): Item;
+  shiftRowsDown(): (GameObject | null)[];
+  toJson(): void;
+  fromJson(): void;
+}
+
+export class SwipeBrick implements ISwipeBrick {
   private readonly GRID_WIDTH = 6;
   private readonly GRID_HEIGHT = 8;
   private readonly GAME_CENTER_X = 180; // GAME_WIDTH / 2
@@ -24,12 +41,14 @@ export class SwipeBrick {
   private level: number;
   private ballCount: number;
   private ballStartX: number;
+  private isRunning: boolean;
 
   constructor() {
     this.objects = this.initializeGrid();
     this.level = 1;
     this.ballCount = 1;
     this.ballStartX = this.GAME_CENTER_X;
+    this.isRunning = false;
   }
 
   private initializeGrid(): (GameObject | null)[][] {
@@ -82,6 +101,16 @@ export class SwipeBrick {
   /** 공 시작 X좌표 설정 */
   setBallStartX(x: number): void {
     this.ballStartX = x;
+  }
+
+  /** 실행 상태 반환 */
+  getIsRunning(): boolean {
+    return this.isRunning;
+  }
+
+  /** 실행 상태 설정 */
+  setIsRunning(running: boolean): void {
+    this.isRunning = running;
   }
 
   // ===== 게임 오브젝트 관리 =====
@@ -248,4 +277,8 @@ export class SwipeBrick {
     const lastRowIndex = this.GRID_HEIGHT - 1;
     return this.objects[lastRowIndex];
   }
+
+  toJson() {}
+
+  fromJson() {}
 }
