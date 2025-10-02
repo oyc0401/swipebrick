@@ -12,38 +12,69 @@ export function Header() {
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
           height: "100%",
           width: "100%",
         }}
       >
+        <div style={{ flex: 2 }}></div>
+
         <div
           style={{
             padding: "12px",
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "start",
           }}
         >
-          <IconButton
-            iconSrc={storeIcon}
-            iconAlt="Store"
-            onClick={() => console.log("Store button clicked")}
-          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: "4px",
+              flex: 1,
+            }}
+          >
+            <IconButton
+              iconSrc={rankIcon}
+              iconAlt="Ranking"
+              onClick={() => console.log("Ranking button clicked")}
+            />
+            <IconButton
+              iconSrc={storeIcon}
+              iconAlt="Store"
+              onClick={() => console.log("Store button clicked")}
+            />
+          </div>
 
-          <IconButton
-            iconSrc={settingIcon}
-            iconAlt="Settings"
-            onClick={() => console.log("Settings button clicked")}
-          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              paddingTop: "9px",
+            }}
+          >
+            <p style={{ fontSize: 18, fontWeight: 600 }}>최고기록: 120</p>
+            <p style={{ fontSize: 18, fontWeight: 600 }}>현재기록: 13</p>
+          </div>
 
-          <IconButton
-            iconSrc={rankIcon}
-            iconAlt="Ranking"
-            onClick={() => console.log("Ranking button clicked")}
-          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "end",
+              flex: 1,
+            }}
+          >
+            <IconButton
+              iconSrc={settingIcon}
+              iconAlt="Settings"
+              onClick={() => console.log("Settings button clicked")}
+            />
+          </div>
         </div>
+        <div style={{ flex: 1 }}></div>
       </div>
     </div>
   );
