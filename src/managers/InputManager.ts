@@ -57,7 +57,10 @@ export class InputManager {
 
     const gameCoords = {
       x: event.clientX * scale - containerRect.left,
-      y: event.clientY * scale - (containerRect.height * scale - 360) / 2,
+      y:
+        event.clientY * scale -
+        (containerRect.height * scale - 360) / 2 -
+        containerRect.top * scale,
     };
 
     return gameCoords;
