@@ -13,9 +13,11 @@ export class Entity {
   }
 
   public destroy(): void {
+    // 렌더 컴포넌트 먼저 파괴 (화면에서 제거)
     if (this.renderComponent) {
       this.renderComponent.destroy();
     }
+    // 물리 컴포넌트 나중에 파괴 (물리 월드에서 제거)
     if (this.physicsComponent) {
       this.physicsComponent.destroy();
     }
