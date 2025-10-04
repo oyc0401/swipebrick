@@ -115,6 +115,9 @@ export class Game {
         }
       }
 
+      // 다이얼로그 안눌러도 초기화 되도록
+      this.clearGameState();
+
       const handleRestart = () => {
         this.resetGame();
         console.log("Game restarted");
