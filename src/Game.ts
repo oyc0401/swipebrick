@@ -7,176 +7,140 @@ import { BallManager } from "./managers/BallManager";
 import { BoundaryManager } from "./managers/BoundaryManager";
 import { BrickManager } from "./managers/BrickManager";
 import { InputManager } from "./managers/InputManager";
+import { SoundManager } from "./managers/SoundManager";
 import { SwipeBrick } from "./SwipeBrick";
 import type { IScoreRepository } from "./repository/IScoreRepository";
 import { ScoreRepositoryFactory } from "./repository/ScoreRepositoryFactory";
+import { submitGameCenterLeaderBoardScore } from "@apps-in-toss/web-framework";
+import { isTossApp } from "./utils/platform";
 
 export class Game {
+  // ===== 의존성 =====
   private renderer: GraphicEngine;
   private physics: PhysicsEngine;
   private gameState: GameState;
+  private repository: IScoreRepository;
 
+  // ===== 매니저들 =====
   private ballManager: BallManager;
   private boundaryManager: BoundaryManager;
   private brickManager: BrickManager;
   private inputManager: InputManager;
+  private soundManager: SoundManager;
 
+  // ===== 게임 로직 =====
   private swipeBrick: SwipeBrick;
-  private repository: IScoreRepository;
 
   constructor() {
+    // 의존성 초기화
     this.renderer = GraphicEngine.getInstance(GAME_WIDTH, GAME_HEIGHT);
     this.physics = PhysicsEngine.getInstance();
     this.gameState = new GameState();
-
     this.swipeBrick = new SwipeBrick();
     this.repository = ScoreRepositoryFactory.create();
 
+    // 매니저 초기화
     this.ballManager = new BallManager(this.swipeBrick);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
     this.brickManager = new BrickManager(this.physics, this.swipeBrick);
     this.inputManager = new InputManager(this.renderer, this.swipeBrick);
+    this.soundManager = SoundManager.getInstance();
 
-    this.setupBallManagerCallbacks();
-    this.setupInputManagerCallbacks();
-    this.setupBrickManagerCallbacks();
+    // 이벤트 연결
+    this.setupEventCallbacks();
   }
+
+  // ===== 🎮 Public API =====
 
   public async init(): Promise<void> {
     await this.renderer.init();
 
-    // 초기 베스트 스코어 로드
+    // 데이터 로드
     await this.loadInitialBestScore();
-
-    // 게임 벽 생성
-    this.boundaryManager.createGameBoundaries();
-
-    // 게임 상태 로드 완료 후 벽돌 생성
     const hasLoadedState = await this.loadGameState();
+
+    // 게임 월드 구성
+    this.boundaryManager.createGameBoundaries();
     if (hasLoadedState) {
       this.brickManager.createBricksFromState();
     } else {
       this.brickManager.createBricks();
     }
 
-    // 공 미리보기 생성
+    // UI 초기화
     this.ballManager.showPreviewBall();
+    this.updateScoreUI();
 
-    // 점수 ui에 표시
-    this.updateScore();
-
-    // 저장된 발사 상태가 있으면 발사 재개
+    // 게임 상태 복원
     this.resumeShotIfNeeded();
 
-    const startGameLoop = (): void => {
-      // 물리 엔진 시작
-      this.physics.startLoop();
-      // 렌더링 시작
-      this.renderer.startLoop();
-    };
-
-    // 게임 시작
-    startGameLoop();
+    // 게임 루프 시작
+    this.startGameLoop();
   }
 
-  // 사용자 입력 이벤트
-  private setupInputManagerCallbacks(): void {
-    this.inputManager.onClick((x, y) => {
-      // 실행 중이면 클릭 무시
-      if (this.swipeBrick.getIsRunning()) {
-        return;
-      }
+  // ===== 🎯 게임 플레이 핵심 로직 =====
 
-      // 발사 시작 (좌표와 실행 상태 동시 설정)
-      this.swipeBrick.startShot(x, y);
-
-      // 게임 상태 저장 (발사 중 상태)
-      this.saveGameState();
-
-      this.executeLaunch(x, y);
-    });
-
-    this.inputManager.onMouseMove((x, y) => {
-      // 실행 중이 아닐 때만 점선 표시
-      if (!this.swipeBrick.getIsRunning()) {
-        const ballStartX = this.swipeBrick.getBallStartX();
-        this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
-      }
-    });
+  private executeLaunch(x: number, y: number): void {
+    this.renderer.clearAimLine();
+    this.ballManager.createBalls(this.swipeBrick.getBallCount());
+    this.ballManager.hidePreviewBall();
+    this.ballManager.launchBalls(x, y);
   }
 
-  // 게임 진행시 공 이벤트
-  private setupBallManagerCallbacks(): void {
-    // 공이 도착했을 때 이벤트
-    this.ballManager.onBallLanded((landedBall) => {
-      // 첫번째 공이 도착했을 때
-      if (!this.gameState.isBallLanded) {
-        this.gameState.setIsBallLanded(true);
-        const position = landedBall.getPosition();
-        this.swipeBrick.setBallStartX(position.x);
-        this.ballManager.showPreviewBall();
-        console.log("First ball landed at:", position.x, position.y);
+  private resumeShotIfNeeded(): void {
+    if (this.swipeBrick.getIsRunning()) {
+      const shotTarget = this.swipeBrick.getShotTarget();
+      if (shotTarget) {
+        console.log("Resuming shot from saved state:", shotTarget);
+        this.executeLaunch(shotTarget.x, shotTarget.y);
       }
-
-      // 모든 공이 도착했을 때 이벤트 (이벤트가 발생한 이후에 공이 삭제됨, 그래서 1이 도착임)
-      if (this.ballManager.getActiveBallCount() === 1) {
-        setTimeout(() => {
-          this.gameState.setIsBallLanded(false);
-          this.swipeBrick.incrementLevel();
-          this.brickManager.shift();
-          this.brickManager.createBricks();
-
-          // 발사 완료 (좌표와 실행 상태 동시 클리어)
-          this.swipeBrick.endShot();
-
-          // 베스트 스코어 업데이트
-          this.updateScore();
-
-          // 게임 상태 저장
-          this.saveGameState();
-
-          // 게임오버 처리
-          if (this.swipeBrick.isGameOver()) {
-            this.onGameOver();
-            return;
-          }
-
-          console.log("All balls removed. Ready for next shot.");
-        }, 30);
-      }
-    });
+    }
   }
 
-  // 벽돌 충돌 이벤트
-  private setupBrickManagerCallbacks(): void {
-    this.brickManager.onBrickCollision((brick) => {
-      console.log("Brick hit!", {
-        timestamp: new Date().toISOString(),
-        brickId: brick.id,
-        remainingHealth: brick.getHealth(),
-        currentLevel: this.swipeBrick.getLevel(),
-        position: brick.physicsComponent.getPosition(),
-      });
-    });
+  private onGameOver(): void {
+    setTimeout(async () => {
+      // UI 업데이트 후 DB에 베스트 스코어 저장
+      this.updateScoreUI();
+      //await this.updateBestScoreDB();
 
-    this.brickManager.onItemCollision((item) => {
-      console.log("Item collected!", {
-        timestamp: new Date().toISOString(),
-        itemId: item.id,
-        currentLevel: this.swipeBrick.getLevel(),
-        newBallCount: this.swipeBrick.getBallCount(),
-        position: item.physicsComponent.getPosition(),
-      });
-    });
+      const currentScore = this.swipeBrick.getLevel();
+      const currentBestScore = await this.repository.getBestScore();
+
+      // 현재 점수가 베스트 점수보다 높으면 랭킹에 반영
+      if (currentScore > currentBestScore) {
+        await this.repository.setBestScore(currentScore);
+        if (isTossApp()) {
+          // TODO: 이거 배포 때 열기!!
+          // await submitGameCenterLeaderBoardScore({ score: `${currentScore}` });
+        }
+      }
+
+      const handleRestart = () => {
+        this.resetGame();
+        console.log("Game restarted");
+      };
+
+      useGameStore.getState().setCloseCallback(handleRestart);
+      useGameStore.getState().openDialog();
+    }, 50);
   }
 
-  // db로부터 최고기록 불러오기
+  private resetGame(): void {
+    this.brickManager.reset();
+    this.swipeBrick.reset();
+    this.brickManager.createBricks();
+    this.ballManager.showPreviewBall();
+    this.updateScoreUI();
+    this.clearGameState();
+  }
+
+  // ===== 📊 데이터 관리 =====
+
   private async loadInitialBestScore(): Promise<void> {
     const initialBestScore = await this.repository.getBestScore();
     useGameStore.getState().setBestScore(initialBestScore);
   }
 
-  // 이전 게임정보 불러오기
   private async loadGameState(): Promise<boolean> {
     try {
       const savedGameState = await this.repository.getGameState();
@@ -200,7 +164,6 @@ export class Game {
   private async saveGameState(): Promise<void> {
     try {
       const gameStateJson = this.swipeBrick.toJson();
-      console.log(gameStateJson);
       await this.repository.setGameState(gameStateJson);
       console.log("Game state saved:", {
         level: this.swipeBrick.getLevel(),
@@ -220,66 +183,113 @@ export class Game {
     }
   }
 
-  private executeLaunch(x: number, y: number): void {
-    // 점선 숨김
-    this.renderer.clearAimLine();
-
-    // 공들 생성
-    this.ballManager.createBalls(this.swipeBrick.getBallCount());
-
-    // 미리보기 공 숨김
-    this.ballManager.hidePreviewBall();
-
-    // 공들을 목표 지점으로 발사
-    this.ballManager.launchBalls(x, y);
-  }
-
-  private resumeShotIfNeeded(): void {
-    // 로드된 상태에서 발사 중이었다면 발사 재개
-    if (this.swipeBrick.getIsRunning()) {
-      const shotTarget = this.swipeBrick.getShotTarget();
-      if (shotTarget) {
-        console.log("Resuming shot from saved state:", shotTarget);
-        this.executeLaunch(shotTarget.x, shotTarget.y);
-      }
-      // shotTarget이 null이면 endShot()이 자동으로 상태 정리함
-    }
-  }
-
-  private async updateScore(): Promise<void> {
-    // 베스트 스코어 업데이트
+  private async updateScoreUI(): Promise<void> {
     const currentScore = this.swipeBrick.getLevel();
-
     const currentBestScore = await this.repository.getBestScore();
-    if (currentScore > currentBestScore) {
-      await this.repository.setBestScore(currentScore);
-      useGameStore.getState().setBestScore(currentScore);
-    }
 
     useGameStore.getState().setScore(currentScore);
+
+    // 현재 점수가 베스트 점수보다 높으면 UI에서도 즉시 반영
+    if (currentScore > currentBestScore) {
+      useGameStore.getState().setBestScore(currentScore);
+    }
   }
 
-  private onGameOver() {
-    setTimeout(async () => {
-      // 베스트 스코어 업데이트
-      await this.updateScore();
+  // ===== 🔧 시스템 초기화 =====
 
-      const handleRestart = () => {
-        this.brickManager.reset();
-        this.swipeBrick.reset();
-        this.brickManager.createBricks();
+  private startGameLoop(): void {
+    this.physics.startLoop();
+    this.renderer.startLoop();
+  }
+
+  private setupEventCallbacks(): void {
+    this.setupInputCallbacks();
+    this.setupBallCallbacks();
+    this.setupBrickCallbacks();
+  }
+
+  // ===== 📡 이벤트 핸들러들 =====
+
+  private setupInputCallbacks(): void {
+    this.inputManager.onClick((x, y) => {
+      if (this.swipeBrick.getIsRunning()) return;
+
+      this.swipeBrick.startShot(x, y);
+      this.saveGameState();
+      this.executeLaunch(x, y);
+    });
+
+    this.inputManager.onMouseMove((x, y) => {
+      if (!this.swipeBrick.getIsRunning()) {
+        const ballStartX = this.swipeBrick.getBallStartX();
+        this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
+      }
+    });
+  }
+
+  private setupBallCallbacks(): void {
+    this.ballManager.onBallLanded((landedBall) => {
+      // 첫 번째 공 착지 처리
+      if (!this.gameState.isBallLanded) {
+        this.gameState.setIsBallLanded(true);
+        const position = landedBall.getPosition();
+        this.swipeBrick.setBallStartX(position.x);
         this.ballManager.showPreviewBall();
-        useGameStore.getState().setScore(this.swipeBrick.getLevel());
+        console.log("First ball landed at:", position.x, position.y);
+      }
 
-        // 저장된 게임 상태 클리어
-        this.clearGameState();
+      // 모든 공 착지 완료 처리
+      if (this.ballManager.getActiveBallCount() === 1) {
+        setTimeout(() => {
+          this.handleAllBallsLanded();
+        }, 30);
+      }
+    });
+  }
 
-        console.log("Game restarted");
-      };
+  private handleAllBallsLanded(): void {
+    this.gameState.setIsBallLanded(false);
+    this.swipeBrick.incrementLevel();
+    this.brickManager.shift();
+    this.brickManager.createBricks();
+    this.swipeBrick.endShot();
 
-      // 다이얼로그 열기 (콜백 등록)
-      useGameStore.getState().setCloseCallback(handleRestart);
-      useGameStore.getState().openDialog();
-    }, 50);
+    // UI 즉시 업데이트
+    this.updateScoreUI();
+
+    // DB 업데이트 (비동기)
+    this.saveGameState();
+
+    if (this.swipeBrick.isGameOver()) {
+      this.onGameOver();
+      return;
+    }
+
+    console.log("All balls removed. Ready for next shot.");
+  }
+
+  private setupBrickCallbacks(): void {
+    this.brickManager.onBrickCollision((brick) => {
+      // 벽돌 충돌 사운드 재생
+      this.soundManager.playBallSound();
+
+      console.log("Brick hit!", {
+        timestamp: new Date().toISOString(),
+        brickId: brick.id,
+        remainingHealth: brick.getHealth(),
+        currentLevel: this.swipeBrick.getLevel(),
+        position: brick.physicsComponent.getPosition(),
+      });
+    });
+
+    this.brickManager.onItemCollision((item) => {
+      console.log("Item collected!", {
+        timestamp: new Date().toISOString(),
+        itemId: item.id,
+        currentLevel: this.swipeBrick.getLevel(),
+        newBallCount: this.swipeBrick.getBallCount(),
+        position: item.physicsComponent.getPosition(),
+      });
+    });
   }
 }
