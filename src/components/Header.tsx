@@ -14,10 +14,9 @@ export function Header() {
           flexDirection: "column",
           height: "100%",
           width: "100%",
+          justifyContent: "end",
         }}
       >
-        <div style={{ flex: 2 }}></div>
-
         <div
           style={{
             padding: "12px",
@@ -25,6 +24,7 @@ export function Header() {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "start",
+            paddingBottom: "48px",
           }}
         >
           <div
@@ -52,11 +52,11 @@ export function Header() {
               display: "flex",
               flexDirection: "column",
               gap: "8px",
-              paddingTop: "9px",
+              paddingTop: "8px",
             }}
           >
-            <p style={{ fontSize: 18, fontWeight: 600 }}>최고기록: 120</p>
-            <p style={{ fontSize: 18, fontWeight: 600 }}>현재기록: 13</p>
+            <p style={{ fontSize: 18, fontWeight: 500 }}>최고기록: 120</p>
+            <p style={{ fontSize: 18, fontWeight: 500 }}>현재기록: 13</p>
           </div>
 
           <div
@@ -74,7 +74,6 @@ export function Header() {
             />
           </div>
         </div>
-        <div style={{ flex: 1 }}></div>
       </div>
     </div>
   );
