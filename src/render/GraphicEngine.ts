@@ -1,6 +1,8 @@
 import { Application, Container, Graphics } from "pixi.js";
 import { EntityManager } from "../core/entity/EntityManager";
 import { LayerManager } from "./LayerManager";
+// @ts-ignore
+import { ShatterEffect } from "./ShatterEffect.js";
 
 /**
  * 반응형 UI 가로 크기
@@ -24,6 +26,7 @@ export class GraphicEngine {
   private gameHeight: number;
   private debugGuide: Graphics | null = null;
   private aimLine: Graphics | null = null;
+  public shatterEffect: any = null; // ShatterEffect 인스턴스
 
   private constructor(gameWidth: number, gameHeight: number) {
     this.app = new Application();
@@ -72,8 +75,13 @@ export class GraphicEngine {
     this.app.canvas.style.display = "block";
 
     this.layerManager.setupLayers(this.app.stage);
-  }
 
+    // ShatterEffect 초기화 (gameViewport에 렌더링)
+    this.shatterEffect = new ShatterEffect(
+      this.app,
+      this.layerManager.getGameViewport()
+    );
+  }
 
   public addDebugGuide(): void {
     this.layerManager.addDebugGuide();

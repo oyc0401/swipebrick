@@ -215,6 +215,12 @@ export class Game {
 
   private setupInputCallbacks(): void {
     this.inputManager.onClick((x, y) => {
+      // 디버그: 터치한 곳에 파편 효과
+      // if (this.renderer.shatterEffect) {
+      //   console.log("Debug: Creating shatter effect at click position:", x, y);
+      //   this.renderer.shatterEffect.create(x, y);
+      // }
+
       if (this.swipeBrick.getIsRunning()) return;
 
       this.swipeBrick.startShot(x, y);
@@ -283,6 +289,31 @@ export class Game {
         currentLevel: this.swipeBrick.getLevel(),
         position: brick.physicsComponent.getPosition(),
       });
+    });
+
+    this.brickManager.onBrickDestroy((brick) => {
+      // 벽돌 파괴시 파편 효과 생성
+      const position = brick.physicsComponent.getPosition();
+
+      console.log("Brick destroyed!", {
+        timestamp: new Date().toISOString(),
+        brickId: brick.id,
+        position: position,
+        currentLevel: this.swipeBrick.getLevel(),
+        hasShatterEffect: !!this.renderer.shatterEffect,
+      });
+
+      // ShatterEffect 접근 (renderer를 통해)
+      if (this.renderer.shatterEffect) {
+        console.log(
+          "Calling shatterEffect.create with:",
+          position.x,
+          position.y
+        );
+        this.renderer.shatterEffect.create(position.x, position.y);
+      } else {
+        console.warn("ShatterEffect not available");
+      }
     });
 
     this.brickManager.onItemCollision((item) => {

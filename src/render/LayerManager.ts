@@ -98,9 +98,8 @@ export class LayerManager {
 
     // 기존 Graphics 재활용 (clear 후 새로 그리기)
     this.background.clear();
-    this.background
-      .rect(0, h, this.gameWidth, scaledCanvasHeight)
-      .fill(0xffffff); // 흰색
+    this.background.rect(0, h, this.gameWidth, scaledCanvasHeight);
+    // .fill(0xffffff); // 흰색
   }
 
   public getCenterLayer(): Container {
