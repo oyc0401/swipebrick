@@ -47,7 +47,7 @@ export class InputManager {
     this.onMouseMoveCallback = callback;
   }
 
-  eventClickHandler = (e) => {
+  eventClickHandler = (e: PointerEvent) => {
     if (!this.pointerdown) return;
 
     this.pointerdown = false;
@@ -55,7 +55,7 @@ export class InputManager {
     this.clickHandler(e);
   };
 
-  eventMouseMoveHandler = (e) => {
+  eventMouseMoveHandler = (e: PointerEvent) => {
     if (!this.pointerdown) return;
 
     this.mouseMoveHandler(e);

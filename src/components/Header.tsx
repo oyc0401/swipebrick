@@ -1,11 +1,14 @@
 import React from "react";
 import { IconButton } from "./IconButton";
+import { useGameStore } from "../stores/gameStore";
 
 import storeIcon from "/store_icon.svg";
 import settingIcon from "/setting_icon.svg";
 import rankIcon from "/rank_icon.svg";
 
 export function Header() {
+  const score = useGameStore((state) => state.score);
+
   return (
     <div className="spacer">
       <div
@@ -56,7 +59,7 @@ export function Header() {
             }}
           >
             <p style={{ fontSize: 18, fontWeight: 500 }}>최고기록: 120</p>
-            <p style={{ fontSize: 18, fontWeight: 500 }}>현재기록: 13</p>
+            <p style={{ fontSize: 18, fontWeight: 500 }}>현재점수: {score}</p>
           </div>
 
           <div
