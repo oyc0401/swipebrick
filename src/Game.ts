@@ -181,10 +181,11 @@ export class Game {
 
   private onGameOver() {
     setTimeout(async () => {
-      alert("게임오버!");
-
       // 베스트 스코어 업데이트
       await this.updateScore();
+
+      // 다이얼로그 열기
+      useGameStore.getState().openDialog();
 
       this.brickManager.reset();
       this.swipeBrick.reset();
