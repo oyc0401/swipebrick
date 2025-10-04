@@ -55,14 +55,3 @@ body {
   align-items: flex-start;
 }
 
-#view {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  background: rgba(255, 0, 0, 0.3);
-}
-
-.spacer {
-  flex: 1;
-  width: 100%;
-  background: rgba(0, 125, 0, 0.3);
-}
