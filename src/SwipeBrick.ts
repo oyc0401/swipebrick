@@ -15,6 +15,24 @@ type Item = {
 
 export type GameObject = Brick | Item;
 
+interface SavedGameState {
+  level: number;
+  ballCount: number;
+  ballStartX: number;
+  isRunning: boolean;
+  shotTargetX: number | null;
+  shotTargetY: number | null;
+  objects: (SavedGameObject | null)[][];
+}
+
+interface SavedGameObject {
+  type: "brick" | "item";
+  id: string;
+  x: number;
+  y: number;
+  health?: number; // brick only
+}
+
 interface ISwipeBrick {
   getLevel(): number;
   incrementLevel(): void;
@@ -43,6 +61,8 @@ export class SwipeBrick implements ISwipeBrick {
   private ballCount: number;
   private ballStartX: number;
   private isRunning: boolean;
+  private shotTargetX: number | null;
+  private shotTargetY: number | null;
 
   constructor() {
     this.objects = this.initializeGrid();
@@ -50,6 +70,8 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = 1;
     this.ballStartX = this.GAME_CENTER_X;
     this.isRunning = false;
+    this.shotTargetX = null;
+    this.shotTargetY = null;
   }
 
   private initializeGrid(): (GameObject | null)[][] {
@@ -112,9 +134,35 @@ export class SwipeBrick implements ISwipeBrick {
     return this.isRunning;
   }
 
-  /** 실행 상태 설정 */
+  /** 발사 시작 (좌표와 실행 상태 동시 설정) */
+  startShot(x: number, y: number): void {
+    this.shotTargetX = x;
+    this.shotTargetY = y;
+    this.isRunning = true;
+  }
+
+  /** 발사 완료 (좌표와 실행 상태 동시 클리어) */
+  endShot(): void {
+    this.shotTargetX = null;
+    this.shotTargetY = null;
+    this.isRunning = false;
+  }
+
+  /** 실행 상태 설정 (하위 호환용) */
   setIsRunning(running: boolean): void {
     this.isRunning = running;
+    if (!running) {
+      this.shotTargetX = null;
+      this.shotTargetY = null;
+    }
+  }
+
+  /** 발사 좌표 반환 */
+  getShotTarget(): { x: number; y: number } | null {
+    if (this.shotTargetX !== null && this.shotTargetY !== null) {
+      return { x: this.shotTargetX, y: this.shotTargetY };
+    }
+    return null;
   }
 
   // ===== 게임 오브젝트 관리 =====
@@ -289,6 +337,8 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = 1;
     this.ballStartX = this.GAME_CENTER_X;
     this.isRunning = false;
+    this.shotTargetX = null;
+    this.shotTargetY = null;
   }
 
   toJson(): string {
@@ -296,6 +346,9 @@ export class SwipeBrick implements ISwipeBrick {
       level: this.level,
       ballCount: this.ballCount,
       ballStartX: this.ballStartX,
+      isRunning: this.isRunning,
+      shotTargetX: this.shotTargetX,
+      shotTargetY: this.shotTargetY,
       objects: this.objects.map((row) =>
         row.map((obj) =>
           obj
@@ -314,14 +367,40 @@ export class SwipeBrick implements ISwipeBrick {
 
   fromJson(jsonString: string): void {
     try {
-      const data = JSON.parse(jsonString);
+      // 1. JSON 파싱
+      const parsedData = JSON.parse(jsonString);
 
-      this.level = data.level;
-      this.ballCount = data.ballCount;
-      this.ballStartX = data.ballStartX;
+      // 2. 타입 검증 및 변환
+      const gameState = this.convertSavedState(parsedData);
 
-      // 객체 배열 복원
-      this.objects = data.objects.map((row: any[]) =>
+      // 3. 게임 상태 업데이트
+      this.updateGameStateFromSaved(gameState);
+    } catch (error) {
+      console.error("Failed to parse game state JSON:", error);
+      throw new Error("Invalid game state JSON format");
+    }
+  }
+
+  private convertSavedState(data: any): SavedGameState {
+    // 필수 필드 검증
+    if (
+      typeof data.level !== "number" ||
+      typeof data.ballCount !== "number" ||
+      typeof data.ballStartX !== "number" ||
+      !Array.isArray(data.objects)
+    ) {
+      throw new Error("Invalid game state format: missing required fields");
+    }
+
+    // SavedGameState 형식으로 변환
+    return {
+      level: data.level,
+      ballCount: data.ballCount,
+      ballStartX: data.ballStartX,
+      isRunning: data.isRunning ?? false,
+      shotTargetX: data.shotTargetX ?? null,
+      shotTargetY: data.shotTargetY ?? null,
+      objects: data.objects.map((row: any[]) =>
         row.map((obj: any) =>
           obj
             ? ({
@@ -330,13 +409,35 @@ export class SwipeBrick implements ISwipeBrick {
                 x: obj.x,
                 y: obj.y,
                 ...(obj.type === "brick" ? { health: obj.health } : {}),
-              } as GameObject)
+              } as SavedGameObject)
             : null
         )
-      );
-    } catch (error) {
-      console.error("Failed to parse game state JSON:", error);
-      throw new Error("Invalid game state JSON format");
-    }
+      ),
+    };
+  }
+
+  private updateGameStateFromSaved(gameState: SavedGameState): void {
+    // 기본 상태 업데이트
+    this.level = gameState.level;
+    this.ballCount = gameState.ballCount;
+    this.ballStartX = gameState.ballStartX;
+    this.isRunning = gameState.isRunning;
+    this.shotTargetX = gameState.shotTargetX;
+    this.shotTargetY = gameState.shotTargetY;
+
+    // 객체 배열 복원
+    this.objects = gameState.objects.map((row) =>
+      row.map((obj) =>
+        obj
+          ? ({
+              type: obj.type,
+              id: obj.id,
+              x: obj.x,
+              y: obj.y,
+              ...(obj.type === "brick" ? { health: obj.health! } : {}),
+            } as GameObject)
+          : null
+      )
+    );
   }
 }

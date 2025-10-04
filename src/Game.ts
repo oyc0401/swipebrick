@@ -32,17 +32,10 @@ export class Game {
     this.swipeBrick = new SwipeBrick();
     this.repository = ScoreRepositoryFactory.create();
 
-    // 초기 베스트 스코어 로드
-    this.loadInitialBestScore();
-
     this.ballManager = new BallManager(this.swipeBrick);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
     this.brickManager = new BrickManager(this.physics, this.swipeBrick);
-    this.inputManager = new InputManager(
-      this.renderer,
-
-      this.swipeBrick
-    );
+    this.inputManager = new InputManager(this.renderer, this.swipeBrick);
 
     this.setupBallManagerCallbacks();
     this.setupInputManagerCallbacks();
@@ -52,6 +45,10 @@ export class Game {
   public async init(): Promise<void> {
     await this.renderer.init();
 
+    // 초기 베스트 스코어 로드
+    await this.loadInitialBestScore();
+
+    // 게임 벽 생성
     this.boundaryManager.createGameBoundaries();
 
     // 게임 상태 로드 완료 후 벽돌 생성
@@ -62,10 +59,14 @@ export class Game {
       this.brickManager.createBricks();
     }
 
-    // this.renderer.addDebugGuide();
+    // 공 미리보기 생성
     this.ballManager.showPreviewBall();
 
+    // 점수 ui에 표시
     this.updateScore();
+
+    // 저장된 발사 상태가 있으면 발사 재개
+    this.resumeShotIfNeeded();
 
     const startGameLoop = (): void => {
       // 물리 엔진 시작
@@ -74,6 +75,7 @@ export class Game {
       this.renderer.startLoop();
     };
 
+    // 게임 시작
     startGameLoop();
   }
 
@@ -85,20 +87,13 @@ export class Game {
         return;
       }
 
-      // 실행 상태로 변경
-      this.swipeBrick.setIsRunning(true);
+      // 발사 시작 (좌표와 실행 상태 동시 설정)
+      this.swipeBrick.startShot(x, y);
 
-      // 점선 숨김
-      this.renderer.clearAimLine();
+      // 게임 상태 저장 (발사 중 상태)
+      this.saveGameState();
 
-      // 공들 생성
-      this.ballManager.createBalls(this.swipeBrick.getBallCount());
-
-      // 미리보기 공 숨김
-      this.ballManager.hidePreviewBall();
-
-      // 공들을 목표 지점으로 발사
-      this.ballManager.launchBalls(x, y);
+      this.executeLaunch(x, y);
     });
 
     this.inputManager.onMouseMove((x, y) => {
@@ -131,7 +126,8 @@ export class Game {
           this.brickManager.shift();
           this.brickManager.createBricks();
 
-          this.swipeBrick.setIsRunning(false);
+          // 발사 완료 (좌표와 실행 상태 동시 클리어)
+          this.swipeBrick.endShot();
 
           // 베스트 스코어 업데이트
           this.updateScore();
@@ -139,9 +135,9 @@ export class Game {
           // 게임 상태 저장
           this.saveGameState();
 
+          // 게임오버 처리
           if (this.swipeBrick.isGameOver()) {
             this.onGameOver();
-
             return;
           }
 
@@ -174,11 +170,13 @@ export class Game {
     });
   }
 
+  // db로부터 최고기록 불러오기
   private async loadInitialBestScore(): Promise<void> {
     const initialBestScore = await this.repository.getBestScore();
     useGameStore.getState().setBestScore(initialBestScore);
   }
 
+  // 이전 게임정보 불러오기
   private async loadGameState(): Promise<boolean> {
     try {
       const savedGameState = await this.repository.getGameState();
@@ -219,6 +217,32 @@ export class Game {
       console.log("Game state cleared");
     } catch (error) {
       console.warn("Failed to clear game state:", error);
+    }
+  }
+
+  private executeLaunch(x: number, y: number): void {
+    // 점선 숨김
+    this.renderer.clearAimLine();
+
+    // 공들 생성
+    this.ballManager.createBalls(this.swipeBrick.getBallCount());
+
+    // 미리보기 공 숨김
+    this.ballManager.hidePreviewBall();
+
+    // 공들을 목표 지점으로 발사
+    this.ballManager.launchBalls(x, y);
+  }
+
+  private resumeShotIfNeeded(): void {
+    // 로드된 상태에서 발사 중이었다면 발사 재개
+    if (this.swipeBrick.getIsRunning()) {
+      const shotTarget = this.swipeBrick.getShotTarget();
+      if (shotTarget) {
+        console.log("Resuming shot from saved state:", shotTarget);
+        this.executeLaunch(shotTarget.x, shotTarget.y);
+      }
+      // shotTarget이 null이면 endShot()이 자동으로 상태 정리함
     }
   }
 
