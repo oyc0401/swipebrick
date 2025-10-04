@@ -1,8 +1,9 @@
 import { css } from "@emotion/react";
 import { useGameStore } from "../stores/gameStore";
 import { isTossApp } from "../utils/platform";
-import { Paragraph, Post } from "@toss/tds-mobile";
+import { Paragraph } from "@toss/tds-mobile";
 import { colors } from "@toss/tds-colors";
+import { useTranslation } from "react-i18next";
 
 const scoreStyle = css`
   display: flex;
@@ -24,6 +25,7 @@ const bestScoreHighlightStyle = css`
 `;
 
 export function ScoreDisplay() {
+  const { t } = useTranslation();
   const score = useGameStore((state) => state.score);
   const bestScore = useGameStore((state) => state.bestScore);
 
@@ -36,9 +38,9 @@ export function ScoreDisplay() {
           style={{ margin: "3px" }}
           color={score === bestScore ? colors.blue500 : colors.grey700}
         >
-          <Paragraph.Text
-            style={{ marginBottom: "8px" }}
-          >{`최고기록: ${bestScore}`}</Paragraph.Text>
+          <Paragraph.Text style={{ marginBottom: "8px" }}>{`${t(
+            "score.best"
+          )}: ${bestScore}`}</Paragraph.Text>
         </Paragraph>
         <Paragraph
           typography="st7"
@@ -46,7 +48,9 @@ export function ScoreDisplay() {
           style={{ margin: "3px" }}
           color={colors.grey700}
         >
-          <Paragraph.Text typography="st7">{`현재점수: ${score}`}</Paragraph.Text>
+          <Paragraph.Text typography="st7">{`${t(
+            "score.current"
+          )}: ${score}`}</Paragraph.Text>
         </Paragraph>
       </div>
     );
@@ -55,9 +59,11 @@ export function ScoreDisplay() {
   return (
     <div css={scoreStyle}>
       <p css={score === bestScore ? bestScoreHighlightStyle : scoreTextStyle}>
-        최고기록: {bestScore}
+        {t("score.best")}: {bestScore}
       </p>
-      <p css={scoreTextStyle}>현재점수: {score}</p>
+      <p css={scoreTextStyle}>
+        {t("score.current")}: {score}
+      </p>
     </div>
   );
 }
