@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@apps-in-toss/web-framework": "^1.2.0",
+    "@emotion/css": "^11.13.5",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@types/matter-js": "0.20.2",
     "matter-js": "0.20.0",
     "pixi.js": "^8.13.2",
