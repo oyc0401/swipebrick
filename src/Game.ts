@@ -274,7 +274,7 @@ export class Game {
   private setupBrickCallbacks(): void {
     this.brickManager.onBrickCollision((brick) => {
       // 벽돌 충돌 사운드 재생
-      this.soundManager.playBallSound();
+      // this.soundManager.playBallSound();
 
       console.log("Brick hit!", {
         timestamp: new Date().toISOString(),

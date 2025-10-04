@@ -1,168 +1,262 @@
 export class SoundManager {
   private static instance: SoundManager | null = null;
-  private audioContext: AudioContext | null = null;
-  private audioBuffer: AudioBuffer | null = null;
-  private isInitialized = false;
-  private isEnabled = true;
-  private userInteracted = false;
+
+  private ctx?: AudioContext;
+  private buffer?: AudioBuffer;
+
+  private master?: GainNode;
+  private gains: GainNode[] = [];
+  private poolSize = 24; // 동시 발음 수
+  private nextIndex = 0;
+
+  // 상태
+  private unlocked = false; // 실제 running 여부
+  private unlocking = false; // resume() 진행 중인지
+  private isSettingUp = false; // 그래프/버퍼 준비 중인지
+
+  // 단발 씹힘 방지용 큐
+  private pendings = 0; // 준비 전 들어온 "한 번" 요청 수
+  private flushScheduled = false;
+  private pendingRetry?: number; // rAF id (보조 재시도)
+
+  // 파라미터
+  private volume = 0.3;
+  private lookahead = 0.008; // 기본 8ms
+  private assetUrl = "/ball_sound.wav"; // 짧은 mono WAV 권장(50~200ms)
+
+  // HTMLAudio 폴백(사전 프리로드)
+  private htmlAudio?: HTMLAudioElement;
 
   private constructor() {
-    // 적극적인 오디오 활성화 시도
-    this.tryEarlyAudioActivation();
-    this.setupUserInteractionListeners();
-  }
-
-  private async tryEarlyAudioActivation(): Promise<void> {
-    // 즉시 AudioContext 생성 시도 (일부 환경에서 허용됨)
-    try {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-
-      // 무음 톤 재생으로 AudioContext 사전 활성화
-      const oscillator = this.audioContext.createOscillator();
-      const gainNode = this.audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(this.audioContext.destination);
-
-      gainNode.gain.value = 0; // 무음
-      oscillator.frequency.value = 440;
-      oscillator.start();
-      oscillator.stop(this.audioContext.currentTime + 0.001);
-
-      this.userInteracted = true; // 성공하면 활성화로 간주
-      console.log("Early audio activation successful");
-    } catch (error) {
-      console.log("Early audio activation failed, waiting for user interaction");
-    }
-  }
-
-  private setupUserInteractionListeners(): void {
-    const events = ['click', 'touchstart', 'keydown', 'pointerdown'];
-    const enableAudio = async () => {
-      this.userInteracted = true;
-
-      // AudioContext가 없다면 생성
-      if (!this.audioContext) {
-        try {
-          this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-          await this.audioContext.resume();
-        } catch (error) {
-          console.warn("Failed to create AudioContext on user interaction:", error);
-        }
-      }
-
-      events.forEach(event => {
-        document.removeEventListener(event, enableAudio);
-      });
-    };
-
-    events.forEach(event => {
-      document.addEventListener(event, enableAudio, { once: true, passive: true });
-    });
+    this.installUnlockHandlers();
+    this.htmlAudio = new Audio(this.assetUrl);
+    this.htmlAudio.preload = "auto";
   }
 
   public static getInstance(): SoundManager {
-    if (!SoundManager.instance) {
-      SoundManager.instance = new SoundManager();
-    }
-    return SoundManager.instance;
+    if (!this.instance) this.instance = new SoundManager();
+    return this.instance;
   }
 
-  private async initializeAudioContext(): Promise<void> {
-    if (this.isInitialized) return;
+  // --- 언락/복구 -------------------------------------------------------------
 
-    try {
-      // Web Audio API 사용 (최신 브라우저 표준)
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  private installUnlockHandlers(): void {
+    const tryUnlock = async () => {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext ||
+          (window as any).webkitAudioContext)({
+          latencyHint: "interactive",
+        } as any);
+      }
 
-      // 오디오 파일 로드
-      const response = await fetch("/ball_sound.mp3");
-      const arrayBuffer = await response.arrayBuffer();
-      this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      if (this.ctx.state !== "running") {
+        this.unlocking = true;
+        try {
+          await this.ctx.resume();
+        } finally {
+          this.unlocking = false;
+        }
+      }
 
-      this.isInitialized = true;
-      console.log("SoundManager initialized with Web Audio API");
-    } catch (error) {
-      console.warn("Failed to initialize Web Audio API:", error);
-      this.isEnabled = false;
+      if (this.ctx.state === "running") {
+        this.unlocked = true;
+        window.removeEventListener("pointerdown", tryUnlock, true);
+        window.removeEventListener("keydown", tryUnlock, true);
+        // visibilitychange 핸들러는 유지(복귀 자동 resume)
+        if (!this.isSettingUp) {
+          await this.setupGraph().catch(console.warn);
+        }
+        this.flushPending(); // 언락+세팅 완료 직후 대기 중이던 첫 방 보장
+      }
+    };
+
+    // 성공할 때까지 시도해야 하므로 once:false
+    window.addEventListener("pointerdown", tryUnlock, { capture: true });
+    window.addEventListener("keydown", tryUnlock, { capture: true });
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
+  }
+
+  private onVisibilityChange = async () => {
+    if (
+      document.visibilityState === "visible" &&
+      this.ctx?.state === "suspended"
+    ) {
+      try {
+        await this.ctx.resume();
+      } catch {}
+      // 복귀 직후 대기중 단발이 있었다면 다음 프레임에 비우도록
+      this.scheduleFlushPending();
+    }
+  };
+
+  // --- 그래프 구성/버퍼 디코드 ----------------------------------------------
+
+  private async setupGraph(): Promise<void> {
+    if (!this.ctx || this.isSettingUp) return;
+    this.isSettingUp = true;
+
+    // 마스터 게인
+    this.master = this.ctx.createGain();
+    this.master.gain.value = this.volume;
+    this.master.connect(this.ctx.destination);
+
+    // 효과음 디코드(한 번만)
+    const res = await fetch(this.assetUrl);
+    const buf = await res.arrayBuffer();
+    this.buffer = await this.ctx.decodeAudioData(buf);
+
+    // 폴리포니 게인 풀 (destination에 미리 연결)
+    for (let i = 0; i < this.poolSize; i++) {
+      const g = this.ctx.createGain();
+      g.gain.value = 0.0001; // 초기 0에 가까운 값
+      g.connect(this.master);
+      this.gains.push(g);
+    }
+
+    this.isSettingUp = false;
+  }
+
+  // --- 일반 설정 -------------------------------------------------------------
+
+  public setVolume(v: number) {
+    this.volume = Math.max(0, Math.min(1, v));
+    if (this.master) this.master.gain.value = this.volume;
+  }
+
+  private effectiveLookahead(): number {
+    const base = this.ctx?.baseLatency ?? 0;
+    // 일부 브라우저는 baseLatency가 10~20ms대일 수 있음
+    return Math.max(this.lookahead, base, 0.006);
+  }
+
+  // --- 단발 보장 큐 ----------------------------------------------------------
+
+  private scheduleFlushPending() {
+    if (this.flushScheduled) return;
+    this.flushScheduled = true;
+    requestAnimationFrame(() => {
+      this.flushScheduled = false;
+      this.flushPending();
+    });
+  }
+
+  private flushPending() {
+    if (!this.ctx || !this.master || !this.buffer) return;
+    if (!this.unlocked || this.ctx.state !== "running") return;
+
+    const n = this.pendings;
+    this.pendings = 0;
+
+    if (n > 0) {
+      // 한 번만 보장해서 과도한 버스트 방지
+      this.playBallSound();
     }
   }
 
-  public async playBallSound(): Promise<void> {
-    if (!this.isEnabled || !this.userInteracted) {
-      console.log("Audio not enabled or user hasn't interacted yet");
+  private enqueueOneShotRetry(loudness: number) {
+    if (this.pendingRetry) return;
+    this.pendingRetry = requestAnimationFrame(() => {
+      this.pendingRetry && cancelAnimationFrame(this.pendingRetry);
+      this.pendingRetry = undefined;
+      this.playBallSound(loudness);
+    });
+  }
+
+  // --- 재생 ------------------------------------------------------------------
+
+  public playBallSound(loudness = 1): void {
+    // 준비 전이면 큐에 쌓고, 준비되면 rAF/flush로 한 번 발사
+    if (
+      !this.unlocked ||
+      this.unlocking ||
+      !this.ctx ||
+      !this.master ||
+      this.ctx.state !== "running" ||
+      !this.buffer
+    ) {
+      // 가능한 복구 작업은 미리 시도
+      if (this.ctx?.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+      if (this.unlocked && !this.buffer && !this.isSettingUp) {
+        this.setupGraph().catch(console.warn);
+      }
+      this.pendings++;
+      this.scheduleFlushPending(); // 다음 프레임에 비우기 시도
+      this.enqueueOneShotRetry(loudness); // 보조 재시도(안전망)
       return;
     }
 
-    try {
-      // 첫 번째 호출시 초기화
-      if (!this.isInitialized) {
-        await this.initializeAudioContext();
-      }
+    const now = this.ctx.currentTime;
+    const la = this.effectiveLookahead();
+    const startAt = now + la;
+    const duration = Math.min(this.buffer.duration, 0.2);
 
-      if (!this.audioContext || !this.audioBuffer) {
-        console.warn("AudioContext or buffer not available");
-        return;
-      }
+    // 라운드로빈으로 게인 선택(필요 시 '가장 조용한 채널' 탐색으로 고도화 가능)
+    const g = this.gains[this.nextIndex++ % this.poolSize];
 
-      // AudioContext 상태 확인 및 복구
-      if (this.audioContext.state === 'suspended') {
-        console.log("Resuming suspended AudioContext");
-        await this.audioContext.resume();
-      }
+    // 기존 램프가 남아있을 수 있으므로 현재값에서 짧게 내려 끊고 시작(클릭 방지)
+    g.gain.cancelScheduledValues(now);
+    g.gain.setValueAtTime(g.gain.value, now);
+    g.gain.linearRampToValueAtTime(0.0001, now + 0.004);
 
-      if (this.audioContext.state !== 'running') {
-        console.warn(`AudioContext state: ${this.audioContext.state}`);
-        return;
-      }
+    // 새 소스 생성 및 결선
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.buffer;
+    src.playbackRate.value = 1 + (Math.random() * 0.1 - 0.05); // 위상/톤 겹침 완화
+    src.connect(g);
 
-      // 새로운 source 노드 생성 (재사용 불가)
-      const source = this.audioContext.createBufferSource();
-      const gainNode = this.audioContext.createGain();
+    // 새 엔벨로프(아주 짧은 attack + 빠른 release)
+    g.gain.setValueAtTime(0.0001, startAt);
+    g.gain.linearRampToValueAtTime(Math.min(1, loudness), startAt + 0.003);
+    g.gain.exponentialRampToValueAtTime(
+      0.0001,
+      startAt + Math.max(0.12, duration - 0.02)
+    );
 
-      source.buffer = this.audioBuffer;
-      gainNode.gain.value = this.volume;
+    // 오디오 타임라인 기준 스케줄(메인스레드 지연 흡수)
+    src.start(startAt);
+    src.stop(startAt + duration);
 
-      // 연결: source → gain → destination
-      source.connect(gainNode);
-      gainNode.connect(this.audioContext.destination);
-
-      // 재생
-      source.start(0);
-
-      console.log("Ball sound played successfully");
-    } catch (error) {
-      console.warn("Failed to play ball sound:", error);
-
-      // Web Audio API 실패시 fallback으로 HTMLAudioElement 사용
-      this.playFallbackSound();
-    }
+    // 연결 정리(메모리/그래프 청소)
+    src.onended = () => {
+      try {
+        src.disconnect();
+      } catch {}
+    };
   }
 
+  // --- 폴백 -------------------------------------------------------------------
+
+  // HTMLAudio 폴백(사전 프리로드 + cloneNode)
   private playFallbackSound(): void {
     try {
-      const audio = new Audio("/ball_sound.mp3");
-      audio.volume = this.volume;
-      audio.play().catch(error => {
-        console.warn("Fallback audio also failed:", error);
-      });
-    } catch (error) {
-      console.warn("Fallback sound creation failed:", error);
-    }
+      if (!this.htmlAudio) return;
+      const el = this.htmlAudio.cloneNode(true) as HTMLAudioElement;
+      el.volume = this.volume;
+      void el.play();
+    } catch {}
   }
 
-  private volume = 0.3;
-
-  public setVolume(volume: number): void {
-    this.volume = Math.max(0, Math.min(1, volume));
-  }
+  // --- 종료 -------------------------------------------------------------------
 
   public destroy(): void {
-    if (this.audioContext) {
-      this.audioContext.close();
-      this.audioContext = null;
+    try {
+      this.ctx?.close();
+    } catch {}
+    this.ctx = undefined;
+    this.buffer = undefined;
+    this.master = undefined;
+    this.gains = [];
+    this.unlocked = false;
+    this.unlocking = false;
+    this.isSettingUp = false;
+    this.pendings = 0;
+    this.flushScheduled = false;
+
+    if (this.pendingRetry) {
+      cancelAnimationFrame(this.pendingRetry);
+      this.pendingRetry = undefined;
     }
-    this.audioBuffer = null;
-    this.isInitialized = false;
   }
 }
