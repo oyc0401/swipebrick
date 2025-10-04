@@ -1,6 +1,7 @@
 import { GAME_HEIGHT, GAME_WIDTH, BALL_RADIUS, GameState } from "./GameState";
 import { GraphicEngine } from "./render/GraphicEngine";
 import { PhysicsEngine } from "./physics/PhysicsEngine";
+import { useGameStore } from "./stores/gameStore";
 
 import { BallManager } from "./managers/BallManager";
 import { BoundaryManager } from "./managers/BoundaryManager";
@@ -112,8 +113,11 @@ export class Game {
           this.swipeBrick.incrementLevel();
           this.brickManager.shift();
           this.brickManager.createBricks();
+
           this.swipeBrick.setIsRunning(false);
           console.log("All balls removed. Ready for next shot.");
+
+          useGameStore.getState().incrementScore(1);
         }, 30);
       }
     });

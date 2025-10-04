@@ -12,6 +12,29 @@ body {
   background: #f2f4f6;
 }
 
+#safe-area-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+
+  background: #ffffff;
+}
+/* 화면이 500px 초과일 때 */
+@media (min-width: 500px) {
+  #safe-area-wrap {
+    max-width: 360px;
+  }
+}
+
+#safe-area {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 #container {
   position: absolute;
   top: 50%;
@@ -19,27 +42,16 @@ body {
   transform: translate(-50%, -50%);
   width: 100%;
   height: 100%;
-  max-width: 500px;
 }
 
-canvas {
-  background: #ffffff;
-}
-
-#header {
+#ui {
+  display: flex;
+  flex-direction: column;
   position: absolute;
   top: 0px;
   left: 0px;
   width: 100%;
-  height: 100px;
-  background: rgba(0, 125, 0, 0.3);
+  height: 100%;
+  align-items: flex-start;
 }
 
-#footer {
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  width: 100%;
-  height: 100px;
-  background: rgba(172, 255, 48, 0.3);
-}
