@@ -42,6 +42,12 @@ const scoreTextStyle = css`
   font-weight: 500;
 `;
 
+const bestScoreHighlightStyle = css`
+  font-size: 18px;
+  font-weight: 500;
+  color: #9acd32;
+`;
+
 const rightButtonGroupStyle = css`
   display: flex;
   flex-direction: row;
@@ -57,6 +63,8 @@ const spacerStyle = css`
 
 export function Header() {
   const score = useGameStore((state) => state.score);
+
+  const bestScore = useGameStore((state) => state.bestScore);
 
   return (
     <div css={spacerStyle}>
@@ -76,7 +84,13 @@ export function Header() {
           </div>
 
           <div css={scoreStyle}>
-            <p css={scoreTextStyle}>최고기록: 120</p>
+            <p
+              css={
+                score === bestScore ? bestScoreHighlightStyle : scoreTextStyle
+              }
+            >
+              최고기록: {bestScore}
+            </p>
             <p css={scoreTextStyle}>현재점수: {score}</p>
           </div>
 

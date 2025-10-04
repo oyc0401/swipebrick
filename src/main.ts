@@ -5,8 +5,9 @@ import { GameUI } from "./components/GameUI";
 
 import { getSafeAreaInsets } from "@apps-in-toss/web-framework";
 
-(function AppinTossInit() {
-  try {
+import { isTossApp } from "./utils/platform";
+(() => {
+  if (isTossApp()) {
     const insets = getSafeAreaInsets();
 
     const container = document.getElementById("safe-area-wrap");
@@ -16,7 +17,7 @@ import { getSafeAreaInsets } from "@apps-in-toss/web-framework";
     }
 
     console.log("Current Platform: Toss");
-  } catch (e) {
+  } else {
     console.log("Current Platform: Web");
   }
 })();

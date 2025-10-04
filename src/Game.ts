@@ -8,6 +8,8 @@ import { BoundaryManager } from "./managers/BoundaryManager";
 import { BrickManager } from "./managers/BrickManager";
 import { InputManager } from "./managers/InputManager";
 import { SwipeBrick } from "./SwipeBrick";
+import type { IScoreRepository } from "./repository/IScoreRepository";
+import { ScoreRepositoryFactory } from "./repository/ScoreRepositoryFactory";
 
 export class Game {
   private renderer: GraphicEngine;
@@ -20,6 +22,7 @@ export class Game {
   private inputManager: InputManager;
 
   private swipeBrick: SwipeBrick;
+  private repository: IScoreRepository;
 
   constructor() {
     this.renderer = GraphicEngine.getInstance(GAME_WIDTH, GAME_HEIGHT);
@@ -27,6 +30,10 @@ export class Game {
     this.gameState = new GameState();
 
     this.swipeBrick = new SwipeBrick();
+    this.repository = ScoreRepositoryFactory.create();
+
+    // 초기 베스트 스코어 로드
+    this.loadInitialBestScore();
 
     this.ballManager = new BallManager(this.swipeBrick);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
@@ -116,7 +123,9 @@ export class Game {
 
           this.swipeBrick.setIsRunning(false);
 
-          useGameStore.getState().setScore(this.swipeBrick.getLevel());
+          // 베스트 스코어 업데이트
+          this.updateScore();
+
           if (this.swipeBrick.isGameOver()) {
             this.onGameOver();
 
@@ -152,11 +161,30 @@ export class Game {
     });
   }
 
+  private async loadInitialBestScore(): Promise<void> {
+    const initialBestScore = await this.repository.getBestScore();
+    useGameStore.getState().setBestScore(initialBestScore);
+  }
+
+  private async updateScore(): Promise<void> {
+    // 베스트 스코어 업데이트
+    const currentScore = this.swipeBrick.getLevel();
+
+    const currentBestScore = await this.repository.getBestScore();
+    if (currentScore > currentBestScore) {
+      await this.repository.setBestScore(currentScore);
+      useGameStore.getState().setBestScore(currentScore);
+    }
+
+    useGameStore.getState().setScore(currentScore);
+  }
+
   private onGameOver() {
-    setTimeout(() => {
+    setTimeout(async () => {
       alert("게임오버!");
 
-      // this.repository.applyBestScore(this.swipeBrick.getLevel());
+      // 베스트 스코어 업데이트
+      await this.updateScore();
 
       this.brickManager.reset();
       this.swipeBrick.reset();
