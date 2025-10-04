@@ -3,6 +3,7 @@ import { Storage } from "@apps-in-toss/web-framework";
 
 export class TossAppScoreRepository implements IScoreRepository {
   private readonly BEST_SCORE_KEY = "swipebrick-best-score";
+  private readonly GAME_STATE_KEY = "swipebrick-game-state";
   private cachedBestScore: number | null = null;
 
   async getBestScore(): Promise<number> {
@@ -27,6 +28,23 @@ export class TossAppScoreRepository implements IScoreRepository {
       this.cachedBestScore = score;
     } catch (e) {
       console.warn("Toss storage not available, score not saved");
+    }
+  }
+
+  async getGameState(): Promise<string | null> {
+    try {
+      return await Storage.getItem(this.GAME_STATE_KEY);
+    } catch (e) {
+      console.warn("Toss storage not available, returning null game state");
+      return null;
+    }
+  }
+
+  async setGameState(gameState: string): Promise<void> {
+    try {
+      await Storage.setItem(this.GAME_STATE_KEY, gameState);
+    } catch (e) {
+      console.warn("Toss storage not available, game state not saved");
     }
   }
 }

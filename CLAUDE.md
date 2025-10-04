@@ -6,12 +6,19 @@
 - **PixiJS** (WebGL 렌더링)
 - **Matter.js** (물리 엔진)
 
+## 아키텍처 개요
+
+하이브리드 아키텍처: 바닐라 TypeScript 게임 엔진 + React UI 오버레이
+
+- 게임 엔진: 순수 TypeScript + PixiJS + Matter.js
+- UI 계층: React + TDS (토스 디자인 시스템)
+- 상태 관리: Zustand
+
 ## 개발 원칙
 
-- React 절대 사용 금지
 - 순수 바닐라 JavaScript/TypeScript만 사용
 - PixiJS와 Matter.js로만 게임 구현
-- 나중에 React를 추가할건데, 이건 꽤나 나중에 추가할 것이니 의존성은 딱히 안지워도 됨.
+- React는 무조건 UI를 담당하는 곳 에만 적용하고, 게임 로직은 React 절대 사용 금지.
 
 ## **🚨 프로젝트 품질 표준 (CRITICAL)**
 
@@ -74,14 +81,53 @@
 - **`GameBoundary`** - 경계벽 (Matter.js Body + PixiJS Graphics)
 - **`GameState`** - 게임 상태 관리
 
-### 구현된 기능
+### 핵심 상태 동기화
+
+SwipeBrick (논리) ←→ BrickEntity/ItemEntity (시각)
+
+1. SwipeBrick: 6x8 그리드에서 게임 오브젝트 논리적 관리
+2. BrickManager: SwipeBrick ↔ Entity 동기화 담당
+3. 물리 충돌: Matter.js → BrickManager → SwipeBrick → Entity 업데이트
+
+게임 사이클
+
+클릭 → 공 발사 → 충돌 처리 → 벽돌 제거/데미지 →
+공 착지 → 행 시프트 → 새 행 생성 → 게임오버 체크
+
+### 기능
 
 - 360×360 게임 영역 반응형 렌더링
 - 클릭 시 공이 해당 방향으로 이동
 - 벽 충돌 시 완전 탄성 반사 (영구 운동)
 - 중력 비활성화된 2D 물리 시뮬레이션
 
+## 🚨 크리티컬 패턴 (필수!)
+
+### 상태 동기화 철칙
+
+```typescript
+// SwipeBrick(논리) → Entity(시각) 단방향만!
+const result = swipeBrick.damageBrick(stage, index);
+brickEntity.setHealth(result.health); // 동기화만
+```
+
+### ID 파싱 생명선
+
+```typescript
+// 형식: brick-{stage}-{index} (절대 변경 금지!)
+const [type, stage, index] = entity.id.split("-");
+```
+
+### 이중 충돌 버그 방지
+
+```typescript
+// beforeUpdate에서 속도 저장 필수
+(body as any).previousVelocity = { x: body.velocity.x, y: body.velocity.y };
+```
+
 ## 개발 프로세스 규칙
 
 - **Claude는 `npm run dev`, `npm run build`, `npm run lint`, `vite` 등 빌드/테스트/개발서버 명령어를 실행하지 않음**
 - **BashOutput으로 실행 중인 셸 출력 읽기는 허용됨**
+
+# 요청이 들어올때마다 비슷한 몇개의 파일을 꼭 확인하고 코드스타일 통일해서 코드 작성하기

@@ -53,9 +53,19 @@ export class Game {
     await this.renderer.init();
 
     this.boundaryManager.createGameBoundaries();
-    this.brickManager.createBricks();
+
+    // 게임 상태 로드 완료 후 벽돌 생성
+    const hasLoadedState = await this.loadGameState();
+    if (hasLoadedState) {
+      this.brickManager.createBricksFromState();
+    } else {
+      this.brickManager.createBricks();
+    }
+
     // this.renderer.addDebugGuide();
     this.ballManager.showPreviewBall();
+
+    this.updateScore();
 
     const startGameLoop = (): void => {
       // 물리 엔진 시작
@@ -126,6 +136,9 @@ export class Game {
           // 베스트 스코어 업데이트
           this.updateScore();
 
+          // 게임 상태 저장
+          this.saveGameState();
+
           if (this.swipeBrick.isGameOver()) {
             this.onGameOver();
 
@@ -166,6 +179,49 @@ export class Game {
     useGameStore.getState().setBestScore(initialBestScore);
   }
 
+  private async loadGameState(): Promise<boolean> {
+    try {
+      const savedGameState = await this.repository.getGameState();
+      if (savedGameState && savedGameState.trim() !== "") {
+        this.swipeBrick.fromJson(savedGameState);
+        console.log("Game state loaded:", {
+          level: this.swipeBrick.getLevel(),
+          ballCount: this.swipeBrick.getBallCount(),
+          ballStartX: this.swipeBrick.getBallStartX(),
+        });
+        return true;
+      }
+      console.log("No saved game state found, starting fresh");
+      return false;
+    } catch (error) {
+      console.warn("Failed to load game state, starting fresh:", error);
+      return false;
+    }
+  }
+
+  private async saveGameState(): Promise<void> {
+    try {
+      const gameStateJson = this.swipeBrick.toJson();
+      console.log(gameStateJson);
+      await this.repository.setGameState(gameStateJson);
+      console.log("Game state saved:", {
+        level: this.swipeBrick.getLevel(),
+        ballCount: this.swipeBrick.getBallCount(),
+      });
+    } catch (error) {
+      console.warn("Failed to save game state:", error);
+    }
+  }
+
+  private async clearGameState(): Promise<void> {
+    try {
+      await this.repository.setGameState("");
+      console.log("Game state cleared");
+    } catch (error) {
+      console.warn("Failed to clear game state:", error);
+    }
+  }
+
   private async updateScore(): Promise<void> {
     // 베스트 스코어 업데이트
     const currentScore = this.swipeBrick.getLevel();
@@ -190,6 +246,10 @@ export class Game {
         this.brickManager.createBricks();
         this.ballManager.showPreviewBall();
         useGameStore.getState().setScore(this.swipeBrick.getLevel());
+
+        // 저장된 게임 상태 클리어
+        this.clearGameState();
+
         console.log("Game restarted");
       };
 

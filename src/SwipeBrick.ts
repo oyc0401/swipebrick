@@ -13,7 +13,7 @@ type Item = {
   y: number;
 };
 
-type GameObject = Brick | Item;
+export type GameObject = Brick | Item;
 
 interface ISwipeBrick {
   getLevel(): number;
@@ -30,7 +30,7 @@ interface ISwipeBrick {
   shiftRowsDown(): (GameObject | null)[];
   reset(): void;
   toJson(): void;
-  fromJson(): void;
+  fromJson(jsonString: string): void;
 }
 
 export class SwipeBrick implements ISwipeBrick {
@@ -291,7 +291,52 @@ export class SwipeBrick implements ISwipeBrick {
     this.isRunning = false;
   }
 
-  toJson() {}
+  toJson(): string {
+    return JSON.stringify({
+      level: this.level,
+      ballCount: this.ballCount,
+      ballStartX: this.ballStartX,
+      objects: this.objects.map((row) =>
+        row.map((obj) =>
+          obj
+            ? {
+                type: obj.type,
+                id: obj.id,
+                x: obj.x,
+                y: obj.y,
+                ...(obj.type === "brick" ? { health: obj.health } : {}),
+              }
+            : null
+        )
+      ),
+    });
+  }
 
-  fromJson() {}
+  fromJson(jsonString: string): void {
+    try {
+      const data = JSON.parse(jsonString);
+
+      this.level = data.level;
+      this.ballCount = data.ballCount;
+      this.ballStartX = data.ballStartX;
+
+      // 객체 배열 복원
+      this.objects = data.objects.map((row: any[]) =>
+        row.map((obj: any) =>
+          obj
+            ? ({
+                type: obj.type as "brick" | "item",
+                id: obj.id,
+                x: obj.x,
+                y: obj.y,
+                ...(obj.type === "brick" ? { health: obj.health } : {}),
+              } as GameObject)
+            : null
+        )
+      );
+    } catch (error) {
+      console.error("Failed to parse game state JSON:", error);
+      throw new Error("Invalid game state JSON format");
+    }
+  }
 }
