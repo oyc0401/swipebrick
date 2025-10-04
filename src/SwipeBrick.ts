@@ -28,6 +28,7 @@ interface ISwipeBrick {
   damageBrick(stage: number, index: number): Brick | null;
   collectItem(stage: number, index: number): Item;
   shiftRowsDown(): (GameObject | null)[];
+  reset(): void;
   toJson(): void;
   fromJson(): void;
 }
@@ -81,6 +82,9 @@ export class SwipeBrick implements ISwipeBrick {
 
   /** 게임 종료 여부 확인 */
   isGameOver(): boolean {
+    if (this.level == 3) {
+      // return true;
+    }
     const lastRowIndex = this.GRID_HEIGHT - 1;
     for (let x = 0; x < this.GRID_WIDTH; x++) {
       const element = this.objects[lastRowIndex][x];
@@ -276,6 +280,15 @@ export class SwipeBrick implements ISwipeBrick {
 
     const lastRowIndex = this.GRID_HEIGHT - 1;
     return this.objects[lastRowIndex];
+  }
+
+  /** 게임 상태 초기화 */
+  reset(): void {
+    this.objects = this.initializeGrid();
+    this.level = 1;
+    this.ballCount = 1;
+    this.ballStartX = this.GAME_CENTER_X;
+    this.isRunning = false;
   }
 
   toJson() {}

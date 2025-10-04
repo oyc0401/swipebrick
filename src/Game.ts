@@ -115,9 +115,15 @@ export class Game {
           this.brickManager.createBricks();
 
           this.swipeBrick.setIsRunning(false);
-          console.log("All balls removed. Ready for next shot.");
 
-          useGameStore.getState().incrementScore(1);
+          useGameStore.getState().setScore(this.swipeBrick.getLevel());
+          if (this.swipeBrick.isGameOver()) {
+            this.onGameOver();
+
+            return;
+          }
+
+          console.log("All balls removed. Ready for next shot.");
         }, 30);
       }
     });
@@ -144,5 +150,20 @@ export class Game {
         position: item.physicsComponent.getPosition(),
       });
     });
+  }
+
+  private onGameOver() {
+    setTimeout(() => {
+      alert("게임오버!");
+
+      // this.repository.applyBestScore(this.swipeBrick.getLevel());
+
+      this.brickManager.reset();
+      this.swipeBrick.reset();
+
+      this.brickManager.createBricks();
+      this.ballManager.showPreviewBall();
+      useGameStore.getState().setScore(this.swipeBrick.getLevel());
+    }, 50);
   }
 }

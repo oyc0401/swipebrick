@@ -227,6 +227,19 @@ export class BrickManager {
     this.itemCollisionCallbacks.push(callback);
   }
 
+  public reset(): void {
+    // 모든 벽돌 엔티티 제거
+    for (const brick of this.brickEntities.values()) {
+      brick.destroy();
+    }
+    // 모든 아이템 엔티티 제거
+    for (const item of this.itemEntities.values()) {
+      item.destroy();
+    }
+    this.brickEntities.clear();
+    this.itemEntities.clear();
+  }
+
   public destroy(): void {
     // 모든 벽돌 파괴
     for (const brick of this.brickEntities.values()) {
