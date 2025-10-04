@@ -1,7 +1,8 @@
 import { ConfirmDialog } from "@toss/tds-mobile";
 import { useGameStore } from "../stores/gameStore";
 import { isTossApp } from "../utils/platform";
-import { useEffect } from "react";
+
+import { ConfirmDialog as ConfirmDialogDummy } from "../utils/tds-dummy";
 
 export function GameOverDialog() {
   const isOpen = useGameStore((state) => state.isDialogOpen);
@@ -17,19 +18,31 @@ export function GameOverDialog() {
     console.log("공유하기!");
   }
 
-  useEffect(() => {
-    if (isOpen && !isTossApp()) {
-      const result = confirm("게임오버!\n게임을 재도전하세요!");
-      if (result) {
-        handleCancel(); // 재도전
-      } else {
-        handleCancel(); // 어떤 선택을 해도 다시하기
-      }
-    }
-  }, [isOpen]);
-
   if (!isTossApp()) {
-    return null;
+    return (
+      <ConfirmDialogDummy
+        open={isOpen}
+        title={
+          <ConfirmDialogDummy.Title>{"게임오버!"}</ConfirmDialogDummy.Title>
+        }
+        description={
+          <ConfirmDialogDummy.Description>
+            {"게임을 재도전하세요!"}
+          </ConfirmDialogDummy.Description>
+        }
+        cancelButton={
+          <ConfirmDialogDummy.CancelButton onClick={handleCancel}>
+            다시하기
+          </ConfirmDialogDummy.CancelButton>
+        }
+        confirmButton={
+          <ConfirmDialogDummy.ConfirmButton onClick={handleConfirm}>
+            공유하기
+          </ConfirmDialogDummy.ConfirmButton>
+        }
+        onClose={handleCancel}
+      />
+    );
   }
 
   return (
