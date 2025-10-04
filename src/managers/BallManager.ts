@@ -1,20 +1,24 @@
-import { Ball } from "../entity/Ball";
-import type { GameState } from "../GameState";
+import { BallEntity } from "../entity/BallEntity";
+import type { GameState, Position } from "../GameState";
+import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
+import type { SwipeBrick } from "../SwipeBrick";
+import { getNextId } from "../utils/IdGenerator";
 
 interface BallLandingCallback {
-  (landedBall: Ball): void;
+  (landedBall: BallEntity): void;
 }
 
 export class BallManager {
-  private activeBalls: Ball[] = [];
-  private previewBall!: Ball;
-  private gameState: GameState;
+  private activeBalls: BallEntity[] = [];
+  private previewBall!: BallEntity;
+
+  private swipeBrick: SwipeBrick;
 
   private onBallLanding?: BallLandingCallback;
 
-  constructor(gameState: GameState) {
-    this.gameState = gameState;
+  constructor(swipeBrick: SwipeBrick) {
+    this.swipeBrick = swipeBrick;
     this.createPreviewBall();
     this.setupPhysicsEventListeners();
   }
@@ -26,7 +30,12 @@ export class BallManager {
 
   public createBalls(count: number): void {
     for (let i = 0; i < count; i++) {
-      const ball = new Ball(this.gameState.ballStartPosition);
+      const ballStartX = this.swipeBrick.getBallStartX();
+      const ballStartPosition: Position = {
+        x: ballStartX,
+        y: GAME_HEIGHT - BALL_RADIUS,
+      };
+      const ball = new BallEntity(`ball-${getNextId()}`, ballStartPosition);
       this.activeBalls.push(ball);
     }
   }
@@ -59,7 +68,11 @@ export class BallManager {
 
   public showPreviewBall(): void {
     this.previewBall.setVisible(true);
-    this.previewBall.setPosition(this.gameState.ballStartPosition);
+    const ballStartX = this.swipeBrick.getBallStartX();
+    this.previewBall.setPosition({
+      x: ballStartX,
+      y: GAME_HEIGHT - BALL_RADIUS,
+    });
   }
 
   public hidePreviewBall(): void {
@@ -73,11 +86,13 @@ export class BallManager {
   }
 
   private createPreviewBall(): void {
-    this.previewBall = Ball.createWithoutPhysics(
-      this.gameState.ballStartPosition
-    );
+    const ballStartX = this.swipeBrick.getBallStartX();
+    this.previewBall = BallEntity.createWithoutPhysics(`ball-preview-${getNextId()}`, {
+      x: ballStartX,
+      y: GAME_HEIGHT - BALL_RADIUS,
+    });
   }
-  private removeBall(ball: Ball): void {
+  private removeBall(ball: BallEntity): void {
     ball.destroy();
 
     const index = this.activeBalls.indexOf(ball);

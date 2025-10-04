@@ -6,7 +6,7 @@ export interface IComponent {
 
 export interface IRenderComponent extends IComponent {
   getGraphics(): Container;
-  updatePosition(x: number, y: number): void;
+  setPosition(x: number, y: number): void;
   setVisible(visible: boolean): void;
 }
 

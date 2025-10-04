@@ -1,4 +1,4 @@
-import { GAME_HEIGHT, GAME_WIDTH, GameState } from "./GameState";
+import { GAME_HEIGHT, GAME_WIDTH, BALL_RADIUS, GameState } from "./GameState";
 import { GraphicEngine } from "./render/GraphicEngine";
 import { PhysicsEngine } from "./physics/PhysicsEngine";
 
@@ -6,6 +6,7 @@ import { BallManager } from "./managers/BallManager";
 import { BoundaryManager } from "./managers/BoundaryManager";
 import { BrickManager } from "./managers/BrickManager";
 import { InputManager } from "./managers/InputManager";
+import { SwipeBrick } from "./SwipeBrick";
 
 export class Game {
   private renderer: GraphicEngine;
@@ -17,15 +18,23 @@ export class Game {
   private brickManager: BrickManager;
   private inputManager: InputManager;
 
+  private swipeBrick: SwipeBrick;
+
   constructor() {
     this.renderer = GraphicEngine.getInstance(GAME_WIDTH, GAME_HEIGHT);
     this.physics = PhysicsEngine.getInstance();
     this.gameState = new GameState();
 
-    this.ballManager = new BallManager(this.gameState);
+    this.swipeBrick = new SwipeBrick();
+
+    this.ballManager = new BallManager(this.swipeBrick);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
-    this.brickManager = new BrickManager(this.physics, this.gameState);
-    this.inputManager = new InputManager(this.renderer, this.gameState);
+    this.brickManager = new BrickManager(this.physics, this.swipeBrick);
+    this.inputManager = new InputManager(
+      this.renderer,
+
+      this.swipeBrick
+    );
 
     this.setupBallManagerCallbacks();
     this.setupInputManagerCallbacks();
@@ -36,7 +45,7 @@ export class Game {
     await this.renderer.init();
 
     this.boundaryManager.createGameBoundaries();
-    this.brickManager.createBricks(this.gameState.level);
+    this.brickManager.createBricks();
     // this.renderer.addDebugGuide();
     this.ballManager.showPreviewBall();
 
@@ -53,19 +62,19 @@ export class Game {
   // 사용자 입력 이벤트
   private setupInputManagerCallbacks(): void {
     this.inputManager.onClick((x, y) => {
-      // 대기 상태가 아니면 클릭 무시
-      if (!this.gameState.isWaiting) {
+      // 실행 중이면 클릭 무시
+      if (this.swipeBrick.getIsRunning()) {
         return;
       }
 
-      // 대기 상태 해제
-      this.gameState.setWaiting(false);
+      // 실행 상태로 변경
+      this.swipeBrick.setIsRunning(true);
 
       // 점선 숨김
       this.renderer.clearAimLine();
 
       // 공들 생성
-      this.ballManager.createBalls(this.gameState.ballCount);
+      this.ballManager.createBalls(this.swipeBrick.getBallCount());
 
       // 미리보기 공 숨김
       this.ballManager.hidePreviewBall();
@@ -75,10 +84,10 @@ export class Game {
     });
 
     this.inputManager.onMouseMove((x, y) => {
-      // 대기 상태일 때만 점선 표시
-      if (this.gameState.isWaiting) {
-        const ballPos = this.gameState.ballStartPosition;
-        this.renderer.drawAimLine(ballPos.x, ballPos.y, x, y);
+      // 실행 중이 아닐 때만 점선 표시
+      if (!this.swipeBrick.getIsRunning()) {
+        const ballStartX = this.swipeBrick.getBallStartX();
+        this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
       }
     });
   }
@@ -91,7 +100,7 @@ export class Game {
       if (!this.gameState.isBallLanded) {
         this.gameState.setIsBallLanded(true);
         const position = landedBall.getPosition();
-        this.gameState.setBallStartPosition(position.x, position.y);
+        this.swipeBrick.setBallStartX(position.x);
         this.ballManager.showPreviewBall();
         console.log("First ball landed at:", position.x, position.y);
       }
@@ -100,11 +109,10 @@ export class Game {
       if (this.ballManager.getActiveBallCount() === 1) {
         setTimeout(() => {
           this.gameState.setIsBallLanded(false);
-          this.gameState.level++;
-          this.gameState.ballCount++;
+          this.swipeBrick.incrementLevel();
           this.brickManager.shift();
-          this.brickManager.createBricks(this.gameState.level);
-          this.gameState.setWaiting(true);
+          this.brickManager.createBricks();
+          this.swipeBrick.setIsRunning(false);
           console.log("All balls removed. Ready for next shot.");
         }, 30);
       }
@@ -118,8 +126,18 @@ export class Game {
         timestamp: new Date().toISOString(),
         brickId: brick.id,
         remainingHealth: brick.getHealth(),
-        currentLevel: this.gameState.level,
+        currentLevel: this.swipeBrick.getLevel(),
         position: brick.physicsComponent.getPosition(),
+      });
+    });
+
+    this.brickManager.onItemCollision((item) => {
+      console.log("Item collected!", {
+        timestamp: new Date().toISOString(),
+        itemId: item.id,
+        currentLevel: this.swipeBrick.getLevel(),
+        newBallCount: this.swipeBrick.getBallCount(),
+        position: item.physicsComponent.getPosition(),
       });
     });
   }

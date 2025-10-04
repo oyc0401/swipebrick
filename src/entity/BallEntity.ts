@@ -4,12 +4,12 @@ import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 import { EntityManager } from "../core/entity/EntityManager";
 
-export class Ball extends ActiveEntity {
+export class BallEntity extends ActiveEntity {
   private radius: number = BALL_RADIUS;
   private color: number = 0x4880ee; // 토스 블루
 
-  constructor(position: Position, registerToPhysics: boolean = true) {
-    super(`ball-${Date.now()}-${Math.random()}`);
+  constructor(id: string, position: Position, registerToPhysics: boolean = true) {
+    super(id);
 
     // 컴포넌트 직접 할당
     this.renderComponent = new CircleRenderComponent(this.radius, this.color);
@@ -22,10 +22,15 @@ export class Ball extends ActiveEntity {
       );
     } else {
       // 프리뷰용 더미 physicsComponent (물리 등록 없음)
+      // CRITICAL: position 상태를 내부적으로 관리하여 setPosition/getPosition 동작
+      let currentPosition = { x: position.x, y: position.y };
       this.physicsComponent = {
-        getBody: () => ({ position: { x: position.x, y: position.y } }),
-        setPosition: (_x: number, _y: number) => {},
-        getPosition: () => ({ x: position.x, y: position.y }),
+        getBody: () => ({ position: currentPosition }),
+        setPosition: (x: number, y: number) => {
+          currentPosition.x = x;
+          currentPosition.y = y;
+        },
+        getPosition: () => ({ ...currentPosition }),
         destroy: () => {},
       } as any;
     }
@@ -35,8 +40,8 @@ export class Ball extends ActiveEntity {
   }
 
   // 물리 엔진에 등록하지 않는 Ball 생성 (프리뷰용)
-  public static createWithoutPhysics(position: Position): Ball {
-    return new Ball(position, false);
+  public static createWithoutPhysics(id: string, position: Position): BallEntity {
+    return new BallEntity(id, position, false);
   }
 
   public moveTowards(targetX: number, targetY: number): void {

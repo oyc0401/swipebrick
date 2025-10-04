@@ -1,4 +1,5 @@
 import { GameBoundary } from "../entity/GameBoundary";
+import { getNextId } from "../utils/IdGenerator";
 
 interface BoundaryConfig {
   x: number;
@@ -8,6 +9,8 @@ interface BoundaryConfig {
   color: number;
   label: string;
 }
+
+const BOUNDARY_THICKNESS = 15;
 
 export class BoundaryManager {
   private boundaries: Map<string, GameBoundary> = new Map();
@@ -20,37 +23,38 @@ export class BoundaryManager {
   }
 
   public createGameBoundaries(): void {
+    const color = 0xf2f4f6;
     const boundaryConfigs: BoundaryConfig[] = [
       {
-        x: 0,
-        y: -5,
+        x: this.gameWidth / 2,
+        y: -BOUNDARY_THICKNESS / 2,
         width: this.gameWidth,
-        height: 5,
-        color: 0x000000,
+        height: BOUNDARY_THICKNESS,
+        color,
         label: "top",
       },
       {
-        x: 0,
-        y: this.gameHeight,
+        x: this.gameWidth / 2,
+        y: this.gameHeight + BOUNDARY_THICKNESS / 2,
         width: this.gameWidth,
-        height: 5,
-        color: 0x000000,
+        height: BOUNDARY_THICKNESS,
+        color,
         label: "bottom",
       },
       {
-        x: -5,
-        y: 0,
-        width: 5,
+        x: -BOUNDARY_THICKNESS / 2,
+        y: this.gameHeight / 2,
+        width: BOUNDARY_THICKNESS,
         height: this.gameHeight,
-        color: 0x000000,
+        color,
         label: "left",
       },
       {
-        x: this.gameWidth,
-        y: 0,
-        width: 5,
+        x: this.gameWidth + BOUNDARY_THICKNESS / 2,
+        y: this.gameHeight / 2,
+        width: BOUNDARY_THICKNESS,
         height: this.gameHeight,
-        color: 0x000000,
+        color,
         label: "right",
       },
     ];
@@ -76,6 +80,7 @@ export class BoundaryManager {
 
   private createBoundary(config: BoundaryConfig): void {
     const boundary = new GameBoundary(
+      `boundary-${config.label}-${getNextId()}`,
       config.x,
       config.y,
       config.width,

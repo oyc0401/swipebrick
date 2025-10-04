@@ -5,16 +5,12 @@ import { EntityManager } from "../core/entity/EntityManager";
  * 반응형 UI 가로 크기
  */
 function getSize() {
-  const size = { width: window.innerWidth, height: window.innerHeight };
-  // -> 세로 / 가로
-  const RATIO = 1.6; // 2도 좋음
-  let innerWidth = size.width;
-  if (size.height / size.width < RATIO) {
-    innerWidth = size.height / RATIO;
-  }
+  const containerElement = document.getElementById("container");
+  const containerRect = containerElement?.getBoundingClientRect();
+
   return {
-    width: innerWidth,
-    height: size.height,
+    width: containerRect?.width ?? 0,
+    height: containerRect?.height ?? 0,
   };
 }
 
@@ -149,7 +145,7 @@ export class GraphicEngine {
     this.background.clear();
     this.background
       .rect(0, h, this.gameWidth, scaledCanvasHeight)
-      .fill(0xececec); // 하늘색
+      .fill(0xffffff); // 흰색
   }
 
   public addDebugGuide(): void {

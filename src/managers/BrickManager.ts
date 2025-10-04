@@ -1,193 +1,218 @@
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
-import type { GameState } from "../GameState";
-import { Brick } from "../entity/Brick";
+import { BrickEntity } from "../entity/BrickEntity";
+import { ItemEntity } from "../entity/ItemEntity";
+import type { SwipeBrick } from "../SwipeBrick";
 
 interface BrickCollisionCallback {
-  (brick: Brick): void;
+  (brick: BrickEntity): void;
 }
 
 interface BrickDestroyCallback {
-  (brick: Brick): void;
+  (brick: BrickEntity): void;
+}
+
+interface ItemCollisionCallback {
+  (item: ItemEntity): void;
 }
 
 export class BrickManager {
   private physics: PhysicsEngine;
-  private gameState: GameState;
-  private bricks: Map<string, Brick> = new Map();
+  private brickEntities: Map<string, BrickEntity> = new Map();
+  private itemEntities: Map<string, ItemEntity> = new Map();
   private brickCollisionCallbacks: BrickCollisionCallback[] = [];
   private brickDestroyCallbacks: BrickDestroyCallback[] = [];
+  private itemCollisionCallbacks: ItemCollisionCallback[] = [];
 
-  constructor(physics: PhysicsEngine, gameState: GameState) {
+  private swipeBrick: SwipeBrick;
+
+  constructor(physics: PhysicsEngine, swipeBrick: SwipeBrick) {
     this.physics = physics;
-    this.gameState = gameState;
+    this.swipeBrick = swipeBrick;
     this.setupCollisionListener();
   }
 
-  public createBrick(x: number, y: number, maxHits: number = 3): Brick {
-    const brick = new Brick(x, y, maxHits);
+  public createBricks(): void {
+    // CRITICAL: SwipeBrick에서 논리적 상태 생성 후 BrickEntity/ItemEntity로 시각화
+    const elements = this.swipeBrick.createNewRow();
 
-    // 내부 관리용 맵에 추가
-    this.bricks.set(brick.id, brick);
-
-    return brick;
-  }
-
-  private generateRandomBrickData(health: number): (number | null)[] {
-    // return [8000, 8000, 8000, 8000, 8000, null];
-
-    // 확률 분포에 따라 벽돌 개수 결정
-    const brickCount = this.selectBrickCountByProbability();
-
-    // 6개 슬롯 배열 생성
-    const slots: (number | null)[] = [null, null, null, null, null, null];
-
-    // 랜덤 위치에 벽돌 배치
-    const usedIndices = new Set<number>();
-
-    for (let i = 0; i < brickCount; i++) {
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * 6);
-      } while (usedIndices.has(randomIndex));
-
-      usedIndices.add(randomIndex);
-      slots[randomIndex] = health;
-    }
-
-    return slots;
-  }
-
-  private selectBrickCountByProbability(): number {
-    // 벽돌 개수별 확률 (1개, 2개, 3개, 4개, 5개)
-    const BRICK_COUNT_PROBABILITIES = [0.2, 0.3, 0.2, 0.2, 0.1];
-
-    const random = Math.random();
-    let cumulativeProbability = 0;
-
-    for (let i = 0; i < BRICK_COUNT_PROBABILITIES.length; i++) {
-      cumulativeProbability += BRICK_COUNT_PROBABILITIES[i];
-      if (random <= cumulativeProbability) {
-        return i + 1; // 1개부터 5개까지
-      }
-    }
-
-    // 기본값 (확률 합이 1이 아닌 경우 대비)
-    return 3;
-  }
-
-  public createBricks(health: number): void {
-    const brickData = this.generateRandomBrickData(health);
+    console.log("Entities created:", {
+      timestamp: new Date().toISOString(),
+      level: this.swipeBrick.getLevel(),
+      elements,
+    });
 
     const BRICK_WIDTH = 60;
     const BRICK_Y = 40;
 
-    brickData.forEach((hits, index) => {
-      if (hits !== null) {
-        const x = index * BRICK_WIDTH;
-        this.createBrick(x, BRICK_Y, hits);
+    elements.forEach((element, index) => {
+      if (element !== null) {
+        const x = index * BRICK_WIDTH + BRICK_WIDTH / 2;
+        const y = BRICK_Y + 20; // 40px 높이의 절반
+
+        if (element.type === "brick") {
+          // CRITICAL: SwipeBrick의 ID를 BrickEntity에 전달하여 동기화
+          const brick = new BrickEntity(element.id, { x, y }, element.health);
+          this.brickEntities.set(brick.id, brick);
+        } else if (element.type === "item") {
+          // CRITICAL: SwipeBrick의 ID를 ItemEntity에 전달하여 동기화
+          const item = new ItemEntity(element.id, { x, y });
+          this.itemEntities.set(item.id, item);
+        }
       }
     });
 
-    // 새 스테이지마다 모든 벽돌 색상 업데이트
     this.updateAllBrickColors();
   }
 
   private setupCollisionListener(): void {
-    this.physics.onCollisionBrick((brickBody) => {
-      const brick = this.findBrickByBody(brickBody);
-      if (!brick) return;
+    this.physics.onCollisionBrick((body) => {
+      const brick = this.findBrickByBody(body);
+      if (brick) {
+        this.handleBrickCollision(brick);
+        return;
+      }
 
-      this.handleBrickCollision(brick);
+      const item = this.findItemByBody(body);
+      if (item) {
+        this.handleItemCollision(item);
+        return;
+      }
+
+      console.error("Unknown collision body:", {
+        timestamp: new Date().toISOString(),
+        body: {
+          label: body.label,
+          id: body.id,
+          position: { x: body.position.x, y: body.position.y },
+          category: body.collisionFilter.category,
+          mask: body.collisionFilter.mask,
+          isStatic: body.isStatic,
+          isSensor: body.isSensor,
+        },
+        entities: {
+          brickCount: this.brickEntities.size,
+          itemCount: this.itemEntities.size,
+          brickIds: Array.from(this.brickEntities.keys()),
+          itemIds: Array.from(this.itemEntities.keys()),
+        },
+        level: this.swipeBrick.getLevel(),
+      });
     });
   }
 
-  private findBrickByBody(body: Matter.Body): Brick | null {
-    for (const brick of this.bricks.values()) {
-      if (brick.getPhysicsBody() === body) {
-        return brick;
-      }
-    }
-    return null;
+  private findBrickByBody(body: Matter.Body): BrickEntity | null {
+    const entityId = body.plugin.entityId;
+    return this.brickEntities.get(entityId) || null;
   }
 
-  private handleBrickCollision(brick: Brick): void {
-    // 벽돌 타격
-    brick.hit();
+  private findItemByBody(body: Matter.Body): ItemEntity | null {
+    const entityId = body.plugin.entityId;
+    return this.itemEntities.get(entityId) || null;
+  }
 
-    // 벽돌 색상 업데이트 (체력 변화 반영)
-    const brickHealth = brick.getHealth();
-    const color = this.calculateBrickColor(brickHealth, this.gameState.level);
-    brick.setColor(color);
+  private handleBrickCollision(brick: BrickEntity): void {
+    // CRITICAL: SwipeBrick ID 파싱 - brick-{stage}-{index} 형식 의존
+    const idParts = brick.id.split("-");
+    const stage = parseInt(idParts[1]);
+    const index = parseInt(idParts[2]);
 
-    // 외부 콜백 호출
+    // CRITICAL: SwipeBrick이 논리적 상태 관리, BrickEntity는 시각적 동기화만
+    const hitResult = this.swipeBrick.damageBrick(stage, index);
+
+    if (hitResult === null) {
+      // SwipeBrick에서 파괴됨 - BrickEntity도 제거
+      this.destroyBrick(brick);
+      return;
+    } else {
+      // CRITICAL: SwipeBrick → BrickEntity 상태 동기화
+      const remainingHealth = hitResult.health;
+      brick.setHealth(remainingHealth);
+      brick.calculateBrickColor(this.swipeBrick.getLevel());
+    }
+
     this.brickCollisionCallbacks.forEach((callback) => {
       callback(brick);
     });
-
-    if (brick.getHealth() == 0) {
-      this.destroyBrick(brick);
-    }
   }
 
-  private destroyBrick(brick: Brick): void {
+  private handleItemCollision(item: ItemEntity): void {
+    // CRITICAL: SwipeBrick ID 파싱 - item-{stage}-{index} 형식 의존
+    const idParts = item.id.split("-");
+    const stage = parseInt(idParts[1]);
+    const index = parseInt(idParts[2]);
+
+    // CRITICAL: SwipeBrick에서 아이템 수집 처리 (공 개수 증가)
+    this.swipeBrick.collectItem(stage, index);
+
+    // ItemEntity 제거
+    this.destroyItem(item);
+
+    this.itemCollisionCallbacks.forEach((callback) => {
+      callback(item);
+    });
+  }
+
+  private destroyBrick(brick: BrickEntity): void {
     // 외부 파괴 콜백 호출 (벽돌이 실제로 파괴되기 전에)
     this.brickDestroyCallbacks.forEach((callback) => {
       callback(brick);
     });
 
     // 내부 맵에서 제거
-    this.bricks.delete(brick.id);
+    this.brickEntities.delete(brick.id);
 
     // 벽돌 파괴
     brick.destroy();
   }
 
-  public shift(): void {
-    console.log("shift");
-    const SHIFT_AMOUNT = 40;
+  private destroyItem(item: ItemEntity): void {
+    // 내부 맵에서 제거
+    this.itemEntities.delete(item.id);
 
-    for (const brick of this.bricks.values()) {
+    // 아이템 파괴
+    item.destroy();
+  }
+
+  public shift(): void {
+    // SwipeBrick에서 shift 수행하고 마지막 행 요소들 확인
+    const lastRowElements = this.swipeBrick.shiftRowsDown();
+
+    // 마지막 행에 있던 아이템들 자동 수집 및 ItemEntity 제거
+    lastRowElements.forEach((element, index) => {
+      if (element !== null && element.type === "item") {
+        const idParts = element.id.split("-");
+        const stage = parseInt(idParts[1]);
+        this.swipeBrick.collectItem(stage, index);
+
+        // 해당 ItemEntity 찾아서 제거
+        const item = this.itemEntities.get(element.id);
+        if (item) {
+          this.destroyItem(item);
+        }
+      }
+    });
+
+    // 기존 BrickEntity들과 ItemEntity들의 물리적 위치 업데이트
+    const SHIFT_AMOUNT = 40;
+    for (const brick of this.brickEntities.values()) {
       brick.shift(SHIFT_AMOUNT);
+    }
+    for (const item of this.itemEntities.values()) {
+      item.shift(SHIFT_AMOUNT);
+    }
+
+    // 게임 오버 체크
+    if (this.swipeBrick.isGameOver()) {
+      console.log("Game Over - Brick reached bottom!");
     }
   }
 
   public updateAllBrickColors(): void {
-    const currentLevel = this.gameState.level;
+    const currentStage = this.swipeBrick.getLevel();
 
-    for (const brick of this.bricks.values()) {
-      const brickHealth = brick.getHealth();
-      const color = this.calculateBrickColor(brickHealth, currentLevel);
-      brick.setColor(color);
+    for (const brick of this.brickEntities.values()) {
+      brick.calculateBrickColor(currentStage);
     }
-  }
-
-  private calculateBrickColor(currentHealth: number, stage: number): number {
-    // stage를 기준으로 색상 계산
-    // 체력이 높을수록 진한 파란색, 낮을수록 연한 파란색
-    const maxColor = 0x1f4ef5; // 진한 파란색 (#1F4EF5)
-    const minColor = 0x83b4f9; // 연한 파란색 (#83B4F9)
-
-    // currentHealth/stage 비율로 색상 보간 (0~1)
-    const ratio = Math.min(currentHealth / stage, 1);
-
-    return this.interpolateColor(minColor, maxColor, ratio);
-  }
-
-  private interpolateColor(color1: number, color2: number, ratio: number): number {
-    // color1에서 color2로 ratio만큼 보간 (ratio: 0~1)
-    const r1 = (color1 >> 16) & 0xff;
-    const g1 = (color1 >> 8) & 0xff;
-    const b1 = color1 & 0xff;
-
-    const r2 = (color2 >> 16) & 0xff;
-    const g2 = (color2 >> 8) & 0xff;
-    const b2 = color2 & 0xff;
-
-    const r = Math.floor(r1 + (r2 - r1) * ratio);
-    const g = Math.floor(g1 + (g2 - g1) * ratio);
-    const b = Math.floor(b1 + (b2 - b1) * ratio);
-
-    return (r << 16) | (g << 8) | b;
   }
 
   public onBrickCollision(callback: BrickCollisionCallback): void {
@@ -198,13 +223,23 @@ export class BrickManager {
     this.brickDestroyCallbacks.push(callback);
   }
 
+  public onItemCollision(callback: ItemCollisionCallback): void {
+    this.itemCollisionCallbacks.push(callback);
+  }
+
   public destroy(): void {
     // 모든 벽돌 파괴
-    for (const brick of this.bricks.values()) {
+    for (const brick of this.brickEntities.values()) {
       this.destroyBrick(brick);
     }
-    this.bricks.clear();
+    // 모든 아이템 파괴
+    for (const item of this.itemEntities.values()) {
+      this.destroyItem(item);
+    }
+    this.brickEntities.clear();
+    this.itemEntities.clear();
     this.brickCollisionCallbacks = [];
     this.brickDestroyCallbacks = [];
+    this.itemCollisionCallbacks = [];
   }
 }

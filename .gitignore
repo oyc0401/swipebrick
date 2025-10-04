@@ -25,3 +25,7 @@ dist-ssr
 
 
 .env
+.granite
+
+# 메모
+MEMO.txt

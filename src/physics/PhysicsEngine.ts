@@ -136,25 +136,36 @@ export class PhysicsEngine {
   ): void {
     ballCollisions.forEach((bodies, ball) => {
       const brickBodies = bodies.filter((body) => body.label === "brick");
+      const itemBodies = bodies.filter((body) => body.label === "item");
 
-      if (brickBodies.length === 0) return;
+      // 벽돌 충돌 처리
+      if (brickBodies.length > 0) {
+        // console.log("Ball hit bricks!", {
+        //   timestamp: new Date().toISOString(),
+        //   ballId: ball.id,
+        //   ballVelocity: ball.velocity,
+        //   brickCount: brickBodies.length,
+        //   brickIds: brickBodies.map((body) => body.id),
+        // });
 
-      // console.log("Ball hit bricks!", {
-      //   timestamp: new Date().toISOString(),
-      //   ballId: ball.id,
-      //   ballVelocity: ball.velocity,
-      //   brickCount: brickBodies.length,
-      //   brickIds: brickBodies.map((body) => body.id),
-      // });
+        // 2개 벽돌 동시 충돌 시 특별 처리
+        if (brickBodies.length === 2) {
+          this.handleDualBrickCollision(ball, brickBodies);
+        } else {
+          // 일반적인 벽돌 충돌 처리
+          brickBodies.forEach((brickBody) => {
+            this.brickCollisionCallbacks.forEach((callback) => {
+              callback(brickBody);
+            });
+          });
+        }
+      }
 
-      // 2개 벽돌 동시 충돌 시 특별 처리
-      if (brickBodies.length === 2) {
-        this.handleDualBrickCollision(ball, brickBodies);
-      } else {
-        // 일반적인 벽돌 충돌 처리
-        brickBodies.forEach((brickBody) => {
+      // 아이템 충돌 처리
+      if (itemBodies.length > 0) {
+        itemBodies.forEach((itemBody) => {
           this.brickCollisionCallbacks.forEach((callback) => {
-            callback(brickBody);
+            callback(itemBody);
           });
         });
       }

@@ -2,6 +2,13 @@ import { Body, Bodies, Sleeping } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
 import { PhysicsEngine } from "./PhysicsEngine";
 
+const enum CollisionCategories {
+  BALL = 0x0001, // 공
+  BOUNDARY = 0x0002, // 경계벽
+  BRICK = 0x0004, // 벽돌
+  ITEM = 0x0008, // 아이템
+}
+
 export abstract class MatterJSComponent implements IPhysicsComponent {
   protected body: Matter.Body;
 
@@ -49,8 +56,11 @@ export class BallPhysicsComponent extends MatterJSComponent {
       slop: 0.0,
       label: "ball",
       collisionFilter: {
-        category: 0x0001, // 공 카테고리
-        mask: 0x0002 | 0x0004, // 벽과만 충돌, 다른 공과는 충돌 안함
+        category: CollisionCategories.BALL,
+        mask:
+          CollisionCategories.BOUNDARY |
+          CollisionCategories.BRICK |
+          CollisionCategories.ITEM,
       },
     });
   }
@@ -85,10 +95,11 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
     y: number,
     width: number,
     height: number,
+    entityId: string,
     label: string = "boundary"
   ) {
     super();
-    this.createBoundaryBody(x, y, width, height, label);
+    this.createBoundaryBody(x, y, width, height, label, entityId);
     this.registerToPhysics();
   }
 
@@ -97,21 +108,54 @@ export class BoundaryPhysicsComponent extends MatterJSComponent {
     y: number,
     width: number,
     height: number,
-    label: string
+    label: string,
+    entityId: string
   ): void {
     // 벽돌인 경우 다른 카테고리 사용
-    const category = label === "brick" ? 0x0004 : 0x0002;
+    const category =
+      label === "brick"
+        ? CollisionCategories.BRICK
+        : CollisionCategories.BOUNDARY;
 
-    this.body = Bodies.rectangle(x + width / 2, y + height / 2, width, height, {
+    this.body = Bodies.rectangle(x, y, width, height, {
       isStatic: true, // 정적 객체
       restitution: 1, // 완전 탄성 반사
       friction: 0, // 마찰 완전 제거
       frictionStatic: 0, // 정적 마찰 완전 제거
       slop: 0.0,
       label: label,
+      plugin: { entityId }, // 엔티티 ID 저장
       collisionFilter: {
-        category: category, // 벽돌: 0x0004, 벽: 0x0002
-        mask: 0x0001, // 공과만 충돌
+        category: category,
+        mask: CollisionCategories.BALL,
+      },
+    });
+  }
+}
+
+export class ItemPhysicsComponent extends MatterJSComponent {
+  private radius: number;
+
+  constructor(x: number, y: number, radius: number, entityId: string) {
+    super();
+    this.radius = radius;
+    this.createItemBody(x, y, entityId);
+    this.registerToPhysics();
+  }
+
+  private createItemBody(x: number, y: number, entityId: string): void {
+    this.body = Bodies.circle(x, y, this.radius, {
+      isStatic: true, // 정적 객체 (아이템은 움직이지 않음)
+      isSensor: true, // 센서로 설정 - 물리적 충돌 없음, 감지만
+      restitution: 0, // 아이템은 반사하지 않음
+      friction: 0, // 마찰 완전 제거
+      frictionStatic: 0, // 정적 마찰 완전 제거
+      slop: 0.0,
+      label: "item",
+      plugin: { entityId }, // 엔티티 ID 저장
+      collisionFilter: {
+        category: CollisionCategories.ITEM,
+        mask: CollisionCategories.BALL,
       },
     });
   }
