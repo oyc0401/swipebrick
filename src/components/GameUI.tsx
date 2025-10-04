@@ -4,13 +4,13 @@ import { Header } from "./Header";
 const gameViewStyle = css`
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: rgba(255, 0, 0, 0.3);
+  // background: rgba(255, 0, 0, 0.3);
 `;
 
 const bottomSpacerStyle = css`
   flex: 1;
   width: 100%;
-  background: rgba(0, 125, 0, 0.3);
+  // background: rgba(0, 125, 0, 0.3);
 `;
 
 export const GameUI = () => {

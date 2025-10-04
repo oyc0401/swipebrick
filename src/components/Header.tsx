@@ -52,7 +52,7 @@ const rightButtonGroupStyle = css`
 const spacerStyle = css`
   flex: 1;
   width: 100%;
-  background: rgba(0, 125, 0, 0.3);
+  // background: rgba(0, 125, 0, 0.3);
 `;
 
 export function Header() {
