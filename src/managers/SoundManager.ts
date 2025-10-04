@@ -1,11 +1,12 @@
 export class SoundManager {
   private static instance: SoundManager | null = null;
-  private ballSounds: HTMLAudioElement[] = [];
-  private currentSoundIndex = 0;
-  private readonly SOUND_POOL_SIZE = 10;
+  private audioContext: AudioContext | null = null;
+  private audioBuffer: AudioBuffer | null = null;
+  private isInitialized = false;
+  private isEnabled = true;
 
   private constructor() {
-    this.initializeSounds();
+    // 사용자 상호작용 후 초기화하도록 대기
   }
 
   public static getInstance(): SoundManager {
@@ -15,55 +16,72 @@ export class SoundManager {
     return SoundManager.instance;
   }
 
-  private initializeSounds(): void {
+  private async initializeAudioContext(): Promise<void> {
+    if (this.isInitialized) return;
+
     try {
-      // Audio Pool 생성 - 여러 개의 Audio 인스턴스를 미리 생성
-      for (let i = 0; i < this.SOUND_POOL_SIZE; i++) {
-        const audio = new Audio("/ball_sound.mp3");
-        audio.preload = "auto";
-        audio.volume = 0.3;
-        this.ballSounds.push(audio);
-      }
-      console.log(
-        `Sound pool initialized with ${this.SOUND_POOL_SIZE} instances`
-      );
+      // Web Audio API 사용 (최신 브라우저 표준)
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+      // 오디오 파일 로드
+      const response = await fetch("/ball_sound.mp3");
+      const arrayBuffer = await response.arrayBuffer();
+      this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+      this.isInitialized = true;
+      console.log("SoundManager initialized with Web Audio API");
     } catch (error) {
-      console.warn("Failed to initialize ball sounds:", error);
+      console.warn("Failed to initialize Web Audio API:", error);
+      this.isEnabled = false;
     }
   }
 
-  public playBallSound(): void {
-    if (this.ballSounds.length > 0) {
-      try {
-        // Pool에서 현재 인덱스의 Audio 사용
-        const sound = this.ballSounds[this.currentSoundIndex];
-        sound.currentTime = 0; // 처음부터 재생
+  public async playBallSound(): Promise<void> {
+    if (!this.isEnabled) return;
 
-        sound.play().catch((error) => {
-          console.warn("Failed to play ball sound:", error);
-        });
-
-        // 다음 인덱스로 순환 (Pool을 돌려가며 사용)
-        this.currentSoundIndex =
-          (this.currentSoundIndex + 1) % this.ballSounds.length;
-      } catch (error) {
-        console.warn("Failed to play ball sound:", error);
+    try {
+      // 첫 번째 호출시 초기화
+      if (!this.isInitialized) {
+        await this.initializeAudioContext();
       }
+
+      if (!this.audioContext || !this.audioBuffer) return;
+
+      // AudioContext가 suspended 상태면 resume (브라우저 autoplay policy)
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+
+      // 새로운 source 노드 생성 (재사용 불가)
+      const source = this.audioContext.createBufferSource();
+      const gainNode = this.audioContext.createGain();
+
+      source.buffer = this.audioBuffer;
+      gainNode.gain.value = this.volume; // 볼륨 설정
+
+      // 연결: source → gain → destination
+      source.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+
+      // 재생
+      source.start(0);
+    } catch (error) {
+      console.warn("Failed to play ball sound:", error);
     }
   }
+
+  private volume = 0.3;
 
   public setVolume(volume: number): void {
-    const clampedVolume = Math.max(0, Math.min(1, volume));
-    this.ballSounds.forEach((audio) => {
-      audio.volume = clampedVolume;
-    });
+    this.volume = Math.max(0, Math.min(1, volume));
   }
 
   public destroy(): void {
-    this.ballSounds.forEach((audio) => {
-      audio.pause();
-    });
-    this.ballSounds = [];
-    this.currentSoundIndex = 0;
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+    this.audioBuffer = null;
+    this.isInitialized = false;
   }
 }

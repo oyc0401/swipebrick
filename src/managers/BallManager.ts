@@ -43,7 +43,7 @@ export class BallManager {
   public launchBalls(
     targetX: number,
     targetY: number,
-    delayMs: number = 100
+    delayMs: number = 50
   ): void {
     this.activeBalls.forEach((ball, index) => {
       setTimeout(() => {
@@ -87,10 +87,13 @@ export class BallManager {
 
   private createPreviewBall(): void {
     const ballStartX = this.swipeBrick.getBallStartX();
-    this.previewBall = BallEntity.createWithoutPhysics(`ball-preview-${getNextId()}`, {
-      x: ballStartX,
-      y: GAME_HEIGHT - BALL_RADIUS,
-    });
+    this.previewBall = BallEntity.createWithoutPhysics(
+      `ball-preview-${getNextId()}`,
+      {
+        x: ballStartX,
+        y: GAME_HEIGHT - BALL_RADIUS,
+      }
+    );
   }
   private removeBall(ball: BallEntity): void {
     ball.destroy();
