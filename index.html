@@ -2,15 +2,20 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SwipeBrick</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div id="container"></div>
-    <!-- <div id="header"></div>
-    <div id="footer"></div> -->
+    <div id="safe-area-wrap">
+      <div id="safe-area">
+        <div id="container"></div>
+        <div id="ui">
+          <!-- React.js root -->
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

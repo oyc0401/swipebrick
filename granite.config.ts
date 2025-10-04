@@ -9,7 +9,7 @@ export default defineConfig({
     bridgeColorMode: "inverted",
   },
   web: {
-    host: "192.168.1.86", // 본인 컴퓨터 IP 적기
+    host: "192.168.219.108", // 본인 컴퓨터 IP 적기
     port: 5173,
     commands: {
       dev: "vite --host",
@@ -21,5 +21,8 @@ export default defineConfig({
   webViewProps: {
     type: "game",
     overScrollMode: "never",
+    bounces: false,
+    pullToRefreshEnabled: false,
+    allowsBackForwardNavigationGestures: false,
   },
 });

@@ -20,6 +20,8 @@ export class InputManager {
   private clickHandler: (event: MouseEvent) => void;
   private mouseMoveHandler: (event: MouseEvent) => void;
 
+  private pointerdown = false;
+
   private readonly MIN_ANGLE = 10; // 최소 각도 (도)
   private readonly MAX_ANGLE = 180 - 10; // 최대 각도 (도)
 
@@ -31,6 +33,10 @@ export class InputManager {
     this.setupEventListeners();
   }
 
+  onclickView = () => {
+    this.pointerdown = true;
+  };
+
   /** 게임 영역 클릭 시 이벤트 */
   public onClick(callback: ClickCallback): void {
     this.onGameClick = callback;
@@ -41,11 +47,37 @@ export class InputManager {
     this.onMouseMoveCallback = callback;
   }
 
+  eventClickHandler = (e: PointerEvent) => {
+    if (!this.pointerdown) return;
+
+    this.pointerdown = false;
+
+    this.clickHandler(e);
+  };
+
+  eventMouseMoveHandler = (e: PointerEvent) => {
+    if (!this.pointerdown) return;
+
+    this.mouseMoveHandler(e);
+  };
+
   private setupEventListeners(): void {
-    // DOM 전체에서 클릭 이벤트 수신
-    document.addEventListener("pointerup", this.clickHandler);
+    window.onload = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          console.log(document.getElementById("view")!);
+          document
+            .getElementById("view")!
+            .addEventListener("pointerdown", this.onclickView);
+        });
+      });
+    };
+
     // DOM 전체에서 마우스 이동 이벤트 수신
-    document.addEventListener("pointermove", this.mouseMoveHandler);
+    document.addEventListener("pointermove", this.eventMouseMoveHandler);
+
+    // DOM 전체에서 클릭 이벤트 수신
+    document.addEventListener("pointerup", this.eventClickHandler);
   }
 
   private toGameCoords(event: MouseEvent) {
@@ -57,7 +89,10 @@ export class InputManager {
 
     const gameCoords = {
       x: event.clientX * scale - containerRect.left,
-      y: event.clientY * scale - (containerRect.height * scale - 360) / 2,
+      y:
+        event.clientY * scale -
+        (containerRect.height * scale - 360) / 2 -
+        containerRect.top * scale,
     };
 
     return gameCoords;
@@ -146,8 +181,8 @@ export class InputManager {
   }
 
   public destroy(): void {
-    document.removeEventListener("click", this.clickHandler);
-    document.removeEventListener("mousemove", this.mouseMoveHandler);
+    document.removeEventListener("pointerup", this.clickHandler);
+    document.removeEventListener("pointermove", this.eventMouseMoveHandler);
     this.onGameClick = undefined;
     this.onMouseMoveCallback = undefined;
   }

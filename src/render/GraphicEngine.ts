@@ -1,5 +1,6 @@
-import { Application, Container, Graphics, Rectangle } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { EntityManager } from "../core/entity/EntityManager";
+import { LayerManager } from "./LayerManager";
 
 /**
  * 반응형 UI 가로 크기
@@ -18,21 +19,17 @@ export class GraphicEngine {
   private static instance: GraphicEngine | null = null;
 
   private app: Application;
-  private centerLayer: Container;
-  private gameViewport: Container;
+  private layerManager: LayerManager;
   private gameWidth: number;
   private gameHeight: number;
-  private background: Graphics | null = null;
   private debugGuide: Graphics | null = null;
   private aimLine: Graphics | null = null;
-  private cleanupTasks: (() => void)[] = [];
 
   private constructor(gameWidth: number, gameHeight: number) {
     this.app = new Application();
-    this.centerLayer = new Container();
-    this.gameViewport = new Container();
     this.gameWidth = gameWidth;
     this.gameHeight = gameHeight;
+    this.layerManager = new LayerManager(this.app, gameWidth, gameHeight);
   }
 
   public static getInstance(
@@ -74,108 +71,20 @@ export class GraphicEngine {
     if (container) container.appendChild(this.app.canvas);
     this.app.canvas.style.display = "block";
 
-    this.setupLayers();
-    this.setupEventListeners();
+    this.layerManager.setupLayers(this.app.stage);
   }
 
-  private setupLayers(): void {
-    // 중앙 고정 레이어
-    this.centerLayer.pivot.set(this.gameWidth / 2, this.gameWidth / 2);
-
-    this.app.stage.addChild(this.centerLayer);
-
-    // // 게임 뷰포트
-    // this.centerLayer.hitArea = new Rectangle(0, -200, this.gameWidth, 800);
-    this.gameViewport.hitArea = new Rectangle(
-      0,
-      0,
-      this.gameWidth,
-      this.gameHeight
-    );
-    this.centerLayer.addChild(this.gameViewport);
-
-    // // 중앙 정렬 & 리사이즈 대응
-    this.updateCenterPosition();
-  }
-
-  private setupEventListeners(): void {
-    window.addEventListener("resize", this.onResize);
-    this.cleanupTasks.push(() =>
-      window.removeEventListener("resize", this.onResize)
-    );
-  }
-
-  private onResize = (): void => {
-    const { width, height } = getSize();
-    this.app.renderer.resize(width, height);
-    this.updateCenterPosition();
-  };
-
-  private updateCenterPosition(): void {
-    const screenWidth = this.app.renderer.width;
-    const screenHeight = this.app.renderer.height;
-
-    // 화면 가로 크기에 맞춰 스케일 계산
-    const scale = Math.min(
-      screenWidth / this.gameWidth,
-      screenHeight / this.gameHeight
-    );
-
-    // centerLayer에 스케일 적용
-    this.centerLayer.scale.set(scale);
-
-    // 화면 중앙에 배치
-    this.centerLayer.position.set(screenWidth / 2, screenHeight / 2);
-
-    this.drawBackground(scale);
-  }
-
-  private drawBackground(scale: number) {
-    const canvasSize = getSize();
-    const scaledCanvasHeight = canvasSize.height / scale;
-    const h = (this.gameHeight - scaledCanvasHeight) / 2;
-
-    if (!this.background) {
-      // 최초 생성
-      this.background = new Graphics();
-      this.centerLayer.addChildAt(this.background, 0);
-    }
-
-    // 기존 Graphics 재활용 (clear 후 새로 그리기)
-    this.background.clear();
-    this.background
-      .rect(0, h, this.gameWidth, scaledCanvasHeight)
-      .fill(0xffffff); // 흰색
-  }
 
   public addDebugGuide(): void {
-    if (!this.debugGuide) {
-      // 최초 생성
-      this.debugGuide = new Graphics();
-      this.centerLayer.addChild(this.debugGuide);
-    }
-
-    // 기존 Graphics 재활용 (clear 후 새로 그리기)
-    this.debugGuide.clear();
-    this.debugGuide.rect(0, 0, this.gameWidth, this.gameHeight).stroke({
-      width: 2,
-      color: 0x00aa00,
-    });
-    this.debugGuide
-      .moveTo(this.gameWidth / 2, 0)
-      .lineTo(this.gameWidth / 2, this.gameHeight);
-    this.debugGuide
-      .moveTo(0, this.gameHeight / 2)
-      .lineTo(this.gameWidth, this.gameHeight / 2);
-    this.debugGuide.stroke({ width: 1, color: 0xaa0000 });
+    this.layerManager.addDebugGuide();
   }
 
   public getCenterLayer(): Container {
-    return this.centerLayer;
+    return this.layerManager.getCenterLayer();
   }
 
   public getGameViewport(): Container {
-    return this.gameViewport;
+    return this.layerManager.getGameViewport();
   }
 
   public getApp(): Application {
@@ -203,11 +112,12 @@ export class GraphicEngine {
       (clientY - canvasRect.top) * (resolution / window.devicePixelRatio);
 
     // centerLayer의 현재 transform 정보 가져오기
-    const scale = this.centerLayer.scale.x; // scale.x와 scale.y는 동일
-    const centerX = this.centerLayer.position.x;
-    const centerY = this.centerLayer.position.y;
-    const pivotX = this.centerLayer.pivot.x;
-    const pivotY = this.centerLayer.pivot.y;
+    const centerLayer = this.layerManager.getCenterLayer();
+    const scale = centerLayer.scale.x; // scale.x와 scale.y는 동일
+    const centerX = centerLayer.position.x;
+    const centerY = centerLayer.position.y;
+    const pivotX = centerLayer.pivot.x;
+    const pivotY = centerLayer.pivot.y;
 
     // 캔버스 좌표를 centerLayer 로컬 좌표로 역변환
     const localX = (canvasX - centerX) / scale + pivotX;
@@ -224,7 +134,7 @@ export class GraphicEngine {
   ): void {
     if (!this.aimLine) {
       this.aimLine = new Graphics();
-      this.gameViewport.addChildAt(this.aimLine, 0);
+      this.layerManager.getGameViewport().addChildAt(this.aimLine, 0);
     }
 
     this.aimLine.clear();
@@ -371,16 +281,10 @@ export class GraphicEngine {
   }
 
   private destroy(): void {
-    // 이벤트 리스너 정리
-    this.cleanupTasks.forEach((cleanup) => cleanup());
-    this.cleanupTasks = [];
+    // LayerManager 정리
+    this.layerManager.destroy();
 
     // Graphics 객체들 정리
-    if (this.background) {
-      this.background.destroy(true);
-      this.background = null;
-    }
-
     if (this.debugGuide) {
       this.debugGuide.destroy(true);
       this.debugGuide = null;
