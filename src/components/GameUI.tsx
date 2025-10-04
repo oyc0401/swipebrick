@@ -33,7 +33,9 @@ export const GameUI = () => {
     </>
   );
 
-  return <TDSMobileAITProvider>{content}</TDSMobileAITProvider>;
+  if (isTossApp()) {
+    return <TDSMobileAITProvider>{content}</TDSMobileAITProvider>;
+  }
 
   return content;
 };

@@ -184,15 +184,18 @@ export class Game {
       // 베스트 스코어 업데이트
       await this.updateScore();
 
-      // 다이얼로그 열기
+      const handleRestart = () => {
+        this.brickManager.reset();
+        this.swipeBrick.reset();
+        this.brickManager.createBricks();
+        this.ballManager.showPreviewBall();
+        useGameStore.getState().setScore(this.swipeBrick.getLevel());
+        console.log("Game restarted");
+      };
+
+      // 다이얼로그 열기 (콜백 등록)
+      useGameStore.getState().setCloseCallback(handleRestart);
       useGameStore.getState().openDialog();
-
-      this.brickManager.reset();
-      this.swipeBrick.reset();
-
-      this.brickManager.createBricks();
-      this.ballManager.showPreviewBall();
-      useGameStore.getState().setScore(this.swipeBrick.getLevel());
     }, 50);
   }
 }

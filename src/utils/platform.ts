@@ -6,12 +6,26 @@ export function isTossApp(): boolean {
   }
 
   try {
-    // @ts-ignore - getSafeAreaInsets는 Toss App에서만 사용 가능
-    getSafeAreaInsets();
-    cachedPlatformResult = true;
+    // 1. 웹뷰 환경 체크
+    const isWebView =
+      window.navigator.userAgent.includes("toss") ||
+      window.navigator.userAgent.includes("mobile") ||
+      // @ts-ignore
+      window.tossAppInterface ||
+      // @ts-ignore
+      window.webkit?.messageHandlers;
+
+    if (!isWebView) {
+      cachedPlatformResult = false;
+      // alert("현재 플랫폼: Web Browser");
+      return false;
+    }
+
+    // alert("현재 플랫폼: Toss Webview");
     return true;
   } catch (e) {
     cachedPlatformResult = false;
+    // alert("현재 플랫폼: Web Browser (Toss API 사용 불가)" + e);
     return false;
   }
 }
