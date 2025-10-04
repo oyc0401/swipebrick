@@ -95,7 +95,7 @@ export class InputManager {
   private applyAngleLimit(
     targetX: number,
     targetY: number
-  ): { x: number; y: number } {
+  ): { x: number; y: number ; angle: number} { //*추가** angle
     // SwipeBrick에서 공의 시작 위치 가져오기
     const ballX = this.swipeBrick.getBallStartX();
     const ballY = GAME_HEIGHT - BALL_RADIUS;
@@ -138,11 +138,11 @@ export class InputManager {
       const newX = ballX + Math.cos(clampedAngleRad) * distance;
       const newY = ballY - Math.sin(clampedAngleRad) * distance;
 
-      return { x: newX, y: newY };
+      return { x: newX, y: newY , angle: clampedAngle};
     }
 
     // 유효한 각도면 원래 좌표 반환
-    return { x: targetX, y: targetY };
+    return { x: targetX, y: targetY, angle };
   }
 
   public destroy(): void {

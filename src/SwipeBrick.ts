@@ -29,7 +29,7 @@ interface ISwipeBrick {
   collectItem(stage: number, index: number): Item;
   shiftRowsDown(): (GameObject | null)[];
   toJson(): void;
-  fromJson(): void;
+  //fromJson(): void;
 }
 
 export class SwipeBrick implements ISwipeBrick {
@@ -42,6 +42,7 @@ export class SwipeBrick implements ISwipeBrick {
   private ballCount: number;
   private ballStartX: number;
   private isRunning: boolean;
+  private lastLaunchAngle: number | null; // *추가* 각도값
 
   constructor() {
     this.objects = this.initializeGrid();
@@ -49,6 +50,7 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = 1;
     this.ballStartX = this.GAME_CENTER_X;
     this.isRunning = false;
+    this.lastLaunchAngle = null; // *추가* 발사 전
   }
 
   private initializeGrid(): (GameObject | null)[][] {
@@ -113,6 +115,16 @@ export class SwipeBrick implements ISwipeBrick {
     this.isRunning = running;
   }
 
+  // *추가* 출발했을 때 결정된 공 각도 설정
+  setLastLaunchAngle(angle: number): void {
+    this.lastLaunchAngle = angle;
+  }
+  
+  // *추가* 출발했을 때 결정된 공 각도 반환
+  getLastLaunchAngle(): number | null {
+    return this.lastLaunchAngle;
+  }
+
   // ===== 게임 오브젝트 관리 =====
 
   /** 새로운 행 생성 */
@@ -129,7 +141,7 @@ export class SwipeBrick implements ISwipeBrick {
     return createdElements;
   }
 
-  private generateRandomElement(): (GameObject | null)[] {
+  private generateRandomElement(): (GameObject | null)[] { // 아이템 무조건 1개 / brick 랜덤
     const slots: (GameObject | null)[] = [null, null, null, null, null, null];
     const y = 0;
 
@@ -145,6 +157,14 @@ export class SwipeBrick implements ISwipeBrick {
     const brickCount = this.getRandomBrickCount();
     const usedIndices = new Set<number>([itemIndex]);
 
+    // *추가* - 장지원
+    // 벽돌 체력 계산 : 101 레벨부터 체력 2씩 증가
+    let brickHealth = this.level;
+    if (this.level > 100) {
+      brickHealth = 100 + (this.level - 100) * 2;
+    }
+
+    // 벽돌 생성
     for (let i = 0; i < brickCount; i++) {
       let randomIndex;
       do {
@@ -158,7 +178,7 @@ export class SwipeBrick implements ISwipeBrick {
         id: `brick-${this.level}-${randomIndex}`,
         x: randomIndex,
         y,
-        health: this.level,
+        health: brickHealth, // 계산한 체력
       };
       slots[randomIndex] = brick;
     }
@@ -278,7 +298,27 @@ export class SwipeBrick implements ISwipeBrick {
     return this.objects[lastRowIndex];
   }
 
-  toJson() {}
 
-  fromJson() {}
+// *추가* - 장지원
+  toJson(): string {
+    return JSON.stringify({
+      level: this.level, // 레벨
+      ballCount: this.ballCount, // 공개수
+      ballStartX: this.ballStartX, // 공 발사 시작 위치(=착지지점)
+      lastLaunchAngle: this.lastLaunchAngle,  // 공 발사 각도
+      objects: this.objects // 현재 벽돌 배열
+    });
+  }
+
+  static fromJson(json: string): SwipeBrick {
+    const data = JSON.parse(json);
+    const game = new SwipeBrick(); // 생성자
+    //데이터 덮어쓰기
+    game.level = data.level;
+    game.ballCount = data.ballCount;
+    game.ballStartX = data.ballStartX;
+    game.lastLaunchAngle = data.lastLaunchAngle ?? null;
+    game.objects = JSON.parse(JSON.stringify(data.objects));
+    return game;
+  }
 }
