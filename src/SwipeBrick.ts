@@ -64,6 +64,8 @@ export class SwipeBrick implements ISwipeBrick {
   private shotTargetX: number | null;
   private shotTargetY: number | null;
 
+  // private lastLaunchAngle: number | null; // *추가* 각도값
+
   constructor() {
     this.objects = this.initializeGrid();
     this.level = 1;
@@ -165,6 +167,16 @@ export class SwipeBrick implements ISwipeBrick {
     return null;
   }
 
+  // *추가* 출발했을 때 결정된 공 각도 설정
+  // setLastLaunchAngle(angle: number): void {
+  //   this.lastLaunchAngle = angle;
+  // }
+
+  // // *추가* 출발했을 때 결정된 공 각도 반환
+  // getLastLaunchAngle(): number | null {
+  //   return this.lastLaunchAngle;
+  // }
+
   // ===== 게임 오브젝트 관리 =====
 
   /** 새로운 행 생성 */
@@ -182,6 +194,7 @@ export class SwipeBrick implements ISwipeBrick {
   }
 
   private generateRandomElement(): (GameObject | null)[] {
+    // 아이템 무조건 1개 / brick 랜덤
     const slots: (GameObject | null)[] = [null, null, null, null, null, null];
     const y = 0;
 
@@ -197,6 +210,14 @@ export class SwipeBrick implements ISwipeBrick {
     const brickCount = this.getRandomBrickCount();
     const usedIndices = new Set<number>([itemIndex]);
 
+    // *추가* - 장지원
+    // 벽돌 체력 계산 : 101 레벨부터 체력 2씩 증가
+    let brickHealth = this.level;
+    if (this.level > 100) {
+      brickHealth = 100 + (this.level - 100) * 2;
+    }
+
+    // 벽돌 생성
     for (let i = 0; i < brickCount; i++) {
       let randomIndex;
       do {
@@ -210,7 +231,7 @@ export class SwipeBrick implements ISwipeBrick {
         id: `brick-${this.level}-${randomIndex}`,
         x: randomIndex,
         y,
-        health: this.level,
+        health: brickHealth, // 계산한 체력
       };
       slots[randomIndex] = brick;
     }
