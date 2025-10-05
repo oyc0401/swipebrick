@@ -1,5 +1,8 @@
 import { css } from "@emotion/react";
 import { Header } from "./Header";
+import { GameOverDialog } from "./GameOverDialog";
+import { TDSMobileAITProvider } from "@toss/tds-mobile-ait";
+import { isTossApp } from "../utils/platform";
 
 const gameViewStyle = css`
   width: 100%;
@@ -16,7 +19,7 @@ const bottomSpacerStyle = css`
 export const GameUI = () => {
   // 게임 상태 업데이트를 위한 간격 체크 (임시)
 
-  return (
+  const content = (
     <>
       <Header />
 
@@ -25,6 +28,14 @@ export const GameUI = () => {
       </div>
 
       <div css={bottomSpacerStyle}></div>
+
+      <GameOverDialog />
     </>
   );
+
+  if (isTossApp()) {
+    return <TDSMobileAITProvider>{content}</TDSMobileAITProvider>;
+  }
+
+  return content;
 };

@@ -5,8 +5,13 @@ import { GameUI } from "./components/GameUI";
 
 import { getSafeAreaInsets } from "@apps-in-toss/web-framework";
 
-(function AppinTossInit() {
-  try {
+import { isTossApp } from "./utils/platform";
+import { initializeI18n } from "./utils/i18n";
+async function initializeApp() {
+  // i18n 초기화
+  await initializeI18n();
+
+  if (isTossApp()) {
     const insets = getSafeAreaInsets();
 
     const container = document.getElementById("safe-area-wrap");
@@ -16,10 +21,12 @@ import { getSafeAreaInsets } from "@apps-in-toss/web-framework";
     }
 
     console.log("Current Platform: Toss");
-  } catch (e) {
+  } else {
     console.log("Current Platform: Web");
   }
-})();
+}
+
+initializeApp();
 
 // React UI 마운트
 const uiElement = document.getElementById("ui");

@@ -65,7 +65,6 @@ export class InputManager {
     window.onload = () => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          console.log(document.getElementById("view")!);
           document
             .getElementById("view")!
             .addEventListener("pointerdown", this.onclickView);

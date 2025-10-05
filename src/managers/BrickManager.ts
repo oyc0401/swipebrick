@@ -1,7 +1,7 @@
 import type { PhysicsEngine } from "../physics/PhysicsEngine";
 import { BrickEntity } from "../entity/BrickEntity";
 import { ItemEntity } from "../entity/ItemEntity";
-import type { SwipeBrick } from "../SwipeBrick";
+import type { GameObject, SwipeBrick } from "../SwipeBrick";
 
 interface BrickCollisionCallback {
   (brick: BrickEntity): void;
@@ -41,13 +41,18 @@ export class BrickManager {
       elements,
     });
 
+    this.createEntitiesFromElements(elements);
+    this.updateAllBrickColors();
+  }
+
+  private createEntitiesFromElements(elements: (GameObject | null)[]): void {
     const BRICK_WIDTH = 60;
     const BRICK_Y = 40;
 
     elements.forEach((element, index) => {
       if (element !== null) {
         const x = index * BRICK_WIDTH + BRICK_WIDTH / 2;
-        const y = BRICK_Y + 20; // 40px 높이의 절반
+        const y = BRICK_Y + 20; // yOffset으로 행 위치 조정
 
         if (element.type === "brick") {
           // CRITICAL: SwipeBrick의 ID를 BrickEntity에 전달하여 동기화
@@ -60,6 +65,36 @@ export class BrickManager {
         }
       }
     });
+  }
+
+  public createBricksFromState(): void {
+    // 저장된 상태에서 모든 행의 벽돌/아이템 생성
+    const GRID_HEIGHT = 8;
+    const GRID_WIDTH = 6;
+
+    for (let y = 0; y < GRID_HEIGHT; y++) {
+      for (let x = 0; x < GRID_WIDTH; x++) {
+        // SwipeBrick에서 직접 객체 가져오기 (private 접근을 위해 any 캐스팅)
+        const element = (this.swipeBrick as any).objects[y][x];
+        if (element !== null) {
+          const BRICK_WIDTH = 60;
+          const posX = x * BRICK_WIDTH + BRICK_WIDTH / 2;
+          const posY = (y + 1) * 40 + 20; // y행 위치 계산
+
+          if (element.type === "brick") {
+            const brick = new BrickEntity(
+              element.id,
+              { x: posX, y: posY },
+              element.health
+            );
+            this.brickEntities.set(brick.id, brick);
+          } else if (element.type === "item") {
+            const item = new ItemEntity(element.id, { x: posX, y: posY });
+            this.itemEntities.set(item.id, item);
+          }
+        }
+      }
+    }
 
     this.updateAllBrickColors();
   }
@@ -225,6 +260,19 @@ export class BrickManager {
 
   public onItemCollision(callback: ItemCollisionCallback): void {
     this.itemCollisionCallbacks.push(callback);
+  }
+
+  public reset(): void {
+    // 모든 벽돌 엔티티 제거
+    for (const brick of this.brickEntities.values()) {
+      brick.destroy();
+    }
+    // 모든 아이템 엔티티 제거
+    for (const item of this.itemEntities.values()) {
+      item.destroy();
+    }
+    this.brickEntities.clear();
+    this.itemEntities.clear();
   }
 
   public destroy(): void {
