@@ -43,13 +43,37 @@ export class BallManager {
   public launchBalls(
     targetX: number,
     targetY: number,
-    delayMs: number = 50
+    frameInterval: number = 3
   ): void {
-    this.activeBalls.forEach((ball, index) => {
-      setTimeout(() => {
-        ball.moveTowards(targetX, targetY);
-      }, index * delayMs);
+    requestAnimationFrame(() => {
+      this.activeBalls.forEach((ball, index) => {
+        this.scheduleFrameDelayedAction(() => {
+          ball.moveTowards(targetX, targetY);
+        }, index * frameInterval);
+      });
     });
+  }
+
+  private scheduleFrameDelayedAction(
+    action: () => void,
+    frameDelay: number
+  ): void {
+    if (frameDelay <= 0) {
+      action();
+      return;
+    }
+
+    let currentFrame = 0;
+    const frameCallback = () => {
+      currentFrame++;
+      if (currentFrame >= frameDelay) {
+        action();
+      } else {
+        requestAnimationFrame(frameCallback);
+      }
+    };
+
+    requestAnimationFrame(frameCallback);
   }
 
   public handleBallLanding(ballBody: Matter.Body): void {
