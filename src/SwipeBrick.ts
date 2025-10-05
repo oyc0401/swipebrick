@@ -55,6 +55,7 @@ export class SwipeBrick implements ISwipeBrick {
   private readonly GRID_WIDTH = 6;
   private readonly GRID_HEIGHT = 8;
   private readonly GAME_CENTER_X = 180; // GAME_WIDTH / 2
+  private readonly HARD_LEVEL = 100;
 
   private objects: (GameObject | null)[][];
   private level: number;
@@ -207,14 +208,14 @@ export class SwipeBrick implements ISwipeBrick {
     };
     slots[itemIndex] = item;
 
-    const brickCount = this.getRandomBrickCount();
+    const brickCount = this.getRandomBrickCount(this.level);
     const usedIndices = new Set<number>([itemIndex]);
 
     // *추가* - 장지원
-    // 벽돌 체력 계산 : 101 레벨부터 체력 2씩 증가
+    // 벽돌 체력 계산 : HARD_LEVEL 레벨부터 체력 2씩 증가
     let brickHealth = this.level;
-    if (this.level > 100) {
-      brickHealth = 100 + (this.level - 100) * 2;
+    if (this.level > this.HARD_LEVEL) {
+      brickHealth = this.HARD_LEVEL + (this.level - this.HARD_LEVEL) * 2;
     }
 
     // 벽돌 생성
@@ -239,18 +240,36 @@ export class SwipeBrick implements ISwipeBrick {
     return slots;
   }
 
-  private getRandomBrickCount(): number {
-    const BRICK_COUNT_PROBABILITIES = [0.2, 0.3, 0.2, 0.2, 0.1];
-    const random = Math.random();
-    let cumulativeProbability = 0;
+  /**
+   * 1~5개의 벽돌 개수를 확률적으로 반환하는 함수
+   * 확률분포는 [0.2, 0.3, 0.2, 0.2, 0.1] (합계 1.0)
+   * 확률분포는 현재 레벨에 따라서 동적으로 변합니다.
+   * 0->80라운드까지는 점점 어려워지다가, 80라운드 이상부터는 확률분포가 고정입니다.
+   */
+  private getRandomBrickCount(currentLevel: number): number {
+    // 각 벽돌 개수(1~5)에 대한 확률 가중치
+    const weights = [0.2, 0.3, 0.2, 0.2, 0.1];
 
-    for (let i = 0; i < BRICK_COUNT_PROBABILITIES.length; i++) {
-      cumulativeProbability += BRICK_COUNT_PROBABILITIES[i];
-      if (random <= cumulativeProbability) {
-        return i + 1;
+    // 전체 확률 합 (꼭 1일 필요는 없음 — 비율 기준이므로)
+    const total = weights.reduce((a, b) => a + b, 0);
+
+    // 0 ~ total 사이의 난수 생성
+    // total이 1이면 0~1, total이 10이면 0~10 사이 난수
+    const r = Math.random() * total;
+
+    // 누적 확률 합
+    let sum = 0;
+
+    // weights를 순회하며 누적합이 난수를 초과하는 지점 찾기
+    for (let i = 0; i < weights.length; i++) {
+      sum += weights[i]; // 현재까지의 누적 확률
+      if (r <= sum) {
+        // 난수가 이 구간에 속한다면 해당 인덱스 선택
+        return i + 1; // 인덱스 0~4 → 벽돌 개수 1~5
       }
     }
 
+    // 부동소수점 오차 등으로 아무 구간에도 속하지 않을 경우 기본값 반환
     return 3;
   }
 
