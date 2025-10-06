@@ -118,6 +118,7 @@ export class BrickManager {
         body: {
           label: body.label,
           id: body.id,
+          entityId: body.plugin.entityId,
           position: { x: body.position.x, y: body.position.y },
           category: body.collisionFilter.category,
           mask: body.collisionFilter.mask,

@@ -8,7 +8,11 @@ export class BallEntity extends ActiveEntity {
   private radius: number = BALL_RADIUS;
   private color: number = 0x4880ee; // 토스 블루
 
-  constructor(id: string, position: Position, registerToPhysics: boolean = true) {
+  constructor(
+    id: string,
+    position: Position,
+    registerToPhysics: boolean = true
+  ) {
     super(id);
 
     // 컴포넌트 직접 할당
@@ -40,14 +44,18 @@ export class BallEntity extends ActiveEntity {
   }
 
   // 물리 엔진에 등록하지 않는 Ball 생성 (프리뷰용)
-  public static createWithoutPhysics(id: string, position: Position): BallEntity {
+  public static createWithoutPhysics(
+    id: string,
+    position: Position
+  ): BallEntity {
     return new BallEntity(id, position, false);
   }
 
-  public moveTowards(targetX: number, targetY: number): void {
+  public moveTowards(targetX: number, targetY: number, delayMs: number): void {
     (this.physicsComponent as BallPhysicsComponent).moveTowards(
       targetX,
-      targetY
+      targetY,
+      delayMs
     );
   }
 

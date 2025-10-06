@@ -71,11 +71,20 @@ export class Game {
     this.ballManager.showPreviewBall();
     this.updateScoreUI();
 
-    // 게임 상태 복원
-    this.resumeShotIfNeeded();
-
     // 게임 루프 시작
     this.startGameLoop();
+
+    // 게임 상태 복원 (물리 엔진 시작 후)
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.resumeShotIfNeeded();
+          });
+        });
+      });
+    });
   }
 
   // ===== 🎯 게임 플레이 핵심 로직 =====
@@ -281,35 +290,34 @@ export class Game {
     this.brickManager.onBrickCollision((brick) => {
       // 벽돌 충돌 사운드 재생
       // this.soundManager.playBallSound();
-
-      console.log("Brick hit!", {
-        timestamp: new Date().toISOString(),
-        brickId: brick.id,
-        remainingHealth: brick.getHealth(),
-        currentLevel: this.swipeBrick.getLevel(),
-        position: brick.physicsComponent.getPosition(),
-      });
+      // console.log("Brick hit!", {
+      //   timestamp: new Date().toISOString(),
+      //   brickId: brick.id,
+      //   remainingHealth: brick.getHealth(),
+      //   currentLevel: this.swipeBrick.getLevel(),
+      //   position: brick.physicsComponent.getPosition(),
+      // });
     });
 
     this.brickManager.onBrickDestroy((brick) => {
       // 벽돌 파괴시 파편 효과 생성
       const position = brick.physicsComponent.getPosition();
 
-      console.log("Brick destroyed!", {
-        timestamp: new Date().toISOString(),
-        brickId: brick.id,
-        position: position,
-        currentLevel: this.swipeBrick.getLevel(),
-        hasShatterEffect: !!this.renderer.shatterEffect,
-      });
+      // console.log("Brick destroyed!", {
+      //   timestamp: new Date().toISOString(),
+      //   brickId: brick.id,
+      //   position: position,
+      //   currentLevel: this.swipeBrick.getLevel(),
+      //   hasShatterEffect: !!this.renderer.shatterEffect,
+      // });
 
       // ShatterEffect 접근 (renderer를 통해)
       if (this.renderer.shatterEffect) {
-        console.log(
-          "Calling shatterEffect.create with:",
-          position.x,
-          position.y
-        );
+        // console.log(
+        //   "Calling shatterEffect.create with:",
+        //   position.x,
+        //   position.y
+        // );
         this.renderer.shatterEffect.create(position.x, position.y);
       } else {
         console.warn("ShatterEffect not available");
@@ -317,13 +325,13 @@ export class Game {
     });
 
     this.brickManager.onItemCollision((item) => {
-      console.log("Item collected!", {
-        timestamp: new Date().toISOString(),
-        itemId: item.id,
-        currentLevel: this.swipeBrick.getLevel(),
-        newBallCount: this.swipeBrick.getBallCount(),
-        position: item.physicsComponent.getPosition(),
-      });
+      // console.log("Item collected!", {
+      //   timestamp: new Date().toISOString(),
+      //   itemId: item.id,
+      //   currentLevel: this.swipeBrick.getLevel(),
+      //   newBallCount: this.swipeBrick.getBallCount(),
+      //   position: item.physicsComponent.getPosition(),
+      // });
     });
   }
 }

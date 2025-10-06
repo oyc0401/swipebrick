@@ -1,4 +1,4 @@
-import { Body, Bodies, Sleeping } from "matter-js";
+import { Body, Bodies } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
 import { PhysicsEngine } from "./PhysicsEngine";
 
@@ -65,27 +65,22 @@ export class BallPhysicsComponent extends MatterJSComponent {
     });
   }
 
-  public moveTowards(targetX: number, targetY: number): void {
-    if (this.body.isSleeping) {
-      Sleeping.set(this.body, false);
-    }
-
+  public moveTowards(targetX: number, targetY: number, delayMs: number): void {
     const pos = this.body.position;
     const dx = targetX - pos.x;
     const dy = targetY - pos.y;
 
-    const distance = Math.hypot(dx, dy);
-    if (distance === 0) return;
+    // 타겟 방향의 각도 계산 (라디안에서 도로 변환)
+    const angleRad = Math.atan2(dy, dx);
+    const angleDeg = (angleRad * 180) / Math.PI;
 
-    // 원하는 이동 속도(px/초 단위)
-    const SPEED = 10;
-
-    // 방향을 단위 벡터로 만들고 속도 적용
-    const vx = (dx / distance) * SPEED;
-    const vy = (dy / distance) * SPEED;
-
-    // 현재 바디의 속도를 직접 세팅
-    Body.setVelocity(this.body, { x: vx, y: vy });
+    // 모든 발사를 스케줄링 시스템으로 통일 (즉시 발사도 frameDelay=0으로)
+    PhysicsEngine.getInstance().scheduleBallLaunch(
+      this.body,
+      angleDeg,
+      10,
+      delayMs
+    );
   }
 }
 

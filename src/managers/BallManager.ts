@@ -1,5 +1,5 @@
 import { BallEntity } from "../entity/BallEntity";
-import type { GameState, Position } from "../GameState";
+import type { Position } from "../GameState";
 import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { SwipeBrick } from "../SwipeBrick";
@@ -10,6 +10,8 @@ interface BallLandingCallback {
 }
 
 export class BallManager {
+  private static readonly BALL_LAUNCH_DELAY_MS = 50; // 공 발사 간격 (밀리초 단위)
+
   private activeBalls: BallEntity[] = [];
   private previewBall!: BallEntity;
 
@@ -43,37 +45,12 @@ export class BallManager {
   public launchBalls(
     targetX: number,
     targetY: number,
-    frameInterval: number = 3
+    delayMs: number = BallManager.BALL_LAUNCH_DELAY_MS
   ): void {
-    requestAnimationFrame(() => {
-      this.activeBalls.forEach((ball, index) => {
-        this.scheduleFrameDelayedAction(() => {
-          ball.moveTowards(targetX, targetY);
-        }, index * frameInterval);
-      });
+    console.log("launch!");
+    this.activeBalls.forEach((ball, index) => {
+      ball.moveTowards(targetX, targetY, index * delayMs);
     });
-  }
-
-  private scheduleFrameDelayedAction(
-    action: () => void,
-    frameDelay: number
-  ): void {
-    if (frameDelay <= 0) {
-      action();
-      return;
-    }
-
-    let currentFrame = 0;
-    const frameCallback = () => {
-      currentFrame++;
-      if (currentFrame >= frameDelay) {
-        action();
-      } else {
-        requestAnimationFrame(frameCallback);
-      }
-    };
-
-    requestAnimationFrame(frameCallback);
   }
 
   public handleBallLanding(ballBody: Matter.Body): void {
