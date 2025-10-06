@@ -236,11 +236,6 @@ export class BrickManager {
     for (const item of this.itemEntities.values()) {
       item.shift(SHIFT_AMOUNT);
     }
-
-    // 게임 오버 체크
-    if (this.swipeBrick.isGameOver()) {
-      console.log("Game Over - Brick reached bottom!");
-    }
   }
 
   public updateAllBrickColors(): void {

@@ -1,4 +1,5 @@
 import { css } from "@emotion/react";
+import { useEffect } from "react";
 import { Header } from "./Header";
 import { GameOverDialog } from "./GameOverDialog";
 import { TDSMobileAITProvider } from "@toss/tds-mobile-ait";
@@ -17,7 +18,9 @@ const bottomSpacerStyle = css`
 `;
 
 export const GameUI = () => {
-  // 게임 상태 업데이트를 위한 간격 체크 (임시)
+  useEffect(() => {
+    console.log("React render complete");
+  }, []);
 
   const content = (
     <>

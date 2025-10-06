@@ -65,7 +65,7 @@ export class GraphicEngine {
       width,
       height,
       autoDensity: true,
-      backgroundColor: 0xeeeeee,
+      backgroundAlpha: 0,
       antialias: true,
       resolution: Math.ceil(window.devicePixelRatio),
     });
@@ -85,7 +85,7 @@ export class GraphicEngine {
     const endTime = performance.now();
     const initDuration = Math.round(endTime - startTime);
 
-    console.log(`[GraphicEngine] Initialization completed - ${initDuration}ms`);
+    console.log(`GraphicEngine initialized (${initDuration} ms)`);
   }
 
   public addDebugGuide(): void {

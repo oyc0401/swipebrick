@@ -99,7 +99,7 @@ export function initializeI18n(): void {
       : "ko";
 
     i18n.changeLanguage(targetLanguage);
-    console.log(`i18n initialized with language: ${targetLanguage}`);
+    console.log(`i18n initialized (${targetLanguage})`);
   } catch (error) {
     console.warn("Failed to initialize i18n:", error);
     // 기본 언어(ko)로 설정

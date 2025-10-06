@@ -30,12 +30,12 @@ async function initializeApp() {
       container.style.paddingBottom = `${insets.bottom}px`;
     }
 
-    console.log("Current Platform: Toss");
+    console.log("Platform: Toss");
   } else {
-    console.log("Current Platform: Web");
+    console.log("Platform: Web");
   }
 
-  console.log(`Device pixel ratio: ${window.devicePixelRatio}`);
+  console.log(`Device Pixel Ratio: ${window.devicePixelRatio}`);
 }
 
 initializeApp();

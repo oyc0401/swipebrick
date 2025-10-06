@@ -13,6 +13,8 @@ import type { IScoreRepository } from "./repository/IScoreRepository";
 import { ScoreRepositoryFactory } from "./repository/ScoreRepositoryFactory";
 import { submitGameCenterLeaderBoardScore } from "@apps-in-toss/web-framework";
 import { isTossApp } from "./utils/platform";
+import { requestAnimationFrames } from "./utils/animationFrame";
+import { fixed } from "./utils/number";
 
 export class Game {
   // ===== 의존성 =====
@@ -30,6 +32,9 @@ export class Game {
 
   // ===== 게임 로직 =====
   private swipeBrick: SwipeBrick;
+
+  // ===== 성능 측정 =====
+  private shotStartTime: number = 0;
 
   constructor() {
     // 의존성 초기화
@@ -53,18 +58,12 @@ export class Game {
   // ===== 🎮 Public API =====
 
   public async init(): Promise<void> {
-    // console.log("[Game]", "created");
     await this.renderer.init();
 
-    const startTime = performance.now();
     // 데이터 로드
-    await this.loadInitialBestScore();
     const hasLoadedState = await this.loadGameState();
 
-    const endTime = performance.now();
-    const initDuration = Math.round(endTime - startTime);
-    console.log(`[Game] Load Data complete - ${initDuration}ms`);
-
+    const startPhysicsTime = performance.now();
     // 게임 월드 구성
     this.boundaryManager.createGameBoundaries();
     if (hasLoadedState) {
@@ -73,6 +72,10 @@ export class Game {
       this.brickManager.createBricks();
     }
 
+    const endPhysicsTime = performance.now();
+    const durationPhysics = Math.round(endPhysicsTime - startPhysicsTime);
+    console.log(`Physics world built (${durationPhysics} ms)`);
+
     // UI 초기화
     this.ballManager.showPreviewBall();
     this.updateScoreUI();
@@ -80,96 +83,96 @@ export class Game {
     // 게임 루프 시작
     this.startGameLoop();
 
-    // 게임 상태 복원 (물리 엔진 시작 후)
+    // HTML 스플래시 화면 숨기기
+    const splashScreen = document.getElementById("splash-screen");
+    if (splashScreen) {
+      splashScreen.style.display = "none";
+    }
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            this.resumeShotIfNeeded();
-          });
-        });
-      });
-    });
+    // InputManager에 로딩 완료 알림
+    this.inputManager.init();
+
+    console.log(`Stage ${this.swipeBrick.getLevel()} started`);
+
+    // 게임 상태 복원 (물리 엔진 시작 후)
+    const resumeShotIfNeeded = () => {
+      if (this.swipeBrick.getIsRunning()) {
+        const shotTarget = this.swipeBrick.getShotTarget();
+        if (shotTarget) {
+          this.executeLaunch(shotTarget.x, shotTarget.y);
+        }
+      }
+    };
+
+    requestAnimationFrames(resumeShotIfNeeded, 4);
   }
 
   // ===== 🎯 게임 플레이 핵심 로직 =====
 
   private executeLaunch(x: number, y: number): void {
+    this.shotStartTime = performance.now();
+
     this.renderer.clearAimLine();
     this.ballManager.createBalls(this.swipeBrick.getBallCount());
     this.ballManager.hidePreviewBall();
     this.ballManager.launchBalls(x, y);
+
+    console.log(`Ball shot at (${fixed(x)}, ${fixed(y)})`);
   }
 
-  private resumeShotIfNeeded(): void {
-    if (this.swipeBrick.getIsRunning()) {
-      const shotTarget = this.swipeBrick.getShotTarget();
-      if (shotTarget) {
-        console.log("Resuming shot from saved state:", shotTarget);
-        this.executeLaunch(shotTarget.x, shotTarget.y);
+  private async onGameOver(): Promise<void> {
+    console.log("Game over");
+    const currentScore = this.swipeBrick.getLevel();
+    const currentBestScore = useGameStore.getState().bestScore;
+
+    // 현재 점수가 베스트 점수보다 높으면 랭킹에 반영
+    if (currentScore > currentBestScore) {
+      useGameStore.getState().setBestScore(currentScore);
+      await this.repository.setBestScore(currentScore);
+
+      if (isTossApp()) {
+        // TODO: 이거 배포 때 열기!! rank
+        // await submitGameCenterLeaderBoardScore({ score: `${currentScore}` });
       }
     }
+
+    // 다이얼로그 안눌러도 초기화 되도록
+    this.clearGameState();
+
+    const handleRestart = () => {
+      this.resetGameUI();
+      console.log("Game restarted");
+    };
+
+    useGameStore.getState().setCloseCallback(handleRestart);
+    useGameStore.getState().openDialog();
   }
 
-  private onGameOver(): void {
-    setTimeout(async () => {
-      // UI 업데이트 후 DB에 베스트 스코어 저장
-      this.updateScoreUI();
-
-      const currentScore = this.swipeBrick.getLevel();
-      const currentBestScore = useGameStore.getState().bestScore;
-
-      // 현재 점수가 베스트 점수보다 높으면 랭킹에 반영
-      if (currentScore > currentBestScore) {
-        useGameStore.getState().setBestScore(currentScore);
-        await this.repository.setBestScore(currentScore);
-
-        if (isTossApp()) {
-          // TODO: 이거 배포 때 열기!! rank
-          // await submitGameCenterLeaderBoardScore({ score: `${currentScore}` });
-        }
-      }
-
-      // 다이얼로그 안눌러도 초기화 되도록
-      this.clearGameState();
-
-      const handleRestart = () => {
-        this.resetGame();
-        console.log("Game restarted");
-      };
-
-      useGameStore.getState().setCloseCallback(handleRestart);
-      useGameStore.getState().openDialog();
-    }, 50);
-  }
-
-  private resetGame(): void {
+  private resetGameUI(): void {
     this.brickManager.reset();
     this.swipeBrick.reset();
     this.brickManager.createBricks();
     this.ballManager.showPreviewBall();
     this.updateScoreUI();
-    this.clearGameState();
   }
 
   // ===== 📊 데이터 관리 =====
 
-  private async loadInitialBestScore(): Promise<void> {
+  private async loadGameState(): Promise<boolean> {
+    const startTime = performance.now();
+
+    // 최고기록 가져오기
     const initialBestScore = await this.repository.getBestScore();
     useGameStore.getState().setBestScore(initialBestScore);
-  }
 
-  private async loadGameState(): Promise<boolean> {
     try {
       const savedGameState = await this.repository.getGameState();
       if (savedGameState && savedGameState.trim() !== "") {
         this.swipeBrick.fromJson(savedGameState);
-        console.log("Game state loaded:", {
-          level: this.swipeBrick.getLevel(),
-          ballCount: this.swipeBrick.getBallCount(),
-          ballStartX: this.swipeBrick.getBallStartX(),
-        });
+
+        const endTime = performance.now();
+        const initDuration = Math.round(endTime - startTime);
+        console.log(`Game data loaded (${initDuration} ms)`);
         return true;
       }
       console.log("No saved game state found, starting fresh");
@@ -184,10 +187,7 @@ export class Game {
     try {
       const gameStateJson = this.swipeBrick.toJson();
       await this.repository.setGameState(gameStateJson);
-      console.log("Game state saved:", {
-        level: this.swipeBrick.getLevel(),
-        ballCount: this.swipeBrick.getBallCount(),
-      });
+      console.log("Game state saved");
     } catch (error) {
       console.warn("Failed to save game state:", error);
     }
@@ -253,7 +253,7 @@ export class Game {
         const position = landedBall.getPosition();
         this.swipeBrick.setBallStartX(position.x);
         this.ballManager.showPreviewBall();
-        console.log("First ball landed at:", position.x, position.y);
+        console.log(`First ball landed at {x: ${fixed(position.x)}}`);
       }
 
       // 모든 공 착지 완료 처리
@@ -275,15 +275,18 @@ export class Game {
     // UI 즉시 업데이트
     this.updateScoreUI();
 
-    // DB 업데이트 (비동기)
-    this.saveGameState();
-
     if (this.swipeBrick.isGameOver()) {
       this.onGameOver();
       return;
     }
 
-    console.log("All balls removed. Ready for next shot.");
+    // DB 업데이트 (비동기)
+    this.saveGameState();
+
+    const shotDuration = Math.round(performance.now() - this.shotStartTime);
+    let level = this.swipeBrick.getLevel();
+    let secondText = fixed(shotDuration / 1000);
+    console.log(`Stage cleared - Stage ${level} started (${secondText} s)`);
   }
 
   private setupBrickCallbacks(): void {
@@ -313,11 +316,6 @@ export class Game {
 
       // ShatterEffect 접근 (renderer를 통해)
       if (this.renderer.shatterEffect) {
-        // console.log(
-        //   "Calling shatterEffect.create with:",
-        //   position.x,
-        //   position.y
-        // );
         this.renderer.shatterEffect.create(position.x, position.y);
       } else {
         console.warn("ShatterEffect not available");

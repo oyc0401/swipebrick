@@ -1,5 +1,4 @@
 import type { GraphicEngine } from "../render/GraphicEngine";
-import type { GameState } from "../GameState";
 import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import type { SwipeBrick } from "../SwipeBrick";
 
@@ -61,17 +60,15 @@ export class InputManager {
     this.mouseMoveHandler(e);
   };
 
-  private setupEventListeners(): void {
-    window.onload = () => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document
-            .getElementById("view")!
-            .addEventListener("pointerdown", this.onclickView);
-        });
-      });
-    };
+  public init(): void {
+    const gameViewElement = document.getElementById("view");
+    if (gameViewElement) {
+      gameViewElement.addEventListener("pointerdown", this.onclickView);
+      // console.log("[InputManager] Input events initialized");
+    }
+  }
 
+  private setupEventListeners(): void {
     // DOM 전체에서 마우스 이동 이벤트 수신
     document.addEventListener("pointermove", this.eventMouseMoveHandler);
 
@@ -100,7 +97,7 @@ export class InputManager {
     // DOM 좌표를 게임 좌표로 변환
     const gameCoords = this.toGameCoords(event);
 
-    console.log("Clicked at:", gameCoords.x, gameCoords.y);
+    // console.log(`Clicked at (${fixed(gameCoords.x, 4)}, ${fixed(gameCoords.y, 4)})`);
     // 349.38704182330827 93.55791823308269
     let testX = 349.38704182330827;
     let testY = 93.55791823308269;
@@ -129,7 +126,8 @@ export class InputManager {
   private applyAngleLimit(
     targetX: number,
     targetY: number
-  ): { x: number; y: number ; angle: number} { //*추가** angle
+  ): { x: number; y: number; angle: number } {
+    //*추가** angle
     // SwipeBrick에서 공의 시작 위치 가져오기
     const ballX = this.swipeBrick.getBallStartX();
     const ballY = GAME_HEIGHT - BALL_RADIUS;
@@ -172,7 +170,7 @@ export class InputManager {
       const newX = ballX + Math.cos(clampedAngleRad) * distance;
       const newY = ballY - Math.sin(clampedAngleRad) * distance;
 
-      return { x: newX, y: newY , angle: clampedAngle};
+      return { x: newX, y: newY, angle: clampedAngle };
     }
 
     // 유효한 각도면 원래 좌표 반환

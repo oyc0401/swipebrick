@@ -47,7 +47,6 @@ export class BallManager {
     targetY: number,
     delayMs: number = BallManager.BALL_LAUNCH_DELAY_MS
   ): void {
-    console.log("launch!");
     this.activeBalls.forEach((ball, index) => {
       ball.moveTowards(targetX, targetY, index * delayMs);
     });

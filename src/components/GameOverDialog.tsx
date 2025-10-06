@@ -15,7 +15,7 @@ export function GameOverDialog() {
   }
 
   function handleConfirm() {
-    console.log("공유하기!");
+    console.log("Shared");
   }
 
   if (!isTossApp()) {
