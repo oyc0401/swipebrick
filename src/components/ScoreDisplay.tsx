@@ -58,7 +58,7 @@ export function ScoreDisplay() {
 
   return (
     <div css={scoreStyle}>
-      <p css={score === bestScore ? bestScoreHighlightStyle : scoreTextStyle}>
+      <p css={score >= bestScore ? bestScoreHighlightStyle : scoreTextStyle}>
         {t("score.best")}: {score > bestScore ? score : bestScore}
       </p>
       <p css={scoreTextStyle}>
