@@ -10,11 +10,11 @@
       ]
     },
     {
-      "source": "/:all*(js|css|svg|png|jpg|woff2?)",
+      "source": "/:all*(svg|png|jpg|jpeg|webp|avif|ico|woff|woff2|ttf|otf|wav|mp3|ogg|mp4|webm)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "value": "public, max-age=3600, must-revalidate"
         }
       ]
     }
