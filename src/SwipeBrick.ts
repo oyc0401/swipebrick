@@ -20,8 +20,7 @@ interface SavedGameState {
   ballCount: number;
   ballStartX: number;
   isRunning: boolean;
-  shotTargetX: number | null;
-  shotTargetY: number | null;
+  shotAngle: number | null;
   objects: (SavedGameObject | null)[][];
 }
 
@@ -62,8 +61,7 @@ export class SwipeBrick implements ISwipeBrick {
   private ballCount: number;
   private ballStartX: number;
   private isRunning: boolean;
-  private shotTargetX: number | null;
-  private shotTargetY: number | null;
+  private shotAngle: number | null;
 
   // private lastLaunchAngle: number | null; // *추가* 각도값
 
@@ -73,8 +71,7 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = 1;
     this.ballStartX = this.GAME_CENTER_X;
     this.isRunning = false;
-    this.shotTargetX = null;
-    this.shotTargetY = null;
+    this.shotAngle = null;
   }
 
   private initializeGrid(): (GameObject | null)[][] {
@@ -137,17 +134,15 @@ export class SwipeBrick implements ISwipeBrick {
     return this.isRunning;
   }
 
-  /** 발사 시작 (좌표와 실행 상태 동시 설정) */
-  startShot(x: number, y: number): void {
-    this.shotTargetX = x;
-    this.shotTargetY = y;
+  /** 발사 시작 (각도와 실행 상태 동시 설정) */
+  startShot(angle: number): void {
+    this.shotAngle = angle;
     this.isRunning = true;
   }
 
-  /** 발사 완료 (좌표와 실행 상태 동시 클리어) */
+  /** 발사 완료 (각도와 실행 상태 동시 클리어) */
   endShot(): void {
-    this.shotTargetX = null;
-    this.shotTargetY = null;
+    this.shotAngle = null;
     this.isRunning = false;
   }
 
@@ -155,28 +150,14 @@ export class SwipeBrick implements ISwipeBrick {
   setIsRunning(running: boolean): void {
     this.isRunning = running;
     if (!running) {
-      this.shotTargetX = null;
-      this.shotTargetY = null;
+      this.shotAngle = null;
     }
   }
 
-  /** 발사 좌표 반환 */
-  getShotTarget(): { x: number; y: number } | null {
-    if (this.shotTargetX !== null && this.shotTargetY !== null) {
-      return { x: this.shotTargetX, y: this.shotTargetY };
-    }
-    return null;
+  /** 발사 각도 반환 */
+  getShotAngle(): number | null {
+    return this.shotAngle;
   }
-
-  // *추가* 출발했을 때 결정된 공 각도 설정
-  // setLastLaunchAngle(angle: number): void {
-  //   this.lastLaunchAngle = angle;
-  // }
-
-  // // *추가* 출발했을 때 결정된 공 각도 반환
-  // getLastLaunchAngle(): number | null {
-  //   return this.lastLaunchAngle;
-  // }
 
   // ===== 게임 오브젝트 관리 =====
 
@@ -377,8 +358,7 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = 1;
     this.ballStartX = this.GAME_CENTER_X;
     this.isRunning = false;
-    this.shotTargetX = null;
-    this.shotTargetY = null;
+    this.shotAngle = null;
   }
 
   toJson(): string {
@@ -387,8 +367,7 @@ export class SwipeBrick implements ISwipeBrick {
       ballCount: this.ballCount,
       ballStartX: this.ballStartX,
       isRunning: this.isRunning,
-      shotTargetX: this.shotTargetX,
-      shotTargetY: this.shotTargetY,
+      shotAngle: this.shotAngle,
       objects: this.objects.map((row) =>
         row.map((obj) =>
           obj
@@ -438,8 +417,7 @@ export class SwipeBrick implements ISwipeBrick {
       ballCount: data.ballCount,
       ballStartX: data.ballStartX,
       isRunning: data.isRunning ?? false,
-      shotTargetX: data.shotTargetX ?? null,
-      shotTargetY: data.shotTargetY ?? null,
+      shotAngle: data.shotAngle ?? null,
       objects: data.objects.map((row: any[]) =>
         row.map((obj: any) =>
           obj
@@ -462,8 +440,7 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = gameState.ballCount;
     this.ballStartX = gameState.ballStartX;
     this.isRunning = gameState.isRunning;
-    this.shotTargetX = gameState.shotTargetX;
-    this.shotTargetY = gameState.shotTargetY;
+    this.shotAngle = gameState.shotAngle;
 
     // 객체 배열 복원
     this.objects = gameState.objects.map((row) =>

@@ -97,9 +97,9 @@ export class Game {
     // 게임 상태 복원 (물리 엔진 시작 후)
     const resumeShotIfNeeded = () => {
       if (this.swipeBrick.getIsRunning()) {
-        const shotTarget = this.swipeBrick.getShotTarget();
-        if (shotTarget) {
-          this.executeLaunchPOS(shotTarget.x, shotTarget.y);
+        const shotAngle = this.swipeBrick.getShotAngle();
+        if (shotAngle !== null) {
+          this.executeLaunch(shotAngle);
         }
       }
     };
@@ -109,28 +109,8 @@ export class Game {
 
   // ===== 🎯 게임 플레이 핵심 로직 =====
 
-  private executeLaunchPOS(x: number, y: number): void {
-    this.shotStartTime = performance.now();
-
-    // 각도 계산
-    const ballStartX = this.swipeBrick.getBallStartX();
-    const ballStartY = GAME_HEIGHT - BALL_RADIUS;
-    const dx = x - ballStartX;
-    const dy = y - ballStartY;
-    const angleDeg = -Math.atan2(dy, dx) * (180 / Math.PI);
-
-    this.renderer.clearAimLine();
-    this.ballManager.createBalls(this.swipeBrick.getBallCount());
-    this.ballManager.hidePreviewBall();
-    this.ballManager.launchBalls(angleDeg);
-
-    console.log(`Ball shot at ${fixed(angleDeg)}°`);
-  }
-
   private executeLaunch(angle: number): void {
     this.shotStartTime = performance.now();
-
-    // 각도 계산
 
     this.renderer.clearAimLine();
     this.ballManager.createBalls(this.swipeBrick.getBallCount());
@@ -141,7 +121,6 @@ export class Game {
   }
 
   private async onGameOver(): Promise<void> {
-    console.log("Game over");
     const currentScore = this.swipeBrick.getLevel();
     const currentBestScore = useGameStore.getState().bestScore;
 
@@ -207,7 +186,7 @@ export class Game {
     try {
       const gameStateJson = this.swipeBrick.toJson();
       await this.repository.setGameState(gameStateJson);
-      console.log("Game state saved");
+      console.log("%cGame state saved", "color: #aaaaaaff;");
     } catch (error) {
       console.warn("Failed to save game state:", error);
     }
@@ -216,7 +195,7 @@ export class Game {
   private async clearGameState(): Promise<void> {
     try {
       await this.repository.setGameState("");
-      console.log("Game state cleared");
+      console.log("%cGame state cleared", "color: #aaaaaaff;");
     } catch (error) {
       console.warn("Failed to clear game state:", error);
     }
@@ -252,7 +231,7 @@ export class Game {
 
       if (this.swipeBrick.getIsRunning()) return;
 
-      this.swipeBrick.startShot(x, y);
+      this.swipeBrick.startShot(angle);
       this.saveGameState();
       this.executeLaunch(angle);
     });
@@ -273,7 +252,7 @@ export class Game {
         const position = landedBall.getPosition();
         this.swipeBrick.setBallStartX(position.x);
         this.ballManager.showPreviewBall();
-        console.log(`First ball landed at {x: ${fixed(position.x)}}`);
+        console.log(`First ball landed`);
       }
 
       // 모든 공 착지 완료 처리
@@ -296,6 +275,10 @@ export class Game {
     this.updateScoreUI();
 
     if (this.swipeBrick.isGameOver()) {
+      const shotDuration = Math.round(performance.now() - this.shotStartTime);
+      let level = this.swipeBrick.getLevel();
+      let secondText = fixed(shotDuration / 1000);
+      console.log(`Game over - Stage ${level} (${secondText} s)`);
       this.onGameOver();
       return;
     }

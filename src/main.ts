@@ -8,15 +8,6 @@ import { getSafeAreaInsets } from "@apps-in-toss/web-framework";
 import { isTossApp } from "./utils/platform";
 import { initializeI18n } from "./utils/i18n";
 
-// Console timestamp wrapper
-const originalLog = console.log;
-let startTime = performance.now();
-
-console.log = (...args) => {
-  const elapsed = Math.floor(performance.now() - startTime);
-  originalLog(`[${elapsed}ms]`, ...args);
-};
-
 async function initializeApp() {
   // i18n 초기화
   initializeI18n();
