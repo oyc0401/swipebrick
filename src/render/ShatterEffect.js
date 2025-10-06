@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Graphics, Sprite } from "pixi.js";
 
 export class ShatterEffect {
   constructor(app, viewport) {
@@ -22,10 +22,9 @@ export class ShatterEffect {
   }
 
   createTileTexture() {
-    const g = new PIXI.Graphics();
-    g.beginFill(this.defaultColor);
-    g.drawRect(0, 0, this.tileSize, this.tileSize);
-    g.endFill();
+    const g = new Graphics();
+    g.rect(0, 0, this.tileSize, this.tileSize);
+    g.fill(this.defaultColor);
     return this.app.renderer.generateTexture(g);
   }
 
@@ -33,7 +32,7 @@ export class ShatterEffect {
   create(x, y) {
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
-        const s = new PIXI.Sprite(this.tileTexture);
+        const s = new Sprite(this.tileTexture);
 
         // 위치
         const xOffset = Math.random() * 58; // 60은 사각형 너비
