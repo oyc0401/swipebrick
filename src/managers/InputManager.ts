@@ -3,7 +3,7 @@ import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import type { SwipeBrick } from "../SwipeBrick";
 
 interface ClickCallback {
-  (x: number, y: number): void;
+  (x: number, y: number, angle: number): void;
 }
 
 interface MouseMoveCallback {
@@ -106,8 +106,7 @@ export class InputManager {
     const validCoords = this.applyAngleLimit(gameCoords.x, gameCoords.y);
 
     if (this.onGameClick) {
-      // this.onGameClick(testX, testY);
-      this.onGameClick(validCoords.x, validCoords.y);
+      this.onGameClick(validCoords.x, validCoords.y, validCoords.angle);
     }
   }
 

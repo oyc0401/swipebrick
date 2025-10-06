@@ -99,7 +99,7 @@ export class Game {
       if (this.swipeBrick.getIsRunning()) {
         const shotTarget = this.swipeBrick.getShotTarget();
         if (shotTarget) {
-          this.executeLaunch(shotTarget.x, shotTarget.y);
+          this.executeLaunchPOS(shotTarget.x, shotTarget.y);
         }
       }
     };
@@ -109,15 +109,35 @@ export class Game {
 
   // ===== 🎯 게임 플레이 핵심 로직 =====
 
-  private executeLaunch(x: number, y: number): void {
+  private executeLaunchPOS(x: number, y: number): void {
     this.shotStartTime = performance.now();
+
+    // 각도 계산
+    const ballStartX = this.swipeBrick.getBallStartX();
+    const ballStartY = GAME_HEIGHT - BALL_RADIUS;
+    const dx = x - ballStartX;
+    const dy = y - ballStartY;
+    const angleDeg = -Math.atan2(dy, dx) * (180 / Math.PI);
 
     this.renderer.clearAimLine();
     this.ballManager.createBalls(this.swipeBrick.getBallCount());
     this.ballManager.hidePreviewBall();
-    this.ballManager.launchBalls(x, y);
+    this.ballManager.launchBalls(angleDeg);
 
-    console.log(`Ball shot at (${fixed(x)}, ${fixed(y)})`);
+    console.log(`Ball shot at ${fixed(angleDeg)}°`);
+  }
+
+  private executeLaunch(angle: number): void {
+    this.shotStartTime = performance.now();
+
+    // 각도 계산
+
+    this.renderer.clearAimLine();
+    this.ballManager.createBalls(this.swipeBrick.getBallCount());
+    this.ballManager.hidePreviewBall();
+    this.ballManager.launchBalls(angle);
+
+    console.log(`Ball shot at ${fixed(angle)}°`);
   }
 
   private async onGameOver(): Promise<void> {
@@ -223,7 +243,7 @@ export class Game {
   // ===== 📡 이벤트 핸들러들 =====
 
   private setupInputCallbacks(): void {
-    this.inputManager.onClick((x, y) => {
+    this.inputManager.onClick((x, y, angle) => {
       // 디버그: 터치한 곳에 파편 효과
       // if (this.renderer.shatterEffect) {
       //   console.log("Debug: Creating shatter effect at click position:", x, y);
@@ -234,7 +254,7 @@ export class Game {
 
       this.swipeBrick.startShot(x, y);
       this.saveGameState();
-      this.executeLaunch(x, y);
+      this.executeLaunch(angle);
     });
 
     this.inputManager.onMouseMove((x, y) => {

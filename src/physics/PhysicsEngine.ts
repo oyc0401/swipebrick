@@ -284,15 +284,15 @@ export class PhysicsEngine {
 
     Body.setVelocity(ballBody, newVelocity);
 
-    console.log("Ball angle corrected:", {
-      timestamp: new Date().toISOString(),
-      ballId: ballBody.id,
-      originalAngle: angle.toFixed(2),
-      correctedAngle: correctedAngle.toFixed(2),
-      originalVelocity: velocity,
-      newVelocity,
-      speed: speed.toFixed(2),
-    });
+    // console.log("Ball angle corrected:", {
+    //   timestamp: new Date().toISOString(),
+    //   ballId: ballBody.id,
+    //   originalAngle: angle.toFixed(2),
+    //   correctedAngle: correctedAngle.toFixed(2),
+    //   originalVelocity: velocity,
+    //   newVelocity,
+    //   speed: speed.toFixed(2),
+    // });
   }
 
   private isInvalidAngle(angle: number): boolean {
@@ -383,7 +383,7 @@ export class PhysicsEngine {
         Sleeping.set(item.ballBody, false);
       }
 
-      const angleRad = (item.targetAngle * Math.PI) / 180;
+      const angleRad = (-item.targetAngle * Math.PI) / 180;
       const unitX = Math.cos(angleRad);
       const unitY = Math.sin(angleRad);
 

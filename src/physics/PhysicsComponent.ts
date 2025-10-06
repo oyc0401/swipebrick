@@ -65,16 +65,8 @@ export class BallPhysicsComponent extends MatterJSComponent {
     });
   }
 
-  public moveTowards(targetX: number, targetY: number, delayMs: number): void {
-    const pos = this.body.position;
-    const dx = targetX - pos.x;
-    const dy = targetY - pos.y;
-
-    // 타겟 방향의 각도 계산 (라디안에서 도로 변환)
-    const angleRad = Math.atan2(dy, dx);
-    const angleDeg = (angleRad * 180) / Math.PI;
-
-    // 모든 발사를 스케줄링 시스템으로 통일 (즉시 발사도 frameDelay=0으로)
+  public moveAtAngle(angleDeg: number, delayMs: number): void {
+    // 각도를 직접 사용해서 발사
     PhysicsEngine.getInstance().scheduleBallLaunch(
       this.body,
       angleDeg,

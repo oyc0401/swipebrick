@@ -43,14 +43,14 @@ export class BallManager {
   }
 
   public launchBalls(
-    targetX: number,
-    targetY: number,
+    angleDeg: number,
     delayMs: number = BallManager.BALL_LAUNCH_DELAY_MS
   ): void {
     this.activeBalls.forEach((ball, index) => {
-      ball.moveTowards(targetX, targetY, index * delayMs);
+      ball.moveAtAngle(angleDeg, index * delayMs);
     });
   }
+
 
   public handleBallLanding(ballBody: Matter.Body): void {
     const landedBall = this.activeBalls.find(
