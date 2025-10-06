@@ -12,6 +12,8 @@ async function initializeApp() {
   // i18n 초기화
   initializeI18n();
 
+  console.log("토스웹뷰:", isTossApp());
+
   if (isTossApp()) {
     const insets = getSafeAreaInsets();
 

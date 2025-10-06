@@ -6,14 +6,9 @@ export function isTossApp(): boolean {
   }
 
   try {
+    console.log(window.navigator.userAgent);
     // 1. 웹뷰 환경 체크
-    const isWebView =
-      window.navigator.userAgent.includes("toss") ||
-      window.navigator.userAgent.includes("mobile") ||
-      // @ts-ignore
-      window.tossAppInterface ||
-      // @ts-ignore
-      window.webkit?.messageHandlers;
+    const isWebView = window.navigator.userAgent.includes("Toss");
 
     if (!isWebView) {
       cachedPlatformResult = false;
