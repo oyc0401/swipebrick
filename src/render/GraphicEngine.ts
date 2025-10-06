@@ -59,6 +59,8 @@ export class GraphicEngine {
 
   public async init(): Promise<void> {
     const { width, height } = getSize();
+    const startTime = performance.now();
+
     await this.app.init({
       width,
       height,
@@ -67,8 +69,6 @@ export class GraphicEngine {
       antialias: true,
       resolution: Math.ceil(window.devicePixelRatio),
     });
-
-    console.log("dpr:", window.devicePixelRatio);
 
     const container = document.getElementById("container");
     if (container) container.appendChild(this.app.canvas);
@@ -81,6 +81,11 @@ export class GraphicEngine {
       this.app,
       this.layerManager.getGameViewport()
     );
+
+    const endTime = performance.now();
+    const initDuration = Math.round(endTime - startTime);
+
+    console.log(`[GraphicEngine] Initialization completed - ${initDuration}ms`);
   }
 
   public addDebugGuide(): void {

@@ -26,7 +26,7 @@ export class Game {
   private boundaryManager: BoundaryManager;
   private brickManager: BrickManager;
   private inputManager: InputManager;
-  private soundManager: SoundManager;
+  // private soundManager: SoundManager;
 
   // ===== 게임 로직 =====
   private swipeBrick: SwipeBrick;
@@ -44,7 +44,7 @@ export class Game {
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
     this.brickManager = new BrickManager(this.physics, this.swipeBrick);
     this.inputManager = new InputManager(this.renderer, this.swipeBrick);
-    this.soundManager = SoundManager.getInstance();
+    // this.soundManager = SoundManager.getInstance();
 
     // 이벤트 연결
     this.setupEventCallbacks();
@@ -53,11 +53,17 @@ export class Game {
   // ===== 🎮 Public API =====
 
   public async init(): Promise<void> {
+    // console.log("[Game]", "created");
     await this.renderer.init();
 
+    const startTime = performance.now();
     // 데이터 로드
     await this.loadInitialBestScore();
     const hasLoadedState = await this.loadGameState();
+
+    const endTime = performance.now();
+    const initDuration = Math.round(endTime - startTime);
+    console.log(`[Game] Load Data complete - ${initDuration}ms`);
 
     // 게임 월드 구성
     this.boundaryManager.createGameBoundaries();
@@ -110,16 +116,17 @@ export class Game {
     setTimeout(async () => {
       // UI 업데이트 후 DB에 베스트 스코어 저장
       this.updateScoreUI();
-      //await this.updateBestScoreDB();
 
       const currentScore = this.swipeBrick.getLevel();
-      const currentBestScore = await this.repository.getBestScore();
+      const currentBestScore = useGameStore.getState().bestScore;
 
       // 현재 점수가 베스트 점수보다 높으면 랭킹에 반영
       if (currentScore > currentBestScore) {
+        useGameStore.getState().setBestScore(currentScore);
         await this.repository.setBestScore(currentScore);
+
         if (isTossApp()) {
-          // TODO: 이거 배포 때 열기!!
+          // TODO: 이거 배포 때 열기!! rank
           // await submitGameCenterLeaderBoardScore({ score: `${currentScore}` });
         }
       }
@@ -197,14 +204,7 @@ export class Game {
 
   private async updateScoreUI(): Promise<void> {
     const currentScore = this.swipeBrick.getLevel();
-    const currentBestScore = await this.repository.getBestScore();
-
     useGameStore.getState().setScore(currentScore);
-
-    // 현재 점수가 베스트 점수보다 높으면 UI에서도 즉시 반영
-    if (currentScore > currentBestScore) {
-      useGameStore.getState().setBestScore(currentScore);
-    }
   }
 
   // ===== 🔧 시스템 초기화 =====

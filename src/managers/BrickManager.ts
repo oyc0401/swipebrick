@@ -35,11 +35,11 @@ export class BrickManager {
     // CRITICAL: SwipeBrick에서 논리적 상태 생성 후 BrickEntity/ItemEntity로 시각화
     const elements = this.swipeBrick.createNewRow();
 
-    console.log("Entities created:", {
-      timestamp: new Date().toISOString(),
-      level: this.swipeBrick.getLevel(),
-      elements,
-    });
+    // console.log("Entities created:", {
+    //   timestamp: new Date().toISOString(),
+    //   level: this.swipeBrick.getLevel(),
+    //   elements,
+    // });
 
     this.createEntitiesFromElements(elements);
     this.updateAllBrickColors();

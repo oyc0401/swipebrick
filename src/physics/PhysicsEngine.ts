@@ -224,15 +224,15 @@ export class PhysicsEngine {
         callback(closestBrick);
       });
 
-      console.log("Velocity manipulated and hit closest brick:", {
-        previousVelocity,
-        newVelocity: ball.velocity,
-        sameY: sameYPosition,
-        sameX: sameXPosition,
-        brick1Distance: distance1,
-        brick2Distance: distance2,
-        chosenBrick: closestBrick.id,
-      });
+      // console.log("Velocity manipulated and hit closest brick:", {
+      //   previousVelocity,
+      //   newVelocity: ball.velocity,
+      //   sameY: sameYPosition,
+      //   sameX: sameXPosition,
+      //   brick1Distance: distance1,
+      //   brick2Distance: distance2,
+      //   chosenBrick: closestBrick.id,
+      // });
     } else {
       // 정렬되지 않은 두 벽돌의 경우 모든 벽돌 처리
       brickBodies.forEach((brickBody) => {
