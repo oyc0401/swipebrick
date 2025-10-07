@@ -235,25 +235,56 @@ export class RoundedRectangleRenderComponent extends RenderComponent {
 }
 
 export class ItemRenderComponent extends RenderComponent {
-  private radius: number;
+  private baseRadius: number;
+  private currentRadius: number;
   private color: number;
+  private animationTime: number = 0;
+  private animationSpeed: number = 0.06; // 애니메이션 속도
+  private updateHandler: () => void;
 
-  constructor(radius: number = 11, color: number = 0xffb433) {
+  constructor(radius: number = 9, color: number = 0xffb433) {
     super();
-    this.radius = radius;
+    this.baseRadius = radius;
+    this.currentRadius = radius;
     this.color = color;
+    this.createItem();
+
+    // Ticker에 애니메이션 등록
+    this.updateHandler = () => this.updateAnimation();
+    const graphicEngine = GraphicEngine.getInstance();
+    graphicEngine.getApp().ticker.add(this.updateHandler);
+  }
+
+  public updateAnimation(): void {
+    // 사인파를 이용한 부드러운 일렁임 애니메이션
+    this.animationTime += this.animationSpeed;
+
+    // 함수로 0 ~ 1 사이 값 생성
+    const animationOffset = Math.abs(Math.sin(this.animationTime)); // 0 ~ 1
+    this.currentRadius = this.baseRadius + animationOffset * 3;
+
+    // 매 프레임 업데이트 (계속 반복 애니메이션)
     this.createItem();
   }
 
   private createItem(): void {
     this.graphics.clear();
 
-    // 외곽 원 (테두리만, 채우기 투명)
-    this.graphics.circle(0, 0, this.radius);
-    this.graphics.stroke({ width: 1, color: this.color });
+    // 외곽 원 (테두리만, 채우기 투명) - 애니메이션 적용
+    this.graphics.circle(0, 0, this.currentRadius);
+    this.graphics.stroke({ width: 2, color: this.color });
 
-    // 내부 원 (가득찬 원)
+    // 내부 원 (가득찬 원) - 고정 크기
     this.graphics.circle(0, 0, 8);
     this.graphics.fill({ color: this.color });
+  }
+
+  public destroy(): void {
+    // Ticker에서 애니메이션 제거
+    const graphicEngine = GraphicEngine.getInstance();
+    if (graphicEngine && graphicEngine.getApp()) {
+      graphicEngine.getApp().ticker.remove(this.updateHandler);
+    }
+    super.destroy();
   }
 }
