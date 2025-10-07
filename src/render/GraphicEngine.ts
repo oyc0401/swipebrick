@@ -28,6 +28,7 @@ export class GraphicEngine {
   private debugGuide: Graphics | null = null;
   private aimLine: Graphics | null = null;
   public shatterEffect: any = null; // ShatterEffect 인스턴스
+  public shatterItemEffect: any = null; // ShatterItemEffect 인스턴스
   private animationFrameId: number | null = null;
 
   private constructor(gameWidth: number, gameHeight: number) {
@@ -81,8 +82,15 @@ export class GraphicEngine {
     // ShatterEffect 초기화 (gameViewport에 렌더링)
     this.shatterEffect = new ShatterEffect(
       this.app,
-      this.layerManager.getGameViewport()
-    );
+      this.layerManager.getGameViewport(),
+      { count: 20, color: 0x83b4f9, width: 58, height: 38, size: 7 }
+    ); // 파편면적: 980, 사각형 면적: 2204
+
+    this.shatterItemEffect = new ShatterEffect(
+      this.app,
+      this.layerManager.getGameViewport(),
+      { count: 20, color: 0xffb433, width: 26, height: 26, size: 5 }
+    ); // 파편면적: 500, 사각형 면적: 676
 
     const endTime = performance.now();
     const initDuration = Math.round(endTime - startTime);
@@ -320,6 +328,11 @@ export class GraphicEngine {
     if (this.shatterEffect) {
       this.shatterEffect.destroy();
       this.shatterEffect = null;
+    }
+
+    if (this.shatterItemEffect) {
+      this.shatterItemEffect.destroy();
+      this.shatterItemEffect = null;
     }
 
     // CircleRenderComponent 텍스처 캐시 정리

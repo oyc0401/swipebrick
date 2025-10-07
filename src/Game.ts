@@ -222,9 +222,9 @@ export class Game {
   private setupInputCallbacks(): void {
     this.inputManager.onClick((x, y, angle) => {
       // 디버그: 터치한 곳에 파편 효과
-      // if (this.renderer.shatterEffect) {
+      // if (this.renderer.shatterItemEffect) {
       //   console.log("Debug: Creating shatter effect at click position:", x, y);
-      //   this.renderer.shatterEffect.create(x, y);
+      //   this.renderer.shatterItemEffect.create(x, y);
       // }
 
       if (this.swipeBrick.getIsRunning()) return;
@@ -332,6 +332,14 @@ export class Game {
       //   newBallCount: this.swipeBrick.getBallCount(),
       //   position: item.physicsComponent.getPosition(),
       // });
+
+      // 아이템 수집 시에 shatterItemEffect 생성
+      const position = item.physicsComponent.getPosition();
+      if (this.renderer.shatterItemEffect) {
+        this.renderer.shatterItemEffect.create(position.x, position.y);
+      } else {
+        console.warn("shatterItemEffect not available");
+      }
     });
   }
 }

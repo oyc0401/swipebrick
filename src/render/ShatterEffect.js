@@ -1,17 +1,18 @@
 import { Graphics, Sprite } from "pixi.js";
 
 export class ShatterEffect {
-  constructor(app, viewport) {
+  constructor(app, viewport, options = {}) {
     this.app = app;
     this.shards = [];
-    this.tileSize = 7;
-    this.cols = 5;
-    this.rows = 4;
+    this.tileSize = options.size || 7;
+    this.count = options.count || 20;
     this.gravity = 0.35;
     this.drag = 0.99;
     this.duration = 60;
     this.delay = 30;
-    this.defaultColor = 0x83b4f9;
+    this.defaultColor = options.color || 0x83b4f9;
+    this.width = options.width || 58;
+    this.height = options.height || 38;
     this.viewport = viewport;
 
     // 텍스처 미리 생성 (모든 파편에서 재사용)
@@ -33,31 +34,29 @@ export class ShatterEffect {
 
   // 특정 좌표에서 사각형 부서짐 효과
   create(x, y) {
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.cols; c++) {
-        const s = new Sprite(this.tileTexture);
+    for (let r = 0; r < this.count; r++) {
+      const s = new Sprite(this.tileTexture);
 
-        // 위치
-        const xOffset = Math.random() * 58; // 60은 사각형 너비
-        const yOffset = Math.random() * 38; // 40은 사각형 너비
-        s.anchor.set(0, 0);
+      // 위치
+      const xOffset = Math.random() * this.width;
+      const yOffset = Math.random() * this.height;
+      s.anchor.set(0, 0);
 
-        s.x = x + xOffset - 30 - 1;
-        s.y = y + yOffset - 20 - 1;
+      s.x = x + xOffset - this.width / 2 - this.tileSize / 2;
+      s.y = y + yOffset - this.height / 2 - this.tileSize / 2;
 
-        // 물리 속성
-        s.vx = (Math.random() - 0.5) * 6;
-        s.vy = -1 * Math.random() * 2;
-        s.angularVel = (Math.random() - 0.5) * 0.3;
-        s.delay = this.delay;
-        s.duration = this.duration;
-        s.life = s.delay + s.duration;
-        s.scale.set(1);
-        s.alpha = 1;
+      // 물리 속성
+      s.vx = (Math.random() - 0.5) * 6;
+      s.vy = -1 * Math.random() * 2;
+      s.angularVel = (Math.random() - 0.5) * 0.3;
+      s.delay = this.delay;
+      s.duration = this.duration;
+      s.life = s.delay + s.duration;
+      s.scale.set(1);
+      s.alpha = 1;
 
-        this.viewport.addChild(s);
-        this.shards.push(s);
-      }
+      this.viewport.addChild(s);
+      this.shards.push(s);
     }
   }
 
