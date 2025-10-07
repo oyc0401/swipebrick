@@ -11,7 +11,7 @@ export class GameBoundary extends Entity {
     y: number,
     width: number,
     height: number,
-    color: number = 0x000000,
+    color: number,
     label: string
   ) {
     super(id);

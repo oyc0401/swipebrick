@@ -4,6 +4,7 @@ import { LayerManager } from "./LayerManager";
 // @ts-ignore
 import { ShatterEffect } from "./ShatterEffect.js";
 import { CircleRenderComponent } from "./RenderComponent";
+import { getTheme } from "../Setting";
 
 /**
  * 반응형 UI 가로 크기
@@ -80,16 +81,17 @@ export class GraphicEngine {
     this.layerManager.setupLayers(this.app.stage);
 
     // ShatterEffect 초기화 (gameViewport에 렌더링)
+    const theme = getTheme();
     this.shatterEffect = new ShatterEffect(
       this.app,
       this.layerManager.getGameViewport(),
-      { count: 20, color: 0x83b4f9, width: 58, height: 38, size: 7 }
+      { count: 20, color: theme.shatterColor.brick, width: 58, height: 38, size: 7 }
     ); // 파편면적: 980, 사각형 면적: 2204
 
     this.shatterItemEffect = new ShatterEffect(
       this.app,
       this.layerManager.getGameViewport(),
-      { count: 20, color: 0xffb433, width: 26, height: 26, size: 5 }
+      { count: 20, color: theme.shatterColor.item, width: 26, height: 26, size: 5 }
     ); // 파편면적: 500, 사각형 면적: 676
 
     const endTime = performance.now();

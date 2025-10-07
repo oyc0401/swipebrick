@@ -1,6 +1,7 @@
 import { Body, Bodies } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
 import { PhysicsEngine } from "./PhysicsEngine";
+import { BALL_SPEED } from "../Setting";
 
 const enum CollisionCategories {
   BALL = 0x0001, // 공
@@ -70,7 +71,7 @@ export class BallPhysicsComponent extends MatterJSComponent {
     PhysicsEngine.getInstance().scheduleBallLaunch(
       this.body,
       angleDeg,
-      10,
+      BALL_SPEED,
       delayMs
     );
   }

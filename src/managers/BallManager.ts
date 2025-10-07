@@ -4,13 +4,13 @@ import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { SwipeBrick } from "../SwipeBrick";
 import { getNextId } from "../utils/IdGenerator";
+import { BALL_LAUNCH_DELAY_MS } from "../Setting";
 
 interface BallLandingCallback {
   (landedBall: BallEntity): void;
 }
 
 export class BallManager {
-  private static readonly BALL_LAUNCH_DELAY_MS = 50; // 공 발사 간격 (밀리초 단위)
 
   private activeBalls: BallEntity[] = [];
   private previewBall!: BallEntity;
@@ -44,7 +44,7 @@ export class BallManager {
 
   public launchBalls(
     angleDeg: number,
-    delayMs: number = BallManager.BALL_LAUNCH_DELAY_MS
+    delayMs: number = BALL_LAUNCH_DELAY_MS
   ): void {
     this.activeBalls.forEach((ball, index) => {
       ball.moveAtAngle(angleDeg, index * delayMs);

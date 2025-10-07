@@ -3,10 +3,11 @@ import { ActiveEntity } from "../core/entity/ActiveEntity";
 import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 import { EntityManager } from "../core/entity/EntityManager";
+import { getTheme } from "../Setting";
 
 export class BallEntity extends ActiveEntity {
   private radius: number = BALL_RADIUS;
-  private color: number = 0x4880ee; // 토스 블루
+  private color: number = getTheme().ballColor;
 
   constructor(
     id: string,

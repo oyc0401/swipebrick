@@ -2,16 +2,17 @@ import { Entity } from "../core/entity/Entity";
 import { ItemRenderComponent } from "../render/RenderComponent";
 import { ItemPhysicsComponent } from "../physics/PhysicsComponent";
 import type { Position } from "../GameState";
+import { getTheme } from "../Setting";
 
 export class ItemEntity extends Entity {
   private radius: number = 9;
   private physicsRadius = 13;
-  private color: number = 0xffb433; // 노란 오렌지 색상
+  private color: number = getTheme().itemColor;
 
   constructor(id: string, position: Position) {
     super(id);
 
-    this.renderComponent = new ItemRenderComponent();
+    this.renderComponent = new ItemRenderComponent(this.radius, this.color);
     this.renderComponent.setPosition(position.x, position.y);
 
     this.physicsComponent = new ItemPhysicsComponent(
