@@ -4,6 +4,7 @@ import { Header } from "./Header";
 import { GameOverDialog } from "./GameOverDialog";
 import { TDSMobileAITProvider } from "@toss/tds-mobile-ait";
 import { isTossApp } from "../utils/platform";
+import { InputManager } from "../managers/InputManager";
 
 const gameViewStyle = css`
   width: 100%;
@@ -26,7 +27,11 @@ export const GameUI = () => {
     <>
       <Header />
 
-      <div id="view" css={gameViewStyle}>
+      <div
+        id="view"
+        css={gameViewStyle}
+        onPointerDown={InputManager.onclickView}
+      >
         {/* 게임 영역 - 투명하게 유지 */}
       </div>
 

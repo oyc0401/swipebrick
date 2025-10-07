@@ -11,29 +11,26 @@ interface MouseMoveCallback {
 }
 
 export class InputManager {
-  private renderer: GraphicEngine;
-
   private swipeBrick: SwipeBrick;
   private onGameClick?: ClickCallback;
   private onMouseMoveCallback?: MouseMoveCallback;
   private clickHandler: (event: MouseEvent) => void;
   private mouseMoveHandler: (event: MouseEvent) => void;
 
-  private pointerdown = false;
+  private static staticPointerdown = false;
 
   private readonly MIN_ANGLE = 10; // 최소 각도 (도)
   private readonly MAX_ANGLE = 180 - 10; // 최대 각도 (도)
 
-  constructor(renderer: GraphicEngine, swipeBrick: SwipeBrick) {
-    this.renderer = renderer;
+  constructor(swipeBrick: SwipeBrick) {
     this.swipeBrick = swipeBrick;
     this.clickHandler = this.handleClick.bind(this);
     this.mouseMoveHandler = this.handleMouseMove.bind(this);
     this.setupEventListeners();
   }
 
-  onclickView = () => {
-    this.pointerdown = true;
+  public static onclickView = () => {
+    InputManager.staticPointerdown = true;
   };
 
   /** 게임 영역 클릭 시 이벤트 */
@@ -47,26 +44,18 @@ export class InputManager {
   }
 
   eventClickHandler = (e: PointerEvent) => {
-    if (!this.pointerdown) return;
+    if (!InputManager.staticPointerdown) return;
 
-    this.pointerdown = false;
+    InputManager.staticPointerdown = false;
 
     this.clickHandler(e);
   };
 
   eventMouseMoveHandler = (e: PointerEvent) => {
-    if (!this.pointerdown) return;
+    if (!InputManager.staticPointerdown) return;
 
     this.mouseMoveHandler(e);
   };
-
-  public init(): void {
-    const gameViewElement = document.getElementById("view");
-    if (gameViewElement) {
-      gameViewElement.addEventListener("pointerdown", this.onclickView);
-      // console.log("[InputManager] Input events initialized");
-    }
-  }
 
   private setupEventListeners(): void {
     // DOM 전체에서 마우스 이동 이벤트 수신
@@ -177,8 +166,10 @@ export class InputManager {
   }
 
   public destroy(): void {
-    document.removeEventListener("pointerup", this.clickHandler);
+    // document 이벤트 제거
+    document.removeEventListener("pointerup", this.eventClickHandler);
     document.removeEventListener("pointermove", this.eventMouseMoveHandler);
+
     this.onGameClick = undefined;
     this.onMouseMoveCallback = undefined;
   }

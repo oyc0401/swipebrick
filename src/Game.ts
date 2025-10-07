@@ -48,7 +48,7 @@ export class Game {
     this.ballManager = new BallManager(this.swipeBrick);
     this.boundaryManager = new BoundaryManager(GAME_WIDTH, GAME_HEIGHT);
     this.brickManager = new BrickManager(this.physics, this.swipeBrick);
-    this.inputManager = new InputManager(this.renderer, this.swipeBrick);
+    this.inputManager = new InputManager(this.swipeBrick);
     // this.soundManager = SoundManager.getInstance();
 
     // 이벤트 연결
@@ -89,9 +89,6 @@ export class Game {
     if (splashScreen) {
       splashScreen.style.display = "none";
     }
-
-    // InputManager에 로딩 완료 알림
-    this.inputManager.init();
 
     console.log(`Stage ${this.swipeBrick.getLevel()} started`);
 
@@ -258,6 +255,7 @@ export class Game {
 
       // 모든 공 착지 완료 처리
       if (this.ballManager.getActiveBallCount() === 1) {
+        // setTimeout은 30ms 후 자동 실행되어 브라우저에서 자동 정리됨 (메모리 누수 없음)
         setTimeout(() => {
           this.handleAllBallsLanded();
         }, 30);

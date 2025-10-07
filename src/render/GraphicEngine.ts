@@ -28,6 +28,7 @@ export class GraphicEngine {
   private debugGuide: Graphics | null = null;
   private aimLine: Graphics | null = null;
   public shatterEffect: any = null; // ShatterEffect 인스턴스
+  private animationFrameId: number | null = null;
 
   private constructor(gameWidth: number, gameHeight: number) {
     this.app = new Application();
@@ -288,17 +289,20 @@ export class GraphicEngine {
         entity.updateGraphics();
       });
 
-      requestAnimationFrame(renderLoop);
+      this.animationFrameId = requestAnimationFrame(renderLoop);
     };
 
-    renderLoop();
+    this.animationFrameId = requestAnimationFrame(renderLoop);
   }
 
   private destroy(): void {
-    // LayerManager 정리
-    this.layerManager.destroy();
+    // 애니메이션 프레임 정리
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
 
-    // Graphics 객체들 정리
+    // Graphics 객체들 먼저 정리 (LayerManager 전에)
     if (this.debugGuide) {
       this.debugGuide.destroy(true);
       this.debugGuide = null;
@@ -308,6 +312,9 @@ export class GraphicEngine {
       this.aimLine.destroy(true);
       this.aimLine = null;
     }
+
+    // LayerManager 정리
+    this.layerManager.destroy();
 
     // ShatterEffect 정리
     if (this.shatterEffect) {
