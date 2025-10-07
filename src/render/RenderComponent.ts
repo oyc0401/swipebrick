@@ -238,8 +238,7 @@ export class ItemRenderComponent extends RenderComponent {
   private baseRadius: number;
   private currentRadius: number;
   private color: number;
-  private animationTime: number = 0;
-  private animationSpeed: number = 0.06; // 애니메이션 속도
+  private static globalAnimationSpeed: number = 0.0036;
   private updateHandler: () => void;
 
   constructor(radius: number = 9, color: number = 0xffb433) {
@@ -256,11 +255,14 @@ export class ItemRenderComponent extends RenderComponent {
   }
 
   public updateAnimation(): void {
-    // 사인파를 이용한 부드러운 일렁임 애니메이션
-    this.animationTime += this.animationSpeed;
+    // 전역 시간을 사용하여 모든 아이템이 동기화된 애니메이션
+    const graphicEngine = GraphicEngine.getInstance();
+    const globalTime =
+      graphicEngine.getApp().ticker.lastTime *
+      ItemRenderComponent.globalAnimationSpeed;
 
     // 함수로 0 ~ 1 사이 값 생성
-    const animationOffset = Math.abs(Math.sin(this.animationTime)); // 0 ~ 1
+    const animationOffset = Math.abs(Math.sin(globalTime)); // 0 ~ 1
     this.currentRadius = this.baseRadius + animationOffset * 3;
 
     // 매 프레임 업데이트 (계속 반복 애니메이션)
