@@ -14,13 +14,13 @@ const scoreStyle = css`
 
 const scoreTextStyle = css`
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
   color: #4e5968;
 `;
 
 const bestScoreHighlightStyle = css`
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 500;
   color: #3182f6;
 `;
 

@@ -204,10 +204,10 @@ export class RoundedRectangleRenderComponent extends RenderComponent {
 
     // 새 텍스트 생성
     const textStyle = new TextStyle({
-      fontFamily: "Arial",
+      fontFamily: "Inter",
       fontSize: 16,
       fill: 0xffffff, // 흰색
-      fontWeight: "normal",
+      fontWeight: "600",
       align: "center",
     });
 

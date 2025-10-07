@@ -18,7 +18,7 @@ export class BrickEntity extends Entity {
       this.height,
       0x1f4ef5, // 초기 색상은 진한 파란색
       1, // 1px 마진
-      6 // 6px 라운드
+      4 // 6px 라운드
     );
     this.renderComponent.setPosition(position.x, position.y);
 
@@ -43,7 +43,9 @@ export class BrickEntity extends Entity {
   }
 
   public setColor(color: number): void {
-    (this.renderComponent as RoundedRectangleRenderComponent).updateColor(color);
+    (this.renderComponent as RoundedRectangleRenderComponent).updateColor(
+      color
+    );
   }
 
   private updateHealthText(): void {
