@@ -54,21 +54,21 @@ export function Header() {
               iconAlt="Ranking"
               onClick={() => console.log("Ranking button clicked")}
             />
-            <IconButton
-              iconSrc={storeIcon}
-              iconAlt="Store"
-              onClick={() => console.log("Store button clicked")}
-            />
           </div>
 
           <ScoreDisplay />
 
           <div css={rightButtonGroupStyle}>
             <IconButton
+              iconSrc={storeIcon}
+              iconAlt="Store"
+              onClick={() => console.log("Store button clicked")}
+            />
+            {/* <IconButton
               iconSrc={settingIcon}
               iconAlt="Settings"
               onClick={() => console.log("Settings button clicked")}
-            />
+            /> */}
           </div>
         </div>
       </div>
