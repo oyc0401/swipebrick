@@ -14,8 +14,6 @@ export class InputManager {
   private swipeBrick: SwipeBrick;
   private onGameClick?: ClickCallback;
   private onMouseMoveCallback?: MouseMoveCallback;
-  private clickHandler: (event: MouseEvent) => void;
-  private mouseMoveHandler: (event: MouseEvent) => void;
 
   private static staticPointerdown = false;
 
@@ -24,8 +22,7 @@ export class InputManager {
 
   constructor(swipeBrick: SwipeBrick) {
     this.swipeBrick = swipeBrick;
-    this.clickHandler = this.handleClick.bind(this);
-    this.mouseMoveHandler = this.handleMouseMove.bind(this);
+    // this.clickHandler = this.handleClick.bind(this);
     this.setupEventListeners();
   }
 
@@ -48,13 +45,13 @@ export class InputManager {
 
     InputManager.staticPointerdown = false;
 
-    this.clickHandler(e);
+    this.handleClick(e);
   };
 
   eventMouseMoveHandler = (e: PointerEvent) => {
     if (!InputManager.staticPointerdown) return;
 
-    this.mouseMoveHandler(e);
+    this.handleMouseMove(e);
   };
 
   private setupEventListeners(): void {

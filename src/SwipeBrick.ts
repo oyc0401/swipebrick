@@ -411,13 +411,75 @@ export class SwipeBrick implements ISwipeBrick {
       throw new Error("Invalid game state format: missing required fields");
     }
 
+    // 숫자 범위 검증
+    if (data.level < 1 || data.ballCount < 1 || data.ballStartX < 0) {
+      throw new Error("Invalid game state: negative or zero values not allowed");
+    }
+
+    // isRunning과 shotAngle 일관성 검증
+    const isRunning = data.isRunning ?? false;
+    const shotAngle = data.shotAngle ?? null;
+
+    if (isRunning && shotAngle === null) {
+      throw new Error("Invalid game state: isRunning is true but shotAngle is null");
+    }
+
+    if (!isRunning && shotAngle !== null) {
+      throw new Error("Invalid game state: isRunning is false but shotAngle is not null");
+    }
+
+    // objects 배열 구조 검증
+    if (data.objects.length !== this.GRID_HEIGHT) {
+      throw new Error(`Invalid objects array: expected ${this.GRID_HEIGHT} rows, got ${data.objects.length}`);
+    }
+
+    for (let y = 0; y < data.objects.length; y++) {
+      if (!Array.isArray(data.objects[y]) || data.objects[y].length !== this.GRID_WIDTH) {
+        throw new Error(`Invalid objects row ${y}: expected ${this.GRID_WIDTH} columns`);
+      }
+
+      for (let x = 0; x < data.objects[y].length; x++) {
+        const obj = data.objects[y][x];
+        if (obj !== null) {
+          // 객체 필수 필드 검증
+          if (
+            typeof obj.type !== "string" ||
+            typeof obj.id !== "string" ||
+            typeof obj.x !== "number" ||
+            typeof obj.y !== "number"
+          ) {
+            throw new Error(`Invalid object at [${y}][${x}]: missing required fields`);
+          }
+
+          // 타입별 검증
+          if (obj.type === "brick") {
+            if (typeof obj.health !== "number" || obj.health < 1) {
+              throw new Error(`Invalid brick at [${y}][${x}]: health must be positive number`);
+            }
+          } else if (obj.type === "item") {
+            // 아이템은 health 필드가 없어야 함
+            if (obj.health !== undefined) {
+              throw new Error(`Invalid item at [${y}][${x}]: should not have health field`);
+            }
+          } else {
+            throw new Error(`Invalid object type at [${y}][${x}]: ${obj.type}`);
+          }
+
+          // 좌표 일관성 검증
+          if (obj.x !== x || obj.y !== y) {
+            throw new Error(`Position mismatch at [${y}][${x}]: object has coordinates (${obj.x}, ${obj.y})`);
+          }
+        }
+      }
+    }
+
     // SavedGameState 형식으로 변환
     return {
       level: data.level,
       ballCount: data.ballCount,
       ballStartX: data.ballStartX,
-      isRunning: data.isRunning ?? false,
-      shotAngle: data.shotAngle ?? null,
+      isRunning,
+      shotAngle,
       objects: data.objects.map((row: any[]) =>
         row.map((obj: any) =>
           obj
