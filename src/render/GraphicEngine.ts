@@ -3,6 +3,7 @@ import { EntityManager } from "../core/entity/EntityManager";
 import { LayerManager } from "./LayerManager";
 // @ts-ignore
 import { ShatterEffect } from "./ShatterEffect.js";
+import { CircleRenderComponent } from "./RenderComponent";
 
 /**
  * 반응형 UI 가로 크기
@@ -307,6 +308,15 @@ export class GraphicEngine {
       this.aimLine.destroy(true);
       this.aimLine = null;
     }
+
+    // ShatterEffect 정리
+    if (this.shatterEffect) {
+      this.shatterEffect.destroy();
+      this.shatterEffect = null;
+    }
+
+    // CircleRenderComponent 텍스처 캐시 정리
+    CircleRenderComponent.clearTextureCache();
 
     // PixiJS 애플리케이션 완전 정리
     if (this.app) {

@@ -21,7 +21,7 @@ export class BallManager {
 
   constructor(swipeBrick: SwipeBrick) {
     this.swipeBrick = swipeBrick;
-    this.createPreviewBall();
+    // this.createPreviewBall();
     this.setupPhysicsEventListeners();
   }
 
@@ -50,7 +50,6 @@ export class BallManager {
       ball.moveAtAngle(angleDeg, index * delayMs);
     });
   }
-
 
   public handleBallLanding(ballBody: Matter.Body): void {
     const landedBall = this.activeBalls.find(
@@ -85,7 +84,7 @@ export class BallManager {
     });
   }
 
-  private createPreviewBall(): void {
+  public createPreviewBall(): void {
     const ballStartX = this.swipeBrick.getBallStartX();
     this.previewBall = BallEntity.createWithoutPhysics(
       `ball-preview-${getNextId()}`,

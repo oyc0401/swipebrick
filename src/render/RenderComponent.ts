@@ -1,4 +1,4 @@
-import { Graphics, Container, Text, TextStyle } from "pixi.js";
+import { Graphics, Container, Text, TextStyle, Sprite, Texture } from "pixi.js";
 import type { IRenderComponent } from "../core/components/IComponent";
 import { GraphicEngine } from "./GraphicEngine";
 
@@ -54,18 +54,52 @@ export abstract class RenderComponent implements IRenderComponent {
 export class CircleRenderComponent extends RenderComponent {
   private radius: number;
   private color: number;
+  private sprite: Sprite;
+  private static textureCache: Map<string, Texture> = new Map();
 
   constructor(radius: number, color: number = 0x4880ee) {
     super();
     this.radius = radius;
     this.color = color;
-    this.createCircle();
+    this.sprite = this.createCircleSprite();
+    this.container.addChild(this.sprite);
   }
 
-  private createCircle(): void {
-    this.graphics.clear();
-    this.graphics.circle(0, 0, this.radius);
-    this.graphics.fill({ color: this.color });
+  private createCircleSprite(): Sprite {
+    const cacheKey = `circle_${this.radius}_${this.color}`;
+
+    let texture = CircleRenderComponent.textureCache.get(cacheKey);
+    if (!texture) {
+      // 텍스처가 캐시에 없으면 새로 생성
+      const g = new Graphics();
+      g.circle(0, 0, this.radius);
+      g.fill({ color: this.color });
+
+      texture = GraphicEngine.getInstance()
+        .getApp()
+        .renderer.generateTexture(g);
+      g.destroy();
+
+      CircleRenderComponent.textureCache.set(cacheKey, texture);
+    }
+
+    const sprite = new Sprite(texture);
+    sprite.anchor.set(0.5, 0.5);
+    return sprite;
+  }
+
+  public destroy(): void {
+    if (this.sprite) {
+      this.sprite.destroy();
+    }
+    super.destroy();
+  }
+
+  public static clearTextureCache(): void {
+    for (const texture of CircleRenderComponent.textureCache.values()) {
+      texture.destroy(true);
+    }
+    CircleRenderComponent.textureCache.clear();
   }
 }
 
@@ -73,95 +107,29 @@ export class RectangleRenderComponent extends RenderComponent {
   private width: number;
   private height: number;
   private color: number;
-  private innerMargin: number;
-  private healthText: Text | null = null;
 
-  constructor(
-    width: number,
-    height: number,
-    color: number = 0x000000,
-    innerMargin: number = 0
-  ) {
+  constructor(width: number, height: number, color: number = 0x000000) {
     super();
     this.width = width;
     this.height = height;
     this.color = color;
-    this.innerMargin = innerMargin;
     this.createRectangle();
   }
 
   private createRectangle(): void {
     this.graphics.clear();
-
-    if (this.innerMargin > 0) {
-      // 마진이 있으면 내부에 더 작은 사각형 그리기 (중심점 기준)
-      const innerWidth = this.width - this.innerMargin * 2;
-      const innerHeight = this.height - this.innerMargin * 2;
-      this.graphics.rect(
-        -innerWidth / 2,
-        -innerHeight / 2,
-        innerWidth,
-        innerHeight
-      );
-    } else {
-      // 마진이 없으면 전체 크기로 그리기 (중심점 기준)
-      this.graphics.rect(
-        -this.width / 2,
-        -this.height / 2,
-        this.width,
-        this.height
-      );
-    }
-
+    this.graphics.rect(
+      -this.width / 2,
+      -this.height / 2,
+      this.width,
+      this.height
+    );
     this.graphics.fill({ color: this.color });
   }
 
   public updateColor(newColor: number): void {
     this.color = newColor;
     this.createRectangle();
-    // 색상 변경 시 텍스트도 다시 그리기
-    if (this.healthText) {
-      const currentHealth = parseInt(this.healthText.text);
-      this.updateHealthText(currentHealth);
-    }
-  }
-
-  public updateHealthText(health: number): void {
-    // 기존 텍스트 제거
-    if (this.healthText) {
-      this.container.removeChild(this.healthText);
-      this.healthText.destroy();
-    }
-
-    // 새 텍스트 생성
-    const textStyle = new TextStyle({
-      fontFamily: "Arial",
-      fontSize: 16,
-      fill: 0xffffff, // 흰색
-      fontWeight: "bold",
-      align: "center",
-    });
-
-    this.healthText = new Text({
-      text: health.toString(),
-      style: textStyle,
-    });
-
-    // 텍스트를 사각형 중앙에 배치 (중심점 기준)
-    this.healthText.anchor.set(0.5, 0.5);
-    this.healthText.x = 0;
-    this.healthText.y = 0;
-
-    // 컨테이너에 텍스트 추가
-    this.container.addChild(this.healthText);
-  }
-
-  public destroy(): void {
-    if (this.healthText) {
-      this.healthText.destroy();
-      this.healthText = null;
-    }
-    super.destroy();
   }
 }
 

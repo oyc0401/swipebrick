@@ -60,6 +60,7 @@ export class Game {
   public async init(): Promise<void> {
     await this.renderer.init();
 
+    this.ballManager.createPreviewBall();
     // 데이터 로드
     const hasLoadedState = await this.loadGameState();
 
