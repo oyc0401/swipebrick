@@ -4,7 +4,7 @@ import { Header } from "./Header";
 import { GameOverDialog } from "./GameOverDialog";
 import { TDSMobileAITProvider } from "@toss/tds-mobile-ait";
 import { isTossApp } from "../utils/platform";
-import { InputManager } from "../managers/InputManager";
+import { useGameStore } from "../stores/gameStore";
 
 const gameViewStyle = css`
   width: 100%;
@@ -19,6 +19,8 @@ const bottomSpacerStyle = css`
 `;
 
 export const GameUI = () => {
+  const onPointerDown = useGameStore((state) => state.onPointerDown);
+
   useEffect(() => {
     console.log("React render complete");
   }, []);
@@ -30,7 +32,7 @@ export const GameUI = () => {
       <div
         id="view"
         css={gameViewStyle}
-        onPointerDown={InputManager.onclickView}
+        onPointerDown={onPointerDown}
       >
         {/* 게임 영역 - 투명하게 유지 */}
       </div>
