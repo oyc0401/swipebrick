@@ -19,12 +19,12 @@ export function easeOutBackMove(
   container: Container,
   x: number,
   amount: number,
-  duration = 250
+  duration = 150
 ) {
   if (!container || container.destroyed) return;
 
   const easeOutBack = (t: number): number => {
-    const c1 = 2.058; // 튀는 정도 조절 가능
+    const c1 = 2.558; // 튀는 정도 조절 가능
     const c3 = c1;
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
   };
