@@ -3,6 +3,8 @@ import { EntityManager } from "../core/entity/EntityManager";
 import { LayerManager } from "./LayerManager";
 // @ts-ignore
 import { ShatterEffect } from "./ShatterEffect.js";
+import { CircleRenderComponent } from "./RenderComponent";
+import { getTheme } from "../Setting";
 
 /**
  * 반응형 UI 가로 크기
@@ -27,6 +29,8 @@ export class GraphicEngine {
   private debugGuide: Graphics | null = null;
   private aimLine: Graphics | null = null;
   public shatterEffect: any = null; // ShatterEffect 인스턴스
+  public shatterItemEffect: any = null; // ShatterItemEffect 인스턴스
+  private animationFrameId: number | null = null;
 
   private constructor(gameWidth: number, gameHeight: number) {
     this.app = new Application();
@@ -59,16 +63,16 @@ export class GraphicEngine {
 
   public async init(): Promise<void> {
     const { width, height } = getSize();
+    const startTime = performance.now();
+
     await this.app.init({
       width,
       height,
       autoDensity: true,
-      backgroundColor: 0xeeeeee,
+      backgroundAlpha: 0,
       antialias: true,
       resolution: Math.ceil(window.devicePixelRatio),
     });
-
-    console.log("dpr:", window.devicePixelRatio);
 
     const container = document.getElementById("container");
     if (container) container.appendChild(this.app.canvas);
@@ -77,10 +81,23 @@ export class GraphicEngine {
     this.layerManager.setupLayers(this.app.stage);
 
     // ShatterEffect 초기화 (gameViewport에 렌더링)
+    const theme = getTheme();
     this.shatterEffect = new ShatterEffect(
       this.app,
-      this.layerManager.getGameViewport()
-    );
+      this.layerManager.getGameViewport(),
+      { count: 20, color: theme.shatterColor.brick, width: 58, height: 38, size: 7 }
+    ); // 파편면적: 980, 사각형 면적: 2204
+
+    this.shatterItemEffect = new ShatterEffect(
+      this.app,
+      this.layerManager.getGameViewport(),
+      { count: 20, color: theme.shatterColor.item, width: 26, height: 26, size: 5 }
+    ); // 파편면적: 500, 사각형 면적: 676
+
+    const endTime = performance.now();
+    const initDuration = Math.round(endTime - startTime);
+
+    console.log(`GraphicEngine initialized (${initDuration} ms)`);
   }
 
   public addDebugGuide(): void {
@@ -282,17 +299,20 @@ export class GraphicEngine {
         entity.updateGraphics();
       });
 
-      requestAnimationFrame(renderLoop);
+      this.animationFrameId = requestAnimationFrame(renderLoop);
     };
 
-    renderLoop();
+    this.animationFrameId = requestAnimationFrame(renderLoop);
   }
 
   private destroy(): void {
-    // LayerManager 정리
-    this.layerManager.destroy();
+    // 애니메이션 프레임 정리
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
 
-    // Graphics 객체들 정리
+    // Graphics 객체들 먼저 정리 (LayerManager 전에)
     if (this.debugGuide) {
       this.debugGuide.destroy(true);
       this.debugGuide = null;
@@ -302,6 +322,23 @@ export class GraphicEngine {
       this.aimLine.destroy(true);
       this.aimLine = null;
     }
+
+    // LayerManager 정리
+    this.layerManager.destroy();
+
+    // ShatterEffect 정리
+    if (this.shatterEffect) {
+      this.shatterEffect.destroy();
+      this.shatterEffect = null;
+    }
+
+    if (this.shatterItemEffect) {
+      this.shatterItemEffect.destroy();
+      this.shatterItemEffect = null;
+    }
+
+    // CircleRenderComponent 텍스처 캐시 정리
+    CircleRenderComponent.clearTextureCache();
 
     // PixiJS 애플리케이션 완전 정리
     if (this.app) {

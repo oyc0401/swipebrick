@@ -20,8 +20,7 @@ interface SavedGameState {
   ballCount: number;
   ballStartX: number;
   isRunning: boolean;
-  shotTargetX: number | null;
-  shotTargetY: number | null;
+  shotAngle: number | null;
   objects: (SavedGameObject | null)[][];
 }
 
@@ -62,8 +61,7 @@ export class SwipeBrick implements ISwipeBrick {
   private ballCount: number;
   private ballStartX: number;
   private isRunning: boolean;
-  private shotTargetX: number | null;
-  private shotTargetY: number | null;
+  private shotAngle: number | null;
 
   // private lastLaunchAngle: number | null; // *추가* 각도값
 
@@ -73,8 +71,7 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = 1;
     this.ballStartX = this.GAME_CENTER_X;
     this.isRunning = false;
-    this.shotTargetX = null;
-    this.shotTargetY = null;
+    this.shotAngle = null;
   }
 
   private initializeGrid(): (GameObject | null)[][] {
@@ -137,17 +134,15 @@ export class SwipeBrick implements ISwipeBrick {
     return this.isRunning;
   }
 
-  /** 발사 시작 (좌표와 실행 상태 동시 설정) */
-  startShot(x: number, y: number): void {
-    this.shotTargetX = x;
-    this.shotTargetY = y;
+  /** 발사 시작 (각도와 실행 상태 동시 설정) */
+  startShot(angle: number): void {
+    this.shotAngle = angle;
     this.isRunning = true;
   }
 
-  /** 발사 완료 (좌표와 실행 상태 동시 클리어) */
+  /** 발사 완료 (각도와 실행 상태 동시 클리어) */
   endShot(): void {
-    this.shotTargetX = null;
-    this.shotTargetY = null;
+    this.shotAngle = null;
     this.isRunning = false;
   }
 
@@ -155,28 +150,14 @@ export class SwipeBrick implements ISwipeBrick {
   setIsRunning(running: boolean): void {
     this.isRunning = running;
     if (!running) {
-      this.shotTargetX = null;
-      this.shotTargetY = null;
+      this.shotAngle = null;
     }
   }
 
-  /** 발사 좌표 반환 */
-  getShotTarget(): { x: number; y: number } | null {
-    if (this.shotTargetX !== null && this.shotTargetY !== null) {
-      return { x: this.shotTargetX, y: this.shotTargetY };
-    }
-    return null;
+  /** 발사 각도 반환 */
+  getShotAngle(): number | null {
+    return this.shotAngle;
   }
-
-  // *추가* 출발했을 때 결정된 공 각도 설정
-  // setLastLaunchAngle(angle: number): void {
-  //   this.lastLaunchAngle = angle;
-  // }
-
-  // // *추가* 출발했을 때 결정된 공 각도 반환
-  // getLastLaunchAngle(): number | null {
-  //   return this.lastLaunchAngle;
-  // }
 
   // ===== 게임 오브젝트 관리 =====
 
@@ -377,8 +358,7 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = 1;
     this.ballStartX = this.GAME_CENTER_X;
     this.isRunning = false;
-    this.shotTargetX = null;
-    this.shotTargetY = null;
+    this.shotAngle = null;
   }
 
   toJson(): string {
@@ -387,8 +367,7 @@ export class SwipeBrick implements ISwipeBrick {
       ballCount: this.ballCount,
       ballStartX: this.ballStartX,
       isRunning: this.isRunning,
-      shotTargetX: this.shotTargetX,
-      shotTargetY: this.shotTargetY,
+      shotAngle: this.shotAngle,
       objects: this.objects.map((row) =>
         row.map((obj) =>
           obj
@@ -432,14 +411,75 @@ export class SwipeBrick implements ISwipeBrick {
       throw new Error("Invalid game state format: missing required fields");
     }
 
+    // 숫자 범위 검증
+    if (data.level < 1 || data.ballCount < 1 || data.ballStartX < 0) {
+      throw new Error("Invalid game state: negative or zero values not allowed");
+    }
+
+    // isRunning과 shotAngle 일관성 검증
+    const isRunning = data.isRunning ?? false;
+    const shotAngle = data.shotAngle ?? null;
+
+    if (isRunning && shotAngle === null) {
+      throw new Error("Invalid game state: isRunning is true but shotAngle is null");
+    }
+
+    if (!isRunning && shotAngle !== null) {
+      throw new Error("Invalid game state: isRunning is false but shotAngle is not null");
+    }
+
+    // objects 배열 구조 검증
+    if (data.objects.length !== this.GRID_HEIGHT) {
+      throw new Error(`Invalid objects array: expected ${this.GRID_HEIGHT} rows, got ${data.objects.length}`);
+    }
+
+    for (let y = 0; y < data.objects.length; y++) {
+      if (!Array.isArray(data.objects[y]) || data.objects[y].length !== this.GRID_WIDTH) {
+        throw new Error(`Invalid objects row ${y}: expected ${this.GRID_WIDTH} columns`);
+      }
+
+      for (let x = 0; x < data.objects[y].length; x++) {
+        const obj = data.objects[y][x];
+        if (obj !== null) {
+          // 객체 필수 필드 검증
+          if (
+            typeof obj.type !== "string" ||
+            typeof obj.id !== "string" ||
+            typeof obj.x !== "number" ||
+            typeof obj.y !== "number"
+          ) {
+            throw new Error(`Invalid object at [${y}][${x}]: missing required fields`);
+          }
+
+          // 타입별 검증
+          if (obj.type === "brick") {
+            if (typeof obj.health !== "number" || obj.health < 1) {
+              throw new Error(`Invalid brick at [${y}][${x}]: health must be positive number`);
+            }
+          } else if (obj.type === "item") {
+            // 아이템은 health 필드가 없어야 함
+            if (obj.health !== undefined) {
+              throw new Error(`Invalid item at [${y}][${x}]: should not have health field`);
+            }
+          } else {
+            throw new Error(`Invalid object type at [${y}][${x}]: ${obj.type}`);
+          }
+
+          // 좌표 일관성 검증
+          if (obj.x !== x || obj.y !== y) {
+            throw new Error(`Position mismatch at [${y}][${x}]: object has coordinates (${obj.x}, ${obj.y})`);
+          }
+        }
+      }
+    }
+
     // SavedGameState 형식으로 변환
     return {
       level: data.level,
       ballCount: data.ballCount,
       ballStartX: data.ballStartX,
-      isRunning: data.isRunning ?? false,
-      shotTargetX: data.shotTargetX ?? null,
-      shotTargetY: data.shotTargetY ?? null,
+      isRunning,
+      shotAngle,
       objects: data.objects.map((row: any[]) =>
         row.map((obj: any) =>
           obj
@@ -462,8 +502,7 @@ export class SwipeBrick implements ISwipeBrick {
     this.ballCount = gameState.ballCount;
     this.ballStartX = gameState.ballStartX;
     this.isRunning = gameState.isRunning;
-    this.shotTargetX = gameState.shotTargetX;
-    this.shotTargetY = gameState.shotTargetY;
+    this.shotAngle = gameState.shotAngle;
 
     // 객체 배열 복원
     this.objects = gameState.objects.map((row) =>

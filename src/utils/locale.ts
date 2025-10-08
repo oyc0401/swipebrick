@@ -1,18 +1,5 @@
 import { isTossApp } from "./platform";
-
-let getLocaleFromToss: (() => string) | null = null;
-
-// 토스앱 환경에서 동적 import
-async function initTossLocale() {
-  if (isTossApp() && !getLocaleFromToss) {
-    try {
-      const { getLocale } = await import("@apps-in-toss/web-framework");
-      getLocaleFromToss = getLocale;
-    } catch (error) {
-      console.warn("Failed to import getLocale from toss framework:", error);
-    }
-  }
-}
+import { getLocale as getLocaleFromToss } from "@apps-in-toss/web-framework";
 
 // 웹 환경에서 locale 감지
 function getWebLocale(): string {
@@ -40,10 +27,8 @@ function getWebLocale(): string {
   return "ko-KR";
 }
 
-export async function getLocale(): Promise<string> {
+export function getLocale(): string {
   if (isTossApp()) {
-    // 토스앱 환경: 토스 프레임워크 사용
-    await initTossLocale();
     if (getLocaleFromToss) {
       return getLocaleFromToss();
     }

@@ -1,15 +1,17 @@
 import { BallEntity } from "../entity/BallEntity";
-import type { GameState, Position } from "../GameState";
+import type { Position } from "../GameState";
 import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { SwipeBrick } from "../SwipeBrick";
 import { getNextId } from "../utils/IdGenerator";
+import { BALL_LAUNCH_DELAY_MS } from "../Setting";
 
 interface BallLandingCallback {
   (landedBall: BallEntity): void;
 }
 
 export class BallManager {
+
   private activeBalls: BallEntity[] = [];
   private previewBall!: BallEntity;
 
@@ -19,7 +21,7 @@ export class BallManager {
 
   constructor(swipeBrick: SwipeBrick) {
     this.swipeBrick = swipeBrick;
-    this.createPreviewBall();
+    // this.createPreviewBall();
     this.setupPhysicsEventListeners();
   }
 
@@ -41,14 +43,11 @@ export class BallManager {
   }
 
   public launchBalls(
-    targetX: number,
-    targetY: number,
-    delayMs: number = 50
+    angleDeg: number,
+    delayMs: number = BALL_LAUNCH_DELAY_MS
   ): void {
     this.activeBalls.forEach((ball, index) => {
-      setTimeout(() => {
-        ball.moveTowards(targetX, targetY);
-      }, index * delayMs);
+      ball.moveAtAngle(angleDeg, index * delayMs);
     });
   }
 
@@ -85,7 +84,7 @@ export class BallManager {
     });
   }
 
-  private createPreviewBall(): void {
+  public createPreviewBall(): void {
     const ballStartX = this.swipeBrick.getBallStartX();
     this.previewBall = BallEntity.createWithoutPhysics(
       `ball-preview-${getNextId()}`,

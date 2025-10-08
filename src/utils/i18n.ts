@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-
+import { getLocale } from "./locale";
 // 번역 리소스
 const resources = {
   ko: {
@@ -76,10 +76,9 @@ i18n.use(initReactI18next).init({
 });
 
 // locale에 따라 언어 설정
-export async function initializeI18n(): Promise<void> {
+export function initializeI18n(): void {
   try {
-    const { getLocale } = await import("./locale");
-    const locale = await getLocale();
+    const locale = getLocale();
     const language = locale.split("-")[0]; // ko-KR -> ko
 
     // 지원하는 언어인지 확인
@@ -99,12 +98,12 @@ export async function initializeI18n(): Promise<void> {
       ? language
       : "ko";
 
-    await i18n.changeLanguage(targetLanguage);
-    console.log(`i18n initialized with language: ${targetLanguage}`);
+    i18n.changeLanguage(targetLanguage);
+    console.log(`i18n initialized (${targetLanguage})`);
   } catch (error) {
     console.warn("Failed to initialize i18n:", error);
     // 기본 언어(ko)로 설정
-    await i18n.changeLanguage("ko");
+    i18n.changeLanguage("ko");
   }
 }
 

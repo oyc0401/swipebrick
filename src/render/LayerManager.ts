@@ -86,21 +86,19 @@ export class LayerManager {
   }
 
   private drawBackground(scale: number): void {
-    const canvasSize = getSize();
-    const scaledCanvasHeight = canvasSize.height / scale;
-    const h = (this.gameHeight - scaledCanvasHeight) / 2;
-
-    if (!this.background) {
-      // 최초 생성
-      this.background = new Graphics();
-      this.centerLayer.addChildAt(this.background, 0);
-    }
-
-    // 기존 Graphics 재활용 (clear 후 새로 그리기)
-    this.background.clear();
-    this.background
-      .rect(0, h, this.gameWidth, scaledCanvasHeight)
-      .fill(0xffffff); // 흰색
+    // const canvasSize = getSize();
+    // const scaledCanvasHeight = canvasSize.height / scale;
+    // const h = (this.gameHeight - scaledCanvasHeight) / 2;
+    // if (!this.background) {
+    //   // 최초 생성
+    //   this.background = new Graphics();
+    //   this.centerLayer.addChildAt(this.background, 0);
+    // }
+    // // 기존 Graphics 재활용 (clear 후 새로 그리기)
+    // this.background.clear();
+    // this.background
+    //   .rect(0, h, this.gameWidth, scaledCanvasHeight)
+    //   .fill(0xffffff); // 흰색
   }
 
   public getCenterLayer(): Container {

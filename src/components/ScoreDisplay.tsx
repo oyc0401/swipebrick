@@ -8,19 +8,19 @@ import { useTranslation } from "react-i18next";
 const scoreStyle = css`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   padding-top: 8px;
 `;
 
 const scoreTextStyle = css`
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #4e5968;
 `;
 
 const bestScoreHighlightStyle = css`
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #3182f6;
 `;
 
@@ -58,8 +58,8 @@ export function ScoreDisplay() {
 
   return (
     <div css={scoreStyle}>
-      <p css={score === bestScore ? bestScoreHighlightStyle : scoreTextStyle}>
-        {t("score.best")}: {bestScore}
+      <p css={score >= bestScore ? bestScoreHighlightStyle : scoreTextStyle}>
+        {t("score.best")}: {score > bestScore ? score : bestScore}
       </p>
       <p css={scoreTextStyle}>
         {t("score.current")}: {score}

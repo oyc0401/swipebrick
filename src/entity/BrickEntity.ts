@@ -2,6 +2,7 @@ import { Entity } from "../core/entity/Entity";
 import { RoundedRectangleRenderComponent } from "../render/RenderComponent";
 import { BoundaryPhysicsComponent } from "../physics/PhysicsComponent";
 import type { Position } from "../GameState";
+import { getTheme } from "../Setting";
 
 export class BrickEntity extends Entity {
   private width: number = 60;
@@ -16,9 +17,9 @@ export class BrickEntity extends Entity {
     this.renderComponent = new RoundedRectangleRenderComponent(
       this.width,
       this.height,
-      0x1f4ef5, // 초기 색상은 진한 파란색
+      getTheme().brickColor.max, // 초기 색상은 진한 파란색
       1, // 1px 마진
-      6 // 6px 라운드
+      4 // 4px 라운드
     );
     this.renderComponent.setPosition(position.x, position.y);
 
@@ -43,7 +44,9 @@ export class BrickEntity extends Entity {
   }
 
   public setColor(color: number): void {
-    (this.renderComponent as RoundedRectangleRenderComponent).updateColor(color);
+    (this.renderComponent as RoundedRectangleRenderComponent).updateColor(
+      color
+    );
   }
 
   private updateHealthText(): void {
@@ -68,8 +71,9 @@ export class BrickEntity extends Entity {
 
   public calculateBrickColor(stage: number): void {
     const currentHealth = this.getHealth();
-    const maxColor = 0x1f4ef5; // 진한 파란색 (#1F4EF5)
-    const minColor = 0x83b4f9; // 연한 파란색 (#83B4F9)
+    const theme = getTheme();
+    const maxColor = theme.brickColor.max; // 진한 파란색
+    const minColor = theme.brickColor.min; // 연한 파란색
 
     // currentHealth/stage 비율로 색상 보간 (0~1)
     const ratio = Math.min(currentHealth / stage, 1);

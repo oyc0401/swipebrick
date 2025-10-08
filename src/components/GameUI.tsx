@@ -1,8 +1,10 @@
 import { css } from "@emotion/react";
+import { useEffect } from "react";
 import { Header } from "./Header";
 import { GameOverDialog } from "./GameOverDialog";
 import { TDSMobileAITProvider } from "@toss/tds-mobile-ait";
 import { isTossApp } from "../utils/platform";
+import { useGameStore } from "../stores/gameStore";
 
 const gameViewStyle = css`
   width: 100%;
@@ -17,13 +19,21 @@ const bottomSpacerStyle = css`
 `;
 
 export const GameUI = () => {
-  // 게임 상태 업데이트를 위한 간격 체크 (임시)
+  const onPointerDown = useGameStore((state) => state.onPointerDown);
+
+  useEffect(() => {
+    console.log("React render complete");
+  }, []);
 
   const content = (
     <>
       <Header />
 
-      <div id="view" css={gameViewStyle}>
+      <div
+        id="view"
+        css={gameViewStyle}
+        onPointerDown={onPointerDown}
+      >
         {/* 게임 영역 - 투명하게 유지 */}
       </div>
 

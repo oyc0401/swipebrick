@@ -1,10 +1,9 @@
 import type { GraphicEngine } from "../render/GraphicEngine";
-import type { GameState } from "../GameState";
 import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import type { SwipeBrick } from "../SwipeBrick";
 
 interface ClickCallback {
-  (x: number, y: number): void;
+  (x: number, y: number, angle: number): void;
 }
 
 interface MouseMoveCallback {
@@ -12,29 +11,23 @@ interface MouseMoveCallback {
 }
 
 export class InputManager {
-  private renderer: GraphicEngine;
-
   private swipeBrick: SwipeBrick;
   private onGameClick?: ClickCallback;
   private onMouseMoveCallback?: MouseMoveCallback;
-  private clickHandler: (event: MouseEvent) => void;
-  private mouseMoveHandler: (event: MouseEvent) => void;
 
-  private pointerdown = false;
+  private static staticPointerdown = false;
 
   private readonly MIN_ANGLE = 10; // 최소 각도 (도)
   private readonly MAX_ANGLE = 180 - 10; // 최대 각도 (도)
 
-  constructor(renderer: GraphicEngine, swipeBrick: SwipeBrick) {
-    this.renderer = renderer;
+  constructor(swipeBrick: SwipeBrick) {
     this.swipeBrick = swipeBrick;
-    this.clickHandler = this.handleClick.bind(this);
-    this.mouseMoveHandler = this.handleMouseMove.bind(this);
+    // this.clickHandler = this.handleClick.bind(this);
     this.setupEventListeners();
   }
 
-  onclickView = () => {
-    this.pointerdown = true;
+  public static onclickView = () => {
+    InputManager.staticPointerdown = true;
   };
 
   /** 게임 영역 클릭 시 이벤트 */
@@ -48,30 +41,20 @@ export class InputManager {
   }
 
   eventClickHandler = (e: PointerEvent) => {
-    if (!this.pointerdown) return;
+    if (!InputManager.staticPointerdown) return;
 
-    this.pointerdown = false;
+    InputManager.staticPointerdown = false;
 
-    this.clickHandler(e);
+    this.handleClick(e);
   };
 
   eventMouseMoveHandler = (e: PointerEvent) => {
-    if (!this.pointerdown) return;
+    if (!InputManager.staticPointerdown) return;
 
-    this.mouseMoveHandler(e);
+    this.handleMouseMove(e);
   };
 
   private setupEventListeners(): void {
-    window.onload = () => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document
-            .getElementById("view")!
-            .addEventListener("pointerdown", this.onclickView);
-        });
-      });
-    };
-
     // DOM 전체에서 마우스 이동 이벤트 수신
     document.addEventListener("pointermove", this.eventMouseMoveHandler);
 
@@ -100,7 +83,7 @@ export class InputManager {
     // DOM 좌표를 게임 좌표로 변환
     const gameCoords = this.toGameCoords(event);
 
-    console.log("Clicked at:", gameCoords.x, gameCoords.y);
+    // console.log(`Clicked at (${fixed(gameCoords.x, 4)}, ${fixed(gameCoords.y, 4)})`);
     // 349.38704182330827 93.55791823308269
     let testX = 349.38704182330827;
     let testY = 93.55791823308269;
@@ -109,8 +92,7 @@ export class InputManager {
     const validCoords = this.applyAngleLimit(gameCoords.x, gameCoords.y);
 
     if (this.onGameClick) {
-      // this.onGameClick(testX, testY);
-      this.onGameClick(validCoords.x, validCoords.y);
+      this.onGameClick(validCoords.x, validCoords.y, validCoords.angle);
     }
   }
 
@@ -129,7 +111,8 @@ export class InputManager {
   private applyAngleLimit(
     targetX: number,
     targetY: number
-  ): { x: number; y: number ; angle: number} { //*추가** angle
+  ): { x: number; y: number; angle: number } {
+    //*추가** angle
     // SwipeBrick에서 공의 시작 위치 가져오기
     const ballX = this.swipeBrick.getBallStartX();
     const ballY = GAME_HEIGHT - BALL_RADIUS;
@@ -172,7 +155,7 @@ export class InputManager {
       const newX = ballX + Math.cos(clampedAngleRad) * distance;
       const newY = ballY - Math.sin(clampedAngleRad) * distance;
 
-      return { x: newX, y: newY , angle: clampedAngle};
+      return { x: newX, y: newY, angle: clampedAngle };
     }
 
     // 유효한 각도면 원래 좌표 반환
@@ -180,8 +163,10 @@ export class InputManager {
   }
 
   public destroy(): void {
-    document.removeEventListener("pointerup", this.clickHandler);
+    // document 이벤트 제거
+    document.removeEventListener("pointerup", this.eventClickHandler);
     document.removeEventListener("pointermove", this.eventMouseMoveHandler);
+
     this.onGameClick = undefined;
     this.onMouseMoveCallback = undefined;
   }

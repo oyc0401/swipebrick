@@ -35,11 +35,11 @@ export class BrickManager {
     // CRITICAL: SwipeBrick에서 논리적 상태 생성 후 BrickEntity/ItemEntity로 시각화
     const elements = this.swipeBrick.createNewRow();
 
-    console.log("Entities created:", {
-      timestamp: new Date().toISOString(),
-      level: this.swipeBrick.getLevel(),
-      elements,
-    });
+    // console.log("Entities created:", {
+    //   timestamp: new Date().toISOString(),
+    //   level: this.swipeBrick.getLevel(),
+    //   elements,
+    // });
 
     this.createEntitiesFromElements(elements);
     this.updateAllBrickColors();
@@ -118,6 +118,7 @@ export class BrickManager {
         body: {
           label: body.label,
           id: body.id,
+          entityId: body.plugin.entityId,
           position: { x: body.position.x, y: body.position.y },
           category: body.collisionFilter.category,
           mask: body.collisionFilter.mask,
@@ -234,11 +235,6 @@ export class BrickManager {
     }
     for (const item of this.itemEntities.values()) {
       item.shift(SHIFT_AMOUNT);
-    }
-
-    // 게임 오버 체크
-    if (this.swipeBrick.isGameOver()) {
-      console.log("Game Over - Brick reached bottom!");
     }
   }
 

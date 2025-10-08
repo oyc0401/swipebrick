@@ -2,24 +2,23 @@ import { Entity } from "../core/entity/Entity";
 import { ItemRenderComponent } from "../render/RenderComponent";
 import { ItemPhysicsComponent } from "../physics/PhysicsComponent";
 import type { Position } from "../GameState";
+import { getTheme } from "../Setting";
 
 export class ItemEntity extends Entity {
-  private radius: number = 11;
-  private color: number = 0xffb433; // 노란 오렌지 색상
+  private radius: number = 9;
+  private physicsRadius = 13;
+  private color: number = getTheme().itemColor;
 
   constructor(id: string, position: Position) {
     super(id);
 
-    this.renderComponent = new ItemRenderComponent(
-      this.radius,
-      this.color
-    );
+    this.renderComponent = new ItemRenderComponent(this.radius, this.color);
     this.renderComponent.setPosition(position.x, position.y);
 
     this.physicsComponent = new ItemPhysicsComponent(
       position.x,
       position.y,
-      this.radius,
+      this.physicsRadius,
       id
     );
   }
@@ -38,6 +37,13 @@ export class ItemEntity extends Entity {
 
     // 렌더링 위치 동기화
     this.renderComponent.setPosition(currentPos.x, newY);
+  }
+
+  public updateGraphics(): void {
+    // 아이템 애니메이션 업데이트
+    if (this.renderComponent instanceof ItemRenderComponent) {
+      (this.renderComponent as ItemRenderComponent).updateAnimation();
+    }
   }
 
   public destroy(): void {

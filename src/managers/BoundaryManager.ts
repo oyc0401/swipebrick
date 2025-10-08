@@ -1,5 +1,6 @@
 import { GameBoundary } from "../entity/GameBoundary";
 import { getNextId } from "../utils/IdGenerator";
+import { getTheme, BOUNDARY_THICKNESS } from "../Setting";
 
 interface BoundaryConfig {
   x: number;
@@ -10,7 +11,6 @@ interface BoundaryConfig {
   label: string;
 }
 
-const BOUNDARY_THICKNESS = 15;
 
 export class BoundaryManager {
   private boundaries: Map<string, GameBoundary> = new Map();
@@ -23,7 +23,7 @@ export class BoundaryManager {
   }
 
   public createGameBoundaries(): void {
-    const color = 0xf2f4f6;
+    const color = getTheme().boundaryColor;
     const boundaryConfigs: BoundaryConfig[] = [
       {
         x: this.gameWidth / 2,

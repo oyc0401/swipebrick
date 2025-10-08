@@ -1,6 +1,7 @@
-import { Body, Bodies, Sleeping } from "matter-js";
+import { Body, Bodies } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
 import { PhysicsEngine } from "./PhysicsEngine";
+import { BALL_SPEED } from "../Setting";
 
 const enum CollisionCategories {
   BALL = 0x0001, // 공
@@ -65,27 +66,14 @@ export class BallPhysicsComponent extends MatterJSComponent {
     });
   }
 
-  public moveTowards(targetX: number, targetY: number): void {
-    if (this.body.isSleeping) {
-      Sleeping.set(this.body, false);
-    }
-
-    const pos = this.body.position;
-    const dx = targetX - pos.x;
-    const dy = targetY - pos.y;
-
-    const distance = Math.hypot(dx, dy);
-    if (distance === 0) return;
-
-    // 원하는 이동 속도(px/초 단위)
-    const SPEED = 10;
-
-    // 방향을 단위 벡터로 만들고 속도 적용
-    const vx = (dx / distance) * SPEED;
-    const vy = (dy / distance) * SPEED;
-
-    // 현재 바디의 속도를 직접 세팅
-    Body.setVelocity(this.body, { x: vx, y: vy });
+  public moveAtAngle(angleDeg: number, delayMs: number): void {
+    // 각도를 직접 사용해서 발사
+    PhysicsEngine.getInstance().scheduleBallLaunch(
+      this.body,
+      angleDeg,
+      BALL_SPEED,
+      delayMs
+    );
   }
 }
 

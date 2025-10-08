@@ -31,6 +31,7 @@
 - ❌ **성능 최적화 미뤄두기**: 모든 코드는 처음부터 최적화된 상태로 작성
 - ❌ **정밀도 무시**: 소수점 오차, floating point 정밀도 문제 등 수치적 불안정성
 - ❌ **타입 안전성 무시**: `any` 타입 사용, 타입 체크 생략
+- ❌ **동적 import 사용**: `import()`, `require()` 등 런타임 모듈 로딩 금지
 
 ### 필수 준수사항
 
@@ -47,8 +48,35 @@
 - **메모리 관리**: 가비지 컬렉션 최소화, 객체 풀링 등 최적화 기법
 - **수치 정밀도**: floating point 오차 완벽 대응
 - **에러 처리**: 모든 예외 상황에 대한 완벽한 대응
+- **애니메이션**: 반드시 deltaTime 또는 실제 시간 기반으로 구현 (프레임률 독립적)
 
 ## 코딩 컨벤션
+
+### 애니메이션 구현 규칙
+
+- **deltaTime 기반**: `ticker.deltaTime`을 사용하여 프레임률 독립적 애니메이션
+- **실제 시간 기반**: `ticker.lastTime` 또는 `performance.now()` 사용
+- **프레임 기반 금지**: `animationTime += 0.06` 같은 프레임 의존적 구현 금지
+
+```typescript
+// ✅ 올바른 방법 (deltaTime 기반)
+update(ticker) {
+  const dt = ticker.deltaTime;
+  this.velocity += this.gravity * dt;
+  this.position += this.velocity * dt;
+}
+
+// ✅ 올바른 방법 (실제 시간 기반)
+updateAnimation() {
+  const globalTime = ticker.lastTime * this.animationSpeed;
+  const offset = Math.sin(globalTime);
+}
+
+// ❌ 잘못된 방법 (프레임 기반)
+updateAnimation() {
+  this.animationTime += 0.06; // 프레임률에 의존
+}
+```
 
 ### Import 규칙
 
