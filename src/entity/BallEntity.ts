@@ -9,12 +9,15 @@ export class BallEntity extends ActiveEntity {
   private radius: number = BALL_RADIUS;
   private color: number = getTheme().ballColor;
 
+  private registerToPhysics: boolean;
   constructor(
     id: string,
     position: Position,
     registerToPhysics: boolean = true
   ) {
     super(id);
+
+    this.registerToPhysics = registerToPhysics;
 
     // 컴포넌트 직접 할당
     this.renderComponent = new CircleRenderComponent(this.radius, this.color);
@@ -52,10 +55,10 @@ export class BallEntity extends ActiveEntity {
     return new BallEntity(id, position, false);
   }
 
-  public moveAtAngle(angleDeg: number, delayMs: number): void {
+  public moveAtAngle(angleDeg: number, index: number): void {
     (this.physicsComponent as BallPhysicsComponent).moveAtAngle(
       angleDeg,
-      delayMs
+      index
     );
   }
 
@@ -75,6 +78,20 @@ export class BallEntity extends ActiveEntity {
 
   public setVisible(visible: boolean): void {
     this.renderComponent.setVisible(visible);
+  }
+
+  public updateGraphics(): void {
+    super.updateGraphics();
+
+    // // y가 352를 초과하면 공을 숨김
+    const position = this.getPosition();
+    if (this.registerToPhysics) {
+      if (position.y > 352) {
+        this.setVisible(false);
+      } else {
+        this.setVisible(true);
+      }
+    }
   }
 
   public destroy(): void {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { css } from "@emotion/react";
 
 interface IconButtonProps {
@@ -7,26 +7,18 @@ interface IconButtonProps {
   onClick: () => void;
 }
 
-const buttonStyle = css`
-  width: 42px;
-  height: 42px;
+const buttonStyle = (isPressed: boolean) => css`
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  background: transparent;
+  background: ${isPressed ? "hsla(214, 95%, 14%, 0.05)" : "transparent"};
   cursor: pointer;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: background-color 0.2s;
-
-  &:active {
-    background-color: rgba(255, 255, 255, 0.3);
-  }
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
 `;
 
 const iconStyle = css`
@@ -40,8 +32,24 @@ export const IconButton: React.FC<IconButtonProps> = ({
   iconAlt,
   onClick,
 }) => {
+  const [isPressed, setIsPressed] = useState(false);
+
+  const handleMouseDown = () => setIsPressed(true);
+  const handleMouseUp = () => setIsPressed(false);
+  const handleMouseLeave = () => setIsPressed(false);
+  const handleTouchStart = () => setIsPressed(true);
+  const handleTouchEnd = () => setIsPressed(false);
+
   return (
-    <button css={buttonStyle} onClick={onClick}>
+    <button
+      css={buttonStyle(isPressed)}
+      onClick={onClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <img css={iconStyle} src={iconSrc} alt={iconAlt} />
     </button>
   );

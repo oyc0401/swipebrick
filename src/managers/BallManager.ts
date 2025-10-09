@@ -43,26 +43,10 @@ export class BallManager {
     }
   }
 
-  // public setTargetReturnPosition(x: number, y: number): void {
-  //   this.targetReturnPosition = { x, y };
-  // }
-  // public getTargetReturnPosition(): { x: number; y: number } {
-  //   if (!this.targetReturnPosition) {
-  //     throw new Error("targetReturnPosition not set yet");
-  //   }
-  //   return this.targetReturnPosition;
-  // }
 
-  // public clearTargetReturnPosition(): void {
-  //   this.targetReturnPosition = null;
-  // }
-
-  public launchBalls(
-    angleDeg: number,
-    delayMs: number = BALL_LAUNCH_DELAY_MS
-  ): void {
+  public launchBalls(angleDeg: number): void {
     this.activeBalls.forEach((ball, index) => {
-      ball.moveAtAngle(angleDeg, index * delayMs);
+      ball.moveAtAngle(angleDeg, index);
     });
   }
 

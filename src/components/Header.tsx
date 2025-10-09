@@ -49,25 +49,20 @@ export function Header() {
       <div css={headerWrapperStyle}>
         <div css={headerContentStyle}>
           <div css={buttonGroupStyle}>
-            <IconButton
-              iconSrc={rankIcon}
-              iconAlt="Ranking"
-              onClick={() => console.log("Ranking button clicked")}
-            />
-            <IconButton
+            {/* <IconButton
               iconSrc={storeIcon}
               iconAlt="Store"
               onClick={() => console.log("Store button clicked")}
-            />
+            /> */}
           </div>
 
           <ScoreDisplay />
 
           <div css={rightButtonGroupStyle}>
             <IconButton
-              iconSrc={settingIcon}
-              iconAlt="Settings"
-              onClick={() => console.log("Settings button clicked")}
+              iconSrc={rankIcon}
+              iconAlt="Ranking"
+              onClick={() => console.log("Ranking button clicked")}
             />
           </div>
         </div>

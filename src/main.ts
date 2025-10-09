@@ -27,14 +27,34 @@ async function loadFonts(): Promise<void> {
   }
 }
 
+function disableLoupe() {
+  // 루페 막기
+  let lastTapTime = 0;
+
+  window.addEventListener(
+    "touchstart",
+    (e) => {
+      const now = Date.now();
+      const isSecondTap = now - lastTapTime < 350; // 더블탭-홀드 케이스
+      lastTapTime = now;
+      if (isSecondTap) {
+        // 두 번째 touchstart에서 바로 long-press 타이머 시작
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  // (선택) iOS 13+에서 뜨는 컨텍스트 메뉴 이벤트도 방어
+  window.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+
 async function initializeApp() {
   // i18n 초기화
   initializeI18n();
 
   // 폰트 미리 로드
   await loadFonts();
-
-  console.log("토스웹뷰:", isTossApp());
 
   if (isTossApp()) {
     const insets = getSafeAreaInsets();
@@ -52,6 +72,8 @@ async function initializeApp() {
 
   console.log(`Device Pixel Ratio: ${window.devicePixelRatio}`);
 }
+
+disableLoupe();
 
 await initializeApp();
 

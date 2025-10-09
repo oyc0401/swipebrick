@@ -229,10 +229,24 @@ export class SwipeBrick implements ISwipeBrick {
    */
   private getRandomBrickCount(currentLevel: number): number {
     // 각 벽돌 개수(1~5)에 대한 확률 가중치
-    const weights = [0.2, 0.3, 0.2, 0.2, 0.1];
+    
+    let finalWeights: number[];
+    finalWeights = [0.3, 0.45, 0.4, 0, 0];
+    
+    if (currentLevel >= 10){ 
+      const steps = Math.floor((currentLevel-10)/10); //레벨 구간 설정
+      
+      const prob4 = Math.min(0.4, steps * 0.1);
+      const prob5 = Math.min(0.2, steps * 0.05); // 인덱스 4 = 벽돌 5개
+
+      finalWeights = [0.3, 0.45, 0.4, prob4, prob5];
+
+    // baseWeights에서 시작하여, 50레벨마다 벽돌 4,5개는 각각 0.1,0.05씩 확률이 증가한다.
+    // 만약 벽돌 4,5개가 각각 0.4,0.2 즉 200레벨에 돌파하게 된다면 더이상 값이 오르지 않는다.
+    }
 
     // 전체 확률 합 (꼭 1일 필요는 없음 — 비율 기준이므로)
-    const total = weights.reduce((a, b) => a + b, 0);
+    const total = finalWeights.reduce((a, b) => a + b, 0);
 
     // 0 ~ total 사이의 난수 생성
     // total이 1이면 0~1, total이 10이면 0~10 사이 난수
@@ -242,8 +256,8 @@ export class SwipeBrick implements ISwipeBrick {
     let sum = 0;
 
     // weights를 순회하며 누적합이 난수를 초과하는 지점 찾기
-    for (let i = 0; i < weights.length; i++) {
-      sum += weights[i]; // 현재까지의 누적 확률
+    for (let i = 0; i < finalWeights.length; i++) {
+      sum += finalWeights[i]; // 현재까지의 누적 확률
       if (r <= sum) {
         // 난수가 이 구간에 속한다면 해당 인덱스 선택
         return i + 1; // 인덱스 0~4 → 벽돌 개수 1~5
