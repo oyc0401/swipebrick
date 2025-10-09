@@ -15,9 +15,8 @@ import { submitGameCenterLeaderBoardScore } from "@apps-in-toss/web-framework";
 import { isTossApp } from "./utils/platform";
 import { requestAnimationFrames } from "./utils/animationFrame";
 import { fixed } from "./utils/number";
-import {Ticker, Graphics} from "pixi.js";
+import { Ticker } from "pixi.js";
 import type { BallEntity } from "./entity/BallEntity";
-
 
 export class Game {
   // ===== 의존성 =====
@@ -261,45 +260,40 @@ export class Game {
 
       // 애니메이션이 끝나면
       this.moveBall(landedBall, this.swipeBrick.getBallStartX()).then(() => {
-          this.ballManager.removeBall(landedBall);
-          console.log("remove");
-       
+        this.ballManager.removeBall(landedBall);
 
-      // 모든 공 착지 완료 처리
-      if (this.ballManager.getActiveBallCount() === 0) {
-        // setTimeout은 30ms 후 자동 실행되어 브라우저에서 자동 정리됨 (메모리 누수 없음)
-        setTimeout(() => {
-          this.handleAllBallsLanded();
-        }, 300);
-      }
- }
-      );
-      
+        // 모든 공 착지 완료 처리
+        if (this.ballManager.getActiveBallCount() === 0) {
+          // setTimeout은 30ms 후 자동 실행되어 브라우저에서 자동 정리됨 (메모리 누수 없음)
+          setTimeout(() => {
+            this.handleAllBallsLanded();
+          }, 30);
+        }
+      });
     });
-    
   }
 
-public moveBall(landedBall: BallEntity, targetX: number): Promise<void> {
-  return new Promise<void>((resolve) => {
-    const ticker = new Ticker();
+  public moveBall(landedBall: BallEntity, targetX: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const ticker = new Ticker();
 
-    ticker.add(() => {
-      const pos = landedBall.getPosition(); // 현재 위치
-      const dx = targetX - pos.x;
+      ticker.add(() => {
+        const pos = landedBall.getPosition(); // 현재 위치
+        const dx = targetX - pos.x;
 
-      if (Math.abs(dx) < 1) {
-        landedBall.physicsComponent.setPosition(targetX, pos.y); // 실제 위치 업데이트
-        ticker.stop();
-        ticker.destroy();
-        resolve(); // 이동 완료
-      } else {
-        landedBall.physicsComponent.setPosition(pos.x + dx * 0.1, pos.y); // 부드럽게 이동
-      }
+        if (Math.abs(dx) < 1) {
+          landedBall.physicsComponent.setPosition(targetX, pos.y); // 실제 위치 업데이트
+          ticker.stop();
+          ticker.destroy();
+          resolve(); // 이동 완료
+        } else {
+          landedBall.physicsComponent.setPosition(pos.x + dx * 0.2, pos.y); // 부드럽게 이동
+        }
+      });
+
+      ticker.start();
     });
-
-    ticker.start();
-  });
-}
+  }
 
   private handleAllBallsLanded(): void {
     this.gameState.setIsBallLanded(false);
@@ -327,51 +321,6 @@ public moveBall(landedBall: BallEntity, targetX: number): Promise<void> {
     let level = this.swipeBrick.getLevel();
     let secondText = fixed(shotDuration / 1000);
     console.log(`Stage cleared - Stage ${level} started (${secondText} s)`);
-  }
-
-  private async waitForAllBallsToReturn(): Promise<void> {
-    const activeBalls = this.ballManager.getActiveBalls();
-    const targetX = this.swipeBrick.getBallStartX();
-
-    // 모든 공을 동시에 Promise 기반 애니메이션으로 이동
-    await Promise.all(
-      activeBalls.map((ball) => this.animateBallToStart(ball, targetX, 352))
-    );
-  }
-
-  private animateBallToStart(
-    ball,
-    targetX: number,
-    targetY: number
-  ): Promise<void> {
-    return new Promise((resolve) => {
-      const duration = 300 + Math.random() * 200;
-      const start = ball.getPosition();
-      const startTime = performance.now();
-
-      const step = (now: number) => {
-        const progress = Math.min((now - startTime) / duration, 1);
-        const eased = this.easeOutQuad(progress);
-
-        ball.setPosition(
-          start.x + (targetX - start.x) * eased,
-          start.y + (targetY - start.y) * eased
-        );
-
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        } else {
-          ball.setPosition(targetX, targetY);
-          resolve(); // 애니메이션 완료 신호
-        }
-      };
-
-      requestAnimationFrame(step);
-    });
-  }
-
-  private easeOutQuad(t: number): number {
-    return t * (2 - t);
   }
 
   private setupBrickCallbacks(): void {

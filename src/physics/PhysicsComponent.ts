@@ -71,8 +71,6 @@ export class BallPhysicsComponent extends MatterJSComponent {
     // 서로 32만큼 떨어져있음.
     const delayDistance = 32 * index;
 
-    console.log(delayDistance, index);
-
     // 발사 각도의 반대 방향으로 delayDistance만큼 뒤에서 시작
     const angleRad = (-angleDeg * Math.PI) / 180; // PixiJS 좌표계에 맞춤
     const startX = this.body.position.x - Math.cos(angleRad) * delayDistance;
@@ -108,8 +106,6 @@ export class BallPhysicsComponent extends MatterJSComponent {
       x: unitX * speed,
       y: unitY * speed,
     });
-
-    console.log(this.body.velocity);
   }
 }
 
