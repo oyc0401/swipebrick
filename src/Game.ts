@@ -266,7 +266,7 @@ export class Game {
       }
 
       // 애니메이션이 끝나면
-      this.moveBall(landedBall, this.swipeBrick.getBallStartX()).then(() => {
+      landedBall.moveTo(this.swipeBrick.getBallStartX()).then(() => {
         this.ballManager.removeBall(landedBall);
 
         // 모든 공 착지 완료 처리
@@ -280,27 +280,7 @@ export class Game {
     });
   }
 
-  public moveBall(landedBall: BallEntity, targetX: number): Promise<void> {
-    return new Promise<void>((resolve) => {
-      const ticker = new Ticker();
 
-      ticker.add(() => {
-        const pos = landedBall.getPosition(); // 현재 위치
-        const dx = targetX - pos.x;
-
-        if (Math.abs(dx) < 1) {
-          landedBall.physicsComponent.setPosition(targetX, pos.y); // 실제 위치 업데이트
-          ticker.stop();
-          ticker.destroy();
-          resolve(); // 이동 완료
-        } else {
-          landedBall.physicsComponent.setPosition(pos.x + dx * 0.2, pos.y); // 부드럽게 이동
-        }
-      });
-
-      ticker.start();
-    });
-  }
 
   private handleAllBallsLanded(): void {
     this.gameState.setIsBallLanded(false);
@@ -384,3 +364,4 @@ export class Game {
     });
   }
 }
+

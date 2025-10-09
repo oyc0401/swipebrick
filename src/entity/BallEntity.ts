@@ -4,6 +4,7 @@ import { CircleRenderComponent } from "../render/RenderComponent";
 import { BallPhysicsComponent } from "../physics/PhysicsComponent";
 import { EntityManager } from "../core/entity/EntityManager";
 import { getTheme } from "../Setting";
+import { Ticker } from "pixi.js";
 
 export class BallEntity extends ActiveEntity {
   private radius: number = BALL_RADIUS;
@@ -92,6 +93,28 @@ export class BallEntity extends ActiveEntity {
         this.setVisible(true);
       }
     }
+  }
+
+  public moveTo(targetX: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const ticker = new Ticker();
+
+      ticker.add(() => {
+        const pos = this.getPosition(); // 현재 위치
+        const dx = targetX - pos.x;
+
+        if (Math.abs(dx) < 1) {
+          this.physicsComponent.setPosition(targetX, pos.y); // 실제 위치 업데이트
+          ticker.stop();
+          ticker.destroy();
+          resolve(); // 이동 완료
+        } else {
+          this.physicsComponent.setPosition(pos.x + dx * 0.2, pos.y); // 부드럽게 이동
+        }
+      });
+
+      ticker.start();
+    });
   }
 
   public destroy(): void {
