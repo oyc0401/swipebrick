@@ -15,6 +15,9 @@ import { submitGameCenterLeaderBoardScore } from "@apps-in-toss/web-framework";
 import { isTossApp } from "./utils/platform";
 import { requestAnimationFrames } from "./utils/animationFrame";
 import { fixed } from "./utils/number";
+import {Ticker, Graphics} from "pixi.js";
+import type { BallEntity } from "./entity/BallEntity";
+
 
 export class Game {
   // ===== 의존성 =====
@@ -257,11 +260,10 @@ export class Game {
       }
 
       // 애니메이션이 끝나면
-      this.공을해당X좌표로이동(landedBall, swipeBrick.getBallStartX()).then(
-        () => {
+      this.moveBall(landedBall, this.swipeBrick.getBallStartX()).then(() => {
           this.ballManager.removeBall(landedBall);
-        }
-      );
+          console.log("remove");
+       
 
       // 모든 공 착지 완료 처리
       if (this.ballManager.getActiveBallCount() === 0) {
@@ -270,8 +272,34 @@ export class Game {
           this.handleAllBallsLanded();
         }, 300);
       }
+ }
+      );
+      
     });
+    
   }
+
+public moveBall(landedBall: BallEntity, targetX: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const ticker = new Ticker();
+
+    ticker.add(() => {
+      const pos = landedBall.getPosition(); // 현재 위치
+      const dx = targetX - pos.x;
+
+      if (Math.abs(dx) < 1) {
+        landedBall.physicsComponent.setPosition(targetX, pos.y); // 실제 위치 업데이트
+        ticker.stop();
+        ticker.destroy();
+        resolve(); // 이동 완료
+      } else {
+        landedBall.physicsComponent.setPosition(pos.x + dx * 0.1, pos.y); // 부드럽게 이동
+      }
+    });
+
+    ticker.start();
+  });
+}
 
   private handleAllBallsLanded(): void {
     this.gameState.setIsBallLanded(false);

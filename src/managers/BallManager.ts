@@ -107,7 +107,7 @@ export class BallManager {
       }
     );
   }
-  private removeBall(ball: BallEntity): void {
+  public removeBall(ball: BallEntity): void {
     ball.destroy();
 
     const index = this.activeBalls.indexOf(ball);
