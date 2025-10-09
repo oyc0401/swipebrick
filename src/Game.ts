@@ -224,7 +224,14 @@ export class Game {
   // ===== 📡 이벤트 핸들러들 =====
 
   private setupInputCallbacks(): void {
-    this.inputManager.onClick((x, y, angle) => {
+    this.inputManager.onPointerMove((x, y) => {
+      if (!this.swipeBrick.getIsRunning()) {
+        const ballStartX = this.swipeBrick.getBallStartX();
+        this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
+      }
+    });
+
+    this.inputManager.onPointerUp((x, y, angle) => {
       // 디버그: 터치한 곳에 파편 효과
       // if (this.renderer.shatterItemEffect) {
       //   console.log("Debug: Creating shatter effect at click position:", x, y);
@@ -236,13 +243,6 @@ export class Game {
       this.swipeBrick.startShot(angle);
       this.saveGameState();
       this.executeLaunch(angle);
-    });
-
-    this.inputManager.onMouseMove((x, y) => {
-      if (!this.swipeBrick.getIsRunning()) {
-        const ballStartX = this.swipeBrick.getBallStartX();
-        this.renderer.drawAimLine(ballStartX, GAME_HEIGHT - BALL_RADIUS, x, y);
-      }
     });
   }
 

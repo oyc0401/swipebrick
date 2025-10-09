@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { InputManager } from "../managers/InputManager";
+import React from "react";
 
 interface GameState {
   score: number;
@@ -14,7 +15,7 @@ interface GameState {
   onClose?: () => void;
   setCloseCallback: (onClose: () => void) => void;
 
-  onPointerDown: () => void;
+  onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -27,7 +28,7 @@ export const useGameStore = create<GameState>((set) => ({
   openDialog: () => set({ isDialogOpen: true }),
   closeDialog: () => set({ isDialogOpen: false, onClose: undefined }),
   setCloseCallback: (onClose) => set({ onClose }),
-  onPointerDown: () => {
-    InputManager.onclickView();
+  onPointerDown: (e) => {
+    InputManager.triggerPointerDown(e.nativeEvent as PointerEvent);
   },
 }));

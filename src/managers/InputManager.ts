@@ -10,56 +10,95 @@ interface MouseMoveCallback {
   (x: number, y: number): void;
 }
 
-export class InputManager {
-  private swipeBrick: SwipeBrick;
-  private onGameClick?: ClickCallback;
-  private onMouseMoveCallback?: MouseMoveCallback;
+interface PointerdownCallback {
+  (x: number, y: number): void;
+}
 
-  private static staticPointerdown = false;
+export class InputManager {
+  private static instance: InputManager;
+
+  private swipeBrick: SwipeBrick;
+  private onPointerUpCallbacks: ClickCallback[] = [];
+  private onPointerMoveCallbacks: MouseMoveCallback[] = [];
+  private onPointerDownCallbacks: PointerdownCallback[] = [];
+
+  private isPointerDown = false;
 
   private readonly MIN_ANGLE = 10; // 최소 각도 (도)
   private readonly MAX_ANGLE = 180 - 10; // 최대 각도 (도)
 
   constructor(swipeBrick: SwipeBrick) {
     this.swipeBrick = swipeBrick;
-    // this.clickHandler = this.handleClick.bind(this);
     this.setupEventListeners();
+    InputManager.instance = this;
   }
 
-  public static onclickView = () => {
-    InputManager.staticPointerdown = true;
-  };
+  public static triggerPointerDown(event: PointerEvent) {
+    InputManager.instance?.pointerdownHandler(event);
+  }
 
-  /** 게임 영역 클릭 시 이벤트 */
-  public onClick(callback: ClickCallback): void {
-    this.onGameClick = callback;
+  /** 마우스 다운 시 이벤트 */
+  public onPointerDown(callback: PointerdownCallback): void {
+    this.onPointerDownCallbacks.push(callback);
   }
 
   /** 마우스 이동 시 이벤트 */
-  public onMouseMove(callback: MouseMoveCallback): void {
-    this.onMouseMoveCallback = callback;
+  public onPointerMove(callback: MouseMoveCallback): void {
+    this.onPointerMoveCallbacks.push(callback);
   }
 
-  eventClickHandler = (e: PointerEvent) => {
-    if (!InputManager.staticPointerdown) return;
+  /** 게임 영역 포인터 업 이벤트 */
+  public onPointerUp(callback: ClickCallback): void {
+    this.onPointerUpCallbacks.push(callback);
+  }
 
-    InputManager.staticPointerdown = false;
-
-    this.handleClick(e);
+  private pointerdownHandler = (e: PointerEvent) => {
+    this.isPointerDown = true;
+    const gameCoords = this.toGameCoords(e);
+    this.onPointerDownCallbacks.forEach((callback) =>
+      callback(gameCoords.x, gameCoords.y)
+    );
   };
 
-  eventMouseMoveHandler = (e: PointerEvent) => {
-    if (!InputManager.staticPointerdown) return;
+  private pointermoveHandler = (e: PointerEvent) => {
+    if (!this.isPointerDown) return;
 
-    this.handleMouseMove(e);
+    // DOM 좌표를 게임 좌표로 변환
+    const gameCoords = this.toGameCoords(e);
+
+    // console.log(`Clicked at (${fixed(gameCoords.x, 4)}, ${fixed(gameCoords.y, 4)})`);
+    // 349.38704182330827 93.55791823308269
+    let testX = 349.38704182330827;
+    let testY = 93.55791823308269;
+
+    // 각도 제한: 마우스 위치 보정
+    const validCoords = this.applyAngleLimit(gameCoords.x, gameCoords.y);
+
+    this.onPointerMoveCallbacks.forEach((callback) =>
+      callback(validCoords.x, validCoords.y)
+    );
+  };
+
+  private pointerupHandler = (e: PointerEvent) => {
+    if (!this.isPointerDown) return;
+
+    this.isPointerDown = false;
+
+    // DOM 좌표를 게임 좌표로 변환
+    const gameCoords = this.toGameCoords(e);
+
+    // 각도 제한: 가장 가까운 유효 각도로 보정
+    const validCoords = this.applyAngleLimit(gameCoords.x, gameCoords.y);
+
+    this.onPointerUpCallbacks.forEach((callback) =>
+      callback(validCoords.x, validCoords.y, validCoords.angle)
+    );
   };
 
   private setupEventListeners(): void {
-    // DOM 전체에서 마우스 이동 이벤트 수신
-    document.addEventListener("pointermove", this.eventMouseMoveHandler);
-
-    // DOM 전체에서 클릭 이벤트 수신
-    document.addEventListener("pointerup", this.eventClickHandler);
+    // DOM 전체에서 이벤트 수신
+    document.addEventListener("pointermove", this.pointermoveHandler);
+    document.addEventListener("pointerup", this.pointerupHandler);
   }
 
   private toGameCoords(event: MouseEvent) {
@@ -78,34 +117,6 @@ export class InputManager {
     };
 
     return gameCoords;
-  }
-  private handleClick(event: MouseEvent): void {
-    // DOM 좌표를 게임 좌표로 변환
-    const gameCoords = this.toGameCoords(event);
-
-    // console.log(`Clicked at (${fixed(gameCoords.x, 4)}, ${fixed(gameCoords.y, 4)})`);
-    // 349.38704182330827 93.55791823308269
-    let testX = 349.38704182330827;
-    let testY = 93.55791823308269;
-
-    // 각도 제한: 가장 가까운 유효 각도로 보정
-    const validCoords = this.applyAngleLimit(gameCoords.x, gameCoords.y);
-
-    if (this.onGameClick) {
-      this.onGameClick(validCoords.x, validCoords.y, validCoords.angle);
-    }
-  }
-
-  private handleMouseMove(event: MouseEvent): void {
-    // DOM 좌표를 게임 좌표로 변환
-    const gameCoords = this.toGameCoords(event);
-
-    // 각도 제한: 마우스 위치 보정
-    const validCoords = this.applyAngleLimit(gameCoords.x, gameCoords.y);
-
-    if (this.onMouseMoveCallback) {
-      this.onMouseMoveCallback(validCoords.x, validCoords.y);
-    }
   }
 
   private applyAngleLimit(
@@ -164,10 +175,13 @@ export class InputManager {
 
   public destroy(): void {
     // document 이벤트 제거
-    document.removeEventListener("pointerup", this.eventClickHandler);
-    document.removeEventListener("pointermove", this.eventMouseMoveHandler);
+    document.removeEventListener("pointerup", this.pointerupHandler);
+    document.removeEventListener("pointermove", this.pointermoveHandler);
 
-    this.onGameClick = undefined;
-    this.onMouseMoveCallback = undefined;
+    this.onPointerDownCallbacks = [];
+    this.onPointerUpCallbacks = [];
+    this.onPointerMoveCallbacks = [];
+
+    InputManager.instance = null as any;
   }
 }
