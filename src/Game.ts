@@ -252,7 +252,7 @@ export class Game {
       this.ballManager.hidePreviewBall();
     });
 
-    this.ballManager.onBallLanded(async (landedBall) => {
+    this.ballManager.onBallLanded((landedBall) => {
       // 첫 번째 공 착지 처리
       if (!this.gameState.isBallLanded) {
         this.gameState.setIsBallLanded(true);
@@ -264,52 +264,39 @@ export class Game {
         this.ballManager.showLandedBall();
         console.log(`First ball landed at (${position.x}, ${position.y})`);
       }
-
-      // 애니메이션이 끝나면
-      landedBall.moveTo(this.swipeBrick.getBallStartX()).then(() => {
-        this.ballManager.removeBall(landedBall);
-
-        // 모든 공 착지 완료 처리
-        if (this.ballManager.getActiveBallCount() === 0) {
-          // setTimeout은 30ms 후 자동 실행되어 브라우저에서 자동 정리됨 (메모리 누수 없음)
-          setTimeout(() => {
-            this.handleAllBallsLanded();
-          }, 30);
-        }
-      });
     });
-  }
 
+    // 모든 공이 도착하고 돌아오는 애니메이션이 끝났을 때
+    this.ballManager.onAllBallsSettled(() => {
+      this.gameState.setIsBallLanded(false);
+      this.swipeBrick.incrementLevel();
+      this.brickManager.shift();
+      this.brickManager.createBricks();
+      this.swipeBrick.endShot();
 
+      this.ballManager.showPreviewBall();
+      this.ballManager.hideLandedBall();
 
-  private handleAllBallsLanded(): void {
-    this.gameState.setIsBallLanded(false);
-    this.swipeBrick.incrementLevel();
-    this.brickManager.shift();
-    this.brickManager.createBricks();
-    this.swipeBrick.endShot();
-    this.ballManager.showPreviewBall();
-    this.ballManager.hideLandedBall();
+      // UI 즉시 업데이트
+      this.updateScoreUI();
 
-    // UI 즉시 업데이트
-    this.updateScoreUI();
+      if (this.swipeBrick.isGameOver()) {
+        const shotDuration = Math.round(performance.now() - this.shotStartTime);
+        let level = this.swipeBrick.getLevel();
+        let secondText = fixed(shotDuration / 1000);
+        console.log(`Game over - Stage ${level} (${secondText} s)`);
+        this.onGameOver();
+        return;
+      }
 
-    if (this.swipeBrick.isGameOver()) {
+      // DB 업데이트 (비동기)
+      this.saveGameState();
+
       const shotDuration = Math.round(performance.now() - this.shotStartTime);
       let level = this.swipeBrick.getLevel();
       let secondText = fixed(shotDuration / 1000);
-      console.log(`Game over - Stage ${level} (${secondText} s)`);
-      this.onGameOver();
-      return;
-    }
-
-    // DB 업데이트 (비동기)
-    this.saveGameState();
-
-    const shotDuration = Math.round(performance.now() - this.shotStartTime);
-    let level = this.swipeBrick.getLevel();
-    let secondText = fixed(shotDuration / 1000);
-    console.log(`Stage cleared - Stage ${level} started (${secondText} s)`);
+      console.log(`Stage cleared - Stage ${level} started (${secondText} s)`);
+    });
   }
 
   private setupBrickCallbacks(): void {
@@ -364,4 +351,3 @@ export class Game {
     });
   }
 }
-

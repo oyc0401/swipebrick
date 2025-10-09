@@ -5,37 +5,78 @@ import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { SwipeBrick } from "../SwipeBrick";
 import { getNextId } from "../utils/IdGenerator";
 
-interface BallLandingCallback {
-  (landedBall: BallEntity): void;
-}
-
 export class BallManager {
   private activeBalls: BallEntity[] = [];
   private previewBall!: BallEntity;
-  private landedBall!: BallEntity;
+  private landedBall!: BallEntity; // 바닥에 착지한 공 (다음 턴 시작 전까지 유지)
 
   private swipeBrick: SwipeBrick;
 
-  // private targetReturnPosition: { x: number; y: number } | null = null;
+  private onBallLandedCallbacks: Array<(landedBall: BallEntity) => void> = [];
+  private onAllBallsSettledCallbacks: Array<() => void> = [];
+  private onAllBallsLaunchedCallbacks: Array<() => void> = [];
 
-  private onBallLandingCallbacks: Array<BallLandingCallback> = [];
-  private onAllBallsLaunchedCallback: Array<() => void> = [];
+  private landedBallAnimationPromises: Promise<void>[] = [];
 
   constructor(swipeBrick: SwipeBrick) {
     this.swipeBrick = swipeBrick;
-    // this.createPreviewBall();
     this.setupPhysicsEventListeners();
   }
 
-  /** 공이 도착했을 때 이벤트 */
-  public onBallLanded(callback: BallLandingCallback): void {
-    this.onBallLandingCallbacks.push(callback);
+  // ===== Public Event Subscription =====
+
+  public onBallLanded(callback: (landedBall: BallEntity) => void): void {
+    this.onBallLandedCallbacks.push(callback);
   }
 
-  /** 공이 모두 발사되었을 때 이벤트 */
-  public onAllBallsLaunched(callback: () => void): void {
-    this.onAllBallsLaunchedCallback.push(callback);
+  public onAllBallsSettled(callback: () => void): void {
+    this.onAllBallsSettledCallbacks.push(callback);
   }
+
+  public onAllBallsLaunched(callback: () => void): void {
+    this.onAllBallsLaunchedCallbacks.push(callback);
+  }
+
+  // ===== Event Handlers =====
+
+  private setupPhysicsEventListeners(): void {
+    const physicsEngine = PhysicsEngine.getInstance();
+
+    physicsEngine.onCollisionBottom((ballBody) => {
+      this.handleBallLanding(ballBody);
+    });
+
+    physicsEngine.onAllBallsLaunched(() => {
+      this.onAllBallsLaunchedCallbacks.forEach((cb) => cb());
+    });
+  }
+
+  private handleBallLanding(ballBody: Matter.Body): void {
+    const landedBallIndex = this.activeBalls.findIndex(
+      (ball) => ball.getPhysicsBody() === ballBody
+    );
+
+    if (landedBallIndex === -1) return;
+
+    const [landedBall] = this.activeBalls.splice(landedBallIndex, 1);
+
+    this.onBallLandedCallbacks.forEach((cb) => cb(landedBall));
+
+    const targetX = this.swipeBrick.getBallStartX();
+    const movePromise = landedBall.moveTo(targetX).then(() => {
+      landedBall.destroy();
+    });
+    this.landedBallAnimationPromises.push(movePromise);
+
+    if (this.activeBalls.length === 0) {
+      Promise.all(this.landedBallAnimationPromises).then(() => {
+        this.onAllBallsSettledCallbacks.forEach((cb) => cb());
+        this.landedBallAnimationPromises = [];
+      });
+    }
+  }
+
+  // ===== Ball Management =====
 
   public createBalls(count: number): void {
     for (let i = 0; i < count; i++) {
@@ -60,16 +101,26 @@ export class BallManager {
     });
   }
 
-  public handleBallLanding(ballBody: Matter.Body): void {
-    const landedBall = this.activeBalls.find(
-      (ball) => ball.getPhysicsBody() === ballBody
+  public createPreviewBall(): void {
+    const ballStartX = this.swipeBrick.getBallStartX();
+    this.previewBall = BallEntity.createWithoutPhysics(
+      `ball-preview-${getNextId()}`,
+      {
+        x: ballStartX,
+        y: GAME_HEIGHT - BALL_RADIUS,
+      }
     );
+  }
 
-    if (!landedBall) return;
-
-    this.onBallLandingCallbacks.forEach((callback) => {
-      callback(landedBall);
-    });
+  public createLandedBall(): void {
+    const ballStartX = this.swipeBrick.getBallStartX();
+    this.landedBall = BallEntity.createWithoutPhysics(
+      `ball-landed-${getNextId()}`,
+      {
+        x: ballStartX,
+        y: GAME_HEIGHT - BALL_RADIUS,
+      }
+    );
   }
 
   public showPreviewBall(): void {
@@ -98,41 +149,6 @@ export class BallManager {
     this.landedBall.setVisible(false);
   }
 
-  private setupPhysicsEventListeners(): void {
-    const physicsEngine = PhysicsEngine.getInstance();
-    physicsEngine.onCollisionBottom((ballBody) => {
-      this.handleBallLanding(ballBody);
-    });
-
-    physicsEngine.onAllBallsLaunched(() => {
-      this.onAllBallsLaunchedCallback.forEach((callback) => {
-        callback();
-      });
-    });
-  }
-
-  public createPreviewBall(): void {
-    const ballStartX = this.swipeBrick.getBallStartX();
-    this.previewBall = BallEntity.createWithoutPhysics(
-      `ball-preview-${getNextId()}`,
-      {
-        x: ballStartX,
-        y: GAME_HEIGHT - BALL_RADIUS,
-      }
-    );
-  }
-
-  public createLandedBall(): void {
-    const ballStartX = this.swipeBrick.getBallStartX();
-    this.landedBall = BallEntity.createWithoutPhysics(
-      `ball-landed-${getNextId()}`,
-      {
-        x: ballStartX,
-        y: GAME_HEIGHT - BALL_RADIUS,
-      }
-    );
-    this.hideLandedBall();
-  }
   public removeBall(ball: BallEntity): void {
     ball.destroy();
 
@@ -142,7 +158,7 @@ export class BallManager {
     }
   }
 
-  public getActiveBallCount() {
+  public getActiveBallCount(): number {
     return this.activeBalls.length;
   }
 
@@ -159,11 +175,13 @@ export class BallManager {
       this.previewBall.destroy();
     }
 
-    this.landedBall.destroy();
+    if (this.landedBall) {
+      this.landedBall.destroy();
+    }
 
     this.activeBalls = [];
-
-    this.onBallLandingCallbacks = [];
-    this.onAllBallsLaunchedCallback = [];
+    this.onBallLandedCallbacks = [];
+    this.onAllBallsLaunchedCallbacks = [];
+    this.onAllBallsLaunchedCallbacks = [];
   }
 }
