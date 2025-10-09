@@ -11,13 +11,12 @@ interface BallLandingCallback {
 }
 
 export class BallManager {
-
   private activeBalls: BallEntity[] = [];
   private previewBall!: BallEntity;
 
   private swipeBrick: SwipeBrick;
 
-  private targetReturnPosition: { x: number; y: number } | null = null;
+  // private targetReturnPosition: { x: number; y: number } | null = null;
 
   private onBallLanding?: BallLandingCallback;
 
@@ -44,25 +43,19 @@ export class BallManager {
     }
   }
 
-  public setTargetReturnPosition(x: number, y: number): void {
-  this.targetReturnPosition = { x, y };
-}
-public getTargetReturnPosition(): { x: number; y: number } {
-  if (!this.targetReturnPosition) {
-    throw new Error("targetReturnPosition not set yet");
-  }
-  return this.targetReturnPosition;
-}
+  // public setTargetReturnPosition(x: number, y: number): void {
+  //   this.targetReturnPosition = { x, y };
+  // }
+  // public getTargetReturnPosition(): { x: number; y: number } {
+  //   if (!this.targetReturnPosition) {
+  //     throw new Error("targetReturnPosition not set yet");
+  //   }
+  //   return this.targetReturnPosition;
+  // }
 
-
-
-
-
-public clearTargetReturnPosition(): void {
-  this.targetReturnPosition = null;
-}
-
-
+  // public clearTargetReturnPosition(): void {
+  //   this.targetReturnPosition = null;
+  // }
 
   public launchBalls(
     angleDeg: number,
@@ -83,8 +76,6 @@ public clearTargetReturnPosition(): void {
     if (this.onBallLanding) {
       this.onBallLanding(landedBall);
     }
-
-    this.removeBall(landedBall);
   }
 
   public showPreviewBall(): void {
@@ -129,7 +120,7 @@ public clearTargetReturnPosition(): void {
     return this.activeBalls.length;
   }
 
-  public getActiveBalls() : BallEntity[] {
+  public getActiveBalls(): BallEntity[] {
     return this.activeBalls;
   }
 
