@@ -55,10 +55,10 @@ export class BallEntity extends ActiveEntity {
     return new BallEntity(id, position, false);
   }
 
-  public moveAtAngle(angleDeg: number, delayMs: number): void {
+  public moveAtAngle(angleDeg: number, index: number): void {
     (this.physicsComponent as BallPhysicsComponent).moveAtAngle(
       angleDeg,
-      delayMs
+      index
     );
   }
 

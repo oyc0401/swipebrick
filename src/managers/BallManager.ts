@@ -11,7 +11,6 @@ interface BallLandingCallback {
 }
 
 export class BallManager {
-
   private activeBalls: BallEntity[] = [];
   private previewBall!: BallEntity;
 
@@ -42,12 +41,9 @@ export class BallManager {
     }
   }
 
-  public launchBalls(
-    angleDeg: number,
-    delayMs: number = BALL_LAUNCH_DELAY_MS
-  ): void {
+  public launchBalls(angleDeg: number): void {
     this.activeBalls.forEach((ball, index) => {
-      ball.moveAtAngle(angleDeg, index * delayMs);
+      ball.moveAtAngle(angleDeg, index);
     });
   }
 
