@@ -13,6 +13,7 @@ export class PhysicsEngine {
   private world: World;
   private brickCollisionCallbacks: Array<(brickBody: Matter.Body) => void> = [];
   private bottomCollisionCallbacks: Array<(ballBody: Matter.Body) => void> = [];
+  private allBallsLaunchedCallbacks: Array<() => void> = [];
 
   private constructor() {
     this.engine = Engine.create();
@@ -245,16 +246,24 @@ export class PhysicsEngine {
           this.correctBallAngleIfNeeded(body);
         }
       }
+
       for (const body of this.world.bodies) {
         if (body.label === "ball" && !body.isSleeping) {
-          this.correctBallAngleIfNeeded(body);
+          if (body.position.y < 352) {
+            // 공이 막 출발선을 넘었을 때 (y < 352)
 
-          if (body.position.y > 352) {
-            (body as any).started = false;
-            body.isSensor = true;
-          } else {
+            // 그리고 이 공이 마지막 공일 때
+            if ((body as any).isLast) {
+              this.allBallsLaunchedCallbacks.forEach((callback) => callback());
+              // 콜백이 여러번 호출되지 않도록 isLast를 false로 변경
+              (body as any).isLast = false;
+            }
+
             (body as any).started = true;
             body.isSensor = false;
+          } else {
+            (body as any).started = false;
+            body.isSensor = true;
           }
         }
       }
@@ -359,6 +368,10 @@ export class PhysicsEngine {
     this.bottomCollisionCallbacks.push(callback);
   }
 
+  public onAllBallsLaunched(callback: () => void): void {
+    this.allBallsLaunchedCallbacks.push(callback);
+  }
+
   public destroy(): void {
     // 이벤트 리스너 제거
     Events.off(this.engine, "beforeUpdate");
@@ -366,5 +379,6 @@ export class PhysicsEngine {
     Events.off(this.engine, "afterUpdate");
     this.brickCollisionCallbacks = [];
     this.bottomCollisionCallbacks = [];
+    this.allBallsLaunchedCallbacks = [];
   }
 }

@@ -63,6 +63,7 @@ export class Game {
     await this.renderer.init();
 
     this.ballManager.createPreviewBall();
+    this.ballManager.createLandedBall();
     // 데이터 로드
     const hasLoadedState = await this.loadGameState();
 
@@ -81,6 +82,7 @@ export class Game {
 
     // UI 초기화
     this.ballManager.showPreviewBall();
+    this.ballManager.hideLandedBall();
     this.updateScoreUI();
 
     // 게임 루프 시작
@@ -114,7 +116,6 @@ export class Game {
 
     this.renderer.clearAimLine();
     this.ballManager.createBalls(this.swipeBrick.getBallCount());
-    this.ballManager.hidePreviewBall();
     this.ballManager.launchBalls(angle);
 
     console.log(`Ball shot at ${fixed(angle)}°`);
@@ -152,6 +153,7 @@ export class Game {
     this.swipeBrick.reset();
     this.brickManager.createBricks();
     this.ballManager.showPreviewBall();
+    this.ballManager.hideLandedBall();
     this.updateScoreUI();
   }
 
@@ -245,6 +247,11 @@ export class Game {
   }
 
   private setupBallCallbacks(): void {
+    this.ballManager.onAllBallsLaunched(() => {
+      console.log("모든 공 출발!");
+      this.ballManager.hidePreviewBall();
+    });
+
     this.ballManager.onBallLanded(async (landedBall) => {
       // 첫 번째 공 착지 처리
       if (!this.gameState.isBallLanded) {
@@ -254,7 +261,7 @@ export class Game {
         this.swipeBrick.setBallStartX(position.x);
 
         // 미리보기 공 표시
-        this.ballManager.showPreviewBall();
+        this.ballManager.showLandedBall();
         console.log(`First ball landed at (${position.x}, ${position.y})`);
       }
 
@@ -301,6 +308,8 @@ export class Game {
     this.brickManager.shift();
     this.brickManager.createBricks();
     this.swipeBrick.endShot();
+    this.ballManager.showPreviewBall();
+    this.ballManager.hideLandedBall();
 
     // UI 즉시 업데이트
     this.updateScoreUI();
