@@ -245,6 +245,19 @@ export class PhysicsEngine {
           this.correctBallAngleIfNeeded(body);
         }
       }
+      for (const body of this.world.bodies) {
+        if (body.label === "ball" && !body.isSleeping) {
+          this.correctBallAngleIfNeeded(body);
+
+          if (body.position.y > 352) {
+            (body as any).started = false;
+            body.isSensor = true;
+          } else {
+            (body as any).started = true;
+            body.isSensor = false;
+          }
+        }
+      }
     });
   }
 

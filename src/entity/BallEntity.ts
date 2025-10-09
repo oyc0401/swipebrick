@@ -88,13 +88,7 @@ export class BallEntity extends ActiveEntity {
     if (this.registerToPhysics) {
       if (position.y > 352) {
         this.setVisible(false);
-        // (this.physicsComponent.body as any).started = false;
-        // this.physicsComponent.body.isSensor = true;
       } else {
-        // if (this.physicsComponent.body) {
-        //   (this.physicsComponent.body as any).started = true;
-        //   this.physicsComponent.body.isSensor = false;
-        // }
         this.setVisible(true);
       }
     }
