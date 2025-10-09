@@ -17,6 +17,8 @@ export class BallManager {
 
   private swipeBrick: SwipeBrick;
 
+  private targetReturnPosition: { x: number; y: number } | null = null;
+
   private onBallLanding?: BallLandingCallback;
 
   constructor(swipeBrick: SwipeBrick) {
@@ -41,6 +43,26 @@ export class BallManager {
       this.activeBalls.push(ball);
     }
   }
+
+  public setTargetReturnPosition(x: number, y: number): void {
+  this.targetReturnPosition = { x, y };
+}
+public getTargetReturnPosition(): { x: number; y: number } {
+  if (!this.targetReturnPosition) {
+    throw new Error("targetReturnPosition not set yet");
+  }
+  return this.targetReturnPosition;
+}
+
+
+
+
+
+public clearTargetReturnPosition(): void {
+  this.targetReturnPosition = null;
+}
+
+
 
   public launchBalls(
     angleDeg: number,
@@ -105,6 +127,10 @@ export class BallManager {
 
   public getActiveBallCount() {
     return this.activeBalls.length;
+  }
+
+  public getActiveBalls() : BallEntity[] {
+    return this.activeBalls;
   }
 
   public destroy(): void {

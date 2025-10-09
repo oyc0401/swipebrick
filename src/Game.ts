@@ -241,55 +241,73 @@ export class Game {
       }
     });
   }
+  
+private setupBallCallbacks(): void {
+  this.ballManager.onBallLanded(async (landedBall) => {
+    const position = landedBall.getPosition();
 
-  private setupBallCallbacks(): void {
-    this.ballManager.onBallLanded((landedBall) => {
-      // 첫 번째 공 착지 처리
-      if (!this.gameState.isBallLanded) {
-        this.gameState.setIsBallLanded(true);
-        const position = landedBall.getPosition();
-        this.swipeBrick.setBallStartX(position.x);
-        this.ballManager.showPreviewBall();
-        console.log(`First ball landed`);
-      }
+    // 첫 번째 공 착지 처리
+    if (!this.gameState.isBallLanded) {
+      this.gameState.setIsBallLanded(true);
 
-      // 모든 공 착지 완료 처리
-      if (this.ballManager.getActiveBallCount() === 1) {
-        // setTimeout은 30ms 후 자동 실행되어 브라우저에서 자동 정리됨 (메모리 누수 없음)
-        setTimeout(() => {
-          this.handleAllBallsLanded();
-        }, 30);
-      }
-    });
-  }
+      // 첫 번째 공 착지 위치를 목표 좌표로 저장
+      this.ballManager.setTargetReturnPosition(position.x, position.y);
 
-  private handleAllBallsLanded(): void {
-    this.gameState.setIsBallLanded(false);
-    this.swipeBrick.incrementLevel();
-    this.brickManager.shift();
-    this.brickManager.createBricks();
-    this.swipeBrick.endShot();
-
-    // UI 즉시 업데이트
-    this.updateScoreUI();
-
-    if (this.swipeBrick.isGameOver()) {
-      const shotDuration = Math.round(performance.now() - this.shotStartTime);
-      let level = this.swipeBrick.getLevel();
-      let secondText = fixed(shotDuration / 1000);
-      console.log(`Game over - Stage ${level} (${secondText} s)`);
-      this.onGameOver();
-      return;
+      // 미리보기 공 표시
+      this.ballManager.showPreviewBall();
+      console.log(`First ball landed at (${position.x}, ${position.y})`);
     }
 
-    // DB 업데이트 (비동기)
-    this.saveGameState();
+    // 모든 공을 목표 위치로 이동
+    await this.waitForAllBallsToReturn();
 
-    const shotDuration = Math.round(performance.now() - this.shotStartTime);
-    let level = this.swipeBrick.getLevel();
-    let secondText = fixed(shotDuration / 1000);
-    console.log(`Stage cleared - Stage ${level} started (${secondText} s)`);
-  }
+    // 이동 완료 후 게임 상태 처리 (한 번만 호출)
+    this.handleAllBallsLanded();
+  });
+}
+
+private async waitForAllBallsToReturn(): Promise<void> {
+  const activeBalls = this.ballManager.getActiveBalls();
+  const target = this.ballManager.getTargetReturnPosition();
+
+  // 모든 공을 동시에 Promise 기반 애니메이션으로 이동
+  await Promise.all(
+    activeBalls.map(ball =>
+      this.animateBallToStart(ball, target.x, target.y)
+    )
+  );
+}
+
+private animateBallToStart(ball, targetX: number, targetY: number): Promise<void> {
+  return new Promise(resolve => {
+    const duration = 300 + Math.random() * 200;
+    const start = ball.getPosition();
+    const startTime = performance.now();
+
+    const step = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = this.easeOutQuad(progress);
+
+      ball.setPosition(
+        start.x + (targetX - start.x) * eased,
+        start.y + (targetY - start.y) * eased
+      );
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        ball.setPosition(targetX, targetY);
+        resolve(); // 애니메이션 완료 신호
+      }
+    };
+
+    requestAnimationFrame(step);
+  });
+}
+
+private easeOutQuad(t: number): number {
+  return t * (2 - t);
+}
 
   private setupBrickCallbacks(): void {
     this.brickManager.onBrickCollision((brick) => {
