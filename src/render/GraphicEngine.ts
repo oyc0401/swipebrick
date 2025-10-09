@@ -1,4 +1,4 @@
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, Graphics, Ticker } from "pixi.js";
 import { EntityManager } from "../core/entity/EntityManager";
 import { LayerManager } from "./LayerManager";
 // @ts-ignore
@@ -30,7 +30,7 @@ export class GraphicEngine {
   private aimLine: Graphics | null = null;
   public shatterEffect: any = null; // ShatterEffect 인스턴스
   public shatterItemEffect: any = null; // ShatterItemEffect 인스턴스
-  private animationFrameId: number | null = null;
+  private ticker: Ticker | null = null;
 
   private constructor(gameWidth: number, gameHeight: number) {
     this.app = new Application();
@@ -85,13 +85,25 @@ export class GraphicEngine {
     this.shatterEffect = new ShatterEffect(
       this.app,
       this.layerManager.getGameViewport(),
-      { count: 20, color: theme.shatterColor.brick, width: 58, height: 38, size: 7 }
+      {
+        count: 20,
+        color: theme.shatterColor.brick,
+        width: 58,
+        height: 38,
+        size: 7,
+      }
     ); // 파편면적: 980, 사각형 면적: 2204
 
     this.shatterItemEffect = new ShatterEffect(
       this.app,
       this.layerManager.getGameViewport(),
-      { count: 20, color: theme.shatterColor.item, width: 26, height: 26, size: 5 }
+      {
+        count: 20,
+        color: theme.shatterColor.item,
+        width: 26,
+        height: 26,
+        size: 5,
+      }
     ); // 파편면적: 500, 사각형 면적: 676
 
     const endTime = performance.now();
@@ -160,6 +172,63 @@ export class GraphicEngine {
     if (!this.aimLine) {
       this.aimLine = new Graphics();
       this.layerManager.getGameViewport().addChildAt(this.aimLine, 0);
+    }
+
+    this.aimLine.zIndex = 2; // 최상단 보장
+    this.aimLine.clear();
+
+    // ===== 스타일 =====
+    const color = getTheme().arrowColor;
+    const lineWidth = 8;
+    const shaftLength = 80; // 화살표 몸통 길이
+    const headLength = 16; // 화살표 머리 길이
+    const headWidth = 16; // 화살표 머리 폭
+
+    // 방향 벡터
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    const angle = Math.atan2(dy, dx);
+    const ux = Math.cos(angle);
+    const uy = Math.sin(angle);
+
+    // 몸통 시작/끝 좌표
+    const shaftStartX = fromX;
+    const shaftStartY = fromY;
+    const shaftEndX = shaftStartX + ux * shaftLength;
+    const shaftEndY = shaftStartY + uy * shaftLength;
+
+    // 머리 좌표 계산
+    const tipX = shaftEndX + ux * headLength;
+    const tipY = shaftEndY + uy * headLength;
+    const leftX = shaftEndX - uy * (headWidth * 0.5);
+    const leftY = shaftEndY + ux * (headWidth * 0.5);
+    const rightX = shaftEndX + uy * (headWidth * 0.5);
+    const rightY = shaftEndY - ux * (headWidth * 0.5);
+
+    // ===== 그리기 =====
+    this.aimLine
+      // 몸통
+      .moveTo(shaftStartX, shaftStartY)
+      .lineTo(shaftEndX, shaftEndY)
+      .stroke({ width: lineWidth, color, alpha: 0.5 })
+
+      // 머리
+      .moveTo(tipX, tipY)
+      .lineTo(leftX, leftY)
+      .lineTo(rightX, rightY)
+      .closePath()
+      .fill({ color, alpha: 0.5 });
+  }
+
+  public drawAimLine2(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number
+  ): void {
+    if (!this.aimLine) {
+      this.aimLine = new Graphics();
+      this.layerManager.getGameViewport().addChild(this.aimLine);
     }
 
     this.aimLine.clear();
@@ -293,24 +362,23 @@ export class GraphicEngine {
   }
 
   public startLoop(): void {
-    const renderLoop = () => {
-      // 모든 MovingEntity 업데이트
-      EntityManager.forEach((entity) => {
-        entity.updateGraphics();
-      });
+    this.ticker = Ticker.shared;
 
-      this.animationFrameId = requestAnimationFrame(renderLoop);
-    };
-
-    this.animationFrameId = requestAnimationFrame(renderLoop);
+    this.ticker.add(this.update, this);
+    this.ticker.start();
   }
+
+  private update = () => {
+    // 모든 MovingEntity 업데이트
+    EntityManager.forEach((entity) => {
+      entity.updateGraphics();
+    });
+  };
 
   private destroy(): void {
     // 애니메이션 프레임 정리
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
+    this.ticker?.remove(this.update, this);
+    this.ticker?.stop();
 
     // Graphics 객체들 먼저 정리 (LayerManager 전에)
     if (this.debugGuide) {

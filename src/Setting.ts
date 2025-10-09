@@ -14,6 +14,7 @@ let theme = {
     brick: 0x83b4f9,
     item: 0xffb433,
   },
+  arrowColor: 0x83b4f9,
 };
 
 export function getTheme() {

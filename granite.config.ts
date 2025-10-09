@@ -9,7 +9,7 @@ export default defineConfig({
     bridgeColorMode: "inverted",
   },
   web: {
-    host: "192.168.219.108", // 본인 컴퓨터 IP 적기
+    host: "192.168.200.102", // 본인 컴퓨터 IP 적기
     port: 5173,
     commands: {
       dev: "vite --host",

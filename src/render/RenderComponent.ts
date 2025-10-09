@@ -72,6 +72,8 @@ export class CircleRenderComponent extends RenderComponent {
     this.color = color;
     this.sprite = this.createCircleSprite();
     this.container.addChild(this.sprite);
+
+    this.container.zIndex = 3;
   }
 
   private createCircleSprite(): Sprite {
@@ -164,6 +166,8 @@ export class RoundedRectangleRenderComponent extends RenderComponent {
     this.innerMargin = innerMargin;
     this.borderRadius = borderRadius;
     this.createRoundedRectangle();
+
+    this.container.zIndex = 1;
   }
 
   private createRoundedRectangle(): void {
@@ -269,6 +273,8 @@ export class ItemRenderComponent extends RenderComponent {
     this.updateHandler = () => this.updateAnimation();
     const graphicEngine = GraphicEngine.getInstance();
     graphicEngine.getApp().ticker.add(this.updateHandler);
+
+    this.container.zIndex = 1;
   }
 
   public updateAnimation(): void {

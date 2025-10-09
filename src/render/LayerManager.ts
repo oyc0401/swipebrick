@@ -32,6 +32,8 @@ export class LayerManager {
   }
 
   public setupLayers(stage: Container): void {
+    this.gameViewport.sortableChildren = true;
+
     // 중앙 고정 레이어
     this.centerLayer.pivot.set(this.gameWidth / 2, this.gameWidth / 2);
 
