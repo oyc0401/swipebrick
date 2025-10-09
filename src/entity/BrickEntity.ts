@@ -103,7 +103,7 @@ export class BrickEntity extends Entity {
     return (r << 16) | (g << 8) | b;
   }
 
-  public shift(amount: number): void {
+  public shift(amount: number = 40): void {
     // 현재 위치 가져오기
     const currentPos = this.physicsComponent.getPosition();
     const newY = currentPos.y + amount;
@@ -112,7 +112,12 @@ export class BrickEntity extends Entity {
     this.physicsComponent.setPosition(currentPos.x, newY);
 
     // 렌더링 위치 동기화
-    this.renderComponent.setPosition(currentPos.x, newY);
+    // this.renderComponent.setPosition(currentPos.x, newY);
+
+    (this.renderComponent as RoundedRectangleRenderComponent).shift(
+      currentPos.x,
+      newY
+    );
   }
 
   public destroy(): void {

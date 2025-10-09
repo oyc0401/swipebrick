@@ -1,4 +1,12 @@
-import { Graphics, Container, Text, TextStyle, Sprite, Texture, Ticker } from "pixi.js";
+import {
+  Graphics,
+  Container,
+  Text,
+  TextStyle,
+  Sprite,
+  Texture,
+  Ticker,
+} from "pixi.js";
 import type { IRenderComponent } from "../core/components/IComponent";
 import { GraphicEngine } from "./GraphicEngine";
 import { easeOutBackMove } from "./BounceEffect";
@@ -195,16 +203,14 @@ export class RoundedRectangleRenderComponent extends RenderComponent {
       this.updateHealthText(currentHealth);
     }
   }
-public setPosition(x: number, newY: number): void {
-  if (this.container && !this.container.destroyed) {
+
+  public shift(x: number, newY: number): void {
+    if (this.container && !this.container.destroyed) {
       this.container.x = x;
-      this.container.y = newY;
-      easeOutBackMove(this.container, x, newY);
+      // this.container.y = newY;
+      easeOutBackMove(this.container, this.container.y, newY);
     }
-  
-}
-
-
+  }
 
   public updateHealthText(health: number): void {
     // 기존 텍스트 제거
@@ -290,6 +296,14 @@ export class ItemRenderComponent extends RenderComponent {
     // 내부 원 (가득찬 원) - 고정 크기
     this.graphics.circle(0, 0, 8);
     this.graphics.fill({ color: this.color });
+  }
+
+  public shift(x: number, newY: number): void {
+    if (this.container && !this.container.destroyed) {
+      this.container.x = x;
+      // this.container.y = newY;
+      easeOutBackMove(this.container, this.container.y, newY);
+    }
   }
 
   public destroy(): void {

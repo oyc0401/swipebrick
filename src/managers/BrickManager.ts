@@ -52,15 +52,17 @@ export class BrickManager {
     elements.forEach((element, index) => {
       if (element !== null) {
         const x = index * BRICK_WIDTH + BRICK_WIDTH / 2;
-        const y = BRICK_Y + 20; // yOffset으로 행 위치 조정
+        const y = 20; // yOffset으로 행 위치 조정
 
         if (element.type === "brick") {
           // CRITICAL: SwipeBrick의 ID를 BrickEntity에 전달하여 동기화
           const brick = new BrickEntity(element.id, { x, y }, element.health);
+          brick.shift(40);
           this.brickEntities.set(brick.id, brick);
         } else if (element.type === "item") {
           // CRITICAL: SwipeBrick의 ID를 ItemEntity에 전달하여 동기화
           const item = new ItemEntity(element.id, { x, y });
+          item.shift(40);
           this.itemEntities.set(item.id, item);
         }
       }

@@ -27,7 +27,7 @@ export class ItemEntity extends Entity {
     return this.physicsComponent.getBody();
   }
 
-  public shift(amount: number): void {
+  public shift(amount: number = 40): void {
     // 현재 위치 가져오기
     const currentPos = this.physicsComponent.getPosition();
     const newY = currentPos.y + amount;
@@ -36,7 +36,7 @@ export class ItemEntity extends Entity {
     this.physicsComponent.setPosition(currentPos.x, newY);
 
     // 렌더링 위치 동기화
-    this.renderComponent.setPosition(currentPos.x, newY);
+    (this.renderComponent as ItemRenderComponent).shift(currentPos.x, newY);
   }
 
   public updateGraphics(): void {
