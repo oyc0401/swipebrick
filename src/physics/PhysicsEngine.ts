@@ -14,14 +14,6 @@ export class PhysicsEngine {
   private brickCollisionCallbacks: Array<(brickBody: Matter.Body) => void> = [];
   private bottomCollisionCallbacks: Array<(ballBody: Matter.Body) => void> = [];
 
-  // 시간 기반 공 발사 시스템
-  private ballLaunchQueue: Array<{
-    ballBody: Matter.Body;
-    targetAngle: number;
-    speed: number;
-    expectedLaunchTime: number;
-  }> = [];
-
   private constructor() {
     this.engine = Engine.create();
     this.world = this.engine.world;
@@ -101,6 +93,8 @@ export class PhysicsEngine {
     if (!isBallBottomCollision) return;
 
     const ballBody = bodyA.label === "ball" ? bodyA : bodyB;
+
+    if (!(ballBody as any).started) return;
 
     // 공을 바닥에 딱 붙여서 위치 조정
     const ballRadius = BALL_RADIUS;
@@ -245,9 +239,6 @@ export class PhysicsEngine {
 
   private setupAfterUpdateEvents(): void {
     Events.on(this.engine, "afterUpdate", () => {
-      // 발사 대기 중인 공들 처리
-      this.processBallLaunchQueue();
-
       // 모든 공들의 각도 후처리
       for (const body of this.world.bodies) {
         if (body.label === "ball" && !body.isSleeping) {
@@ -355,75 +346,6 @@ export class PhysicsEngine {
     this.bottomCollisionCallbacks.push(callback);
   }
 
-  // 시간 기반 공 발사 스케줄링
-  public scheduleBallLaunch(
-    ballBody: Matter.Body,
-    targetAngle: number,
-    speed: number,
-    delayMs: number
-  ): void {
-    const expectedLaunchTime = performance.now() + delayMs;
-
-    this.ballLaunchQueue.push({
-      ballBody,
-      targetAngle,
-      speed,
-      expectedLaunchTime,
-    });
-  }
-
-  private processBallLaunchQueue(): void {
-    const currentTime = performance.now();
-    const readyToLaunch = this.ballLaunchQueue.filter(
-      (item) => currentTime >= item.expectedLaunchTime
-    );
-
-    readyToLaunch.forEach((item) => {
-      if (item.ballBody.isSleeping) {
-        Sleeping.set(item.ballBody, false);
-      }
-
-      const angleRad = (-item.targetAngle * Math.PI) / 180;
-      const unitX = Math.cos(angleRad);
-      const unitY = Math.sin(angleRad);
-
-      // 타이밍 오차 계산 및 위치 보정
-      const actualLaunchTime = performance.now();
-      const timingError = actualLaunchTime - item.expectedLaunchTime;
-
-      if (Math.abs(timingError) > 0) {
-        const timingErrorSeconds = timingError / 1000;
-        const physicsSpeed = item.speed * (1000 / 60); // pixels per second
-        const compensationDistance = physicsSpeed * timingErrorSeconds;
-
-        const currentPos = item.ballBody.position;
-        const correctedX = currentPos.x + unitX * compensationDistance;
-        const correctedY = currentPos.y + unitY * compensationDistance;
-        // console.log(compensationDistance);
-
-        Body.setPosition(item.ballBody, { x: correctedX, y: correctedY });
-      }
-
-      // 속도 부여
-      const vx = unitX * item.speed;
-      const vy = unitY * item.speed;
-      Body.setVelocity(item.ballBody, { x: vx, y: vy });
-
-      // console.log(
-      //   `Ball ${item.ballBody.id}: expected=${item.expectedLaunchTime.toFixed(
-      //     0
-      //   )}ms actual=${actualLaunchTime.toFixed(
-      //     0
-      //   )}ms error=${timingError.toFixed(1)}ms`
-      // );
-    });
-
-    // 발사된 공들을 큐에서 제거
-    this.ballLaunchQueue = this.ballLaunchQueue.filter(
-      (item) => currentTime < item.expectedLaunchTime
-    );
-  }
-
   public destroy(): void {
     // 이벤트 리스너 제거
     Events.off(this.engine, "beforeUpdate");
@@ -431,6 +353,5 @@ export class PhysicsEngine {
     Events.off(this.engine, "afterUpdate");
     this.brickCollisionCallbacks = [];
     this.bottomCollisionCallbacks = [];
-    this.ballLaunchQueue = [];
   }
 }

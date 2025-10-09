@@ -11,7 +11,6 @@ interface BoundaryConfig {
   label: string;
 }
 
-
 export class BoundaryManager {
   private boundaries: Map<string, GameBoundary> = new Map();
   private gameWidth: number;

@@ -1,4 +1,4 @@
-import { Body, Bodies } from "matter-js";
+import { Body, Bodies, Sleeping } from "matter-js";
 import type { IPhysicsComponent } from "../core/components/IComponent";
 import { PhysicsEngine } from "./PhysicsEngine";
 import { BALL_SPEED } from "../Setting";
@@ -54,6 +54,7 @@ export class BallPhysicsComponent extends MatterJSComponent {
       frictionAir: 0,
       frictionStatic: 0,
       inertia: Infinity,
+      isSensor: true,
       slop: 0.0,
       label: "ball",
       collisionFilter: {
@@ -67,13 +68,44 @@ export class BallPhysicsComponent extends MatterJSComponent {
   }
 
   public moveAtAngle(angleDeg: number, delayMs: number): void {
-    // 각도를 직접 사용해서 발사
-    PhysicsEngine.getInstance().scheduleBallLaunch(
-      this.body,
-      angleDeg,
-      BALL_SPEED,
-      delayMs
-    );
+    // delayMs를 거리로 변환하여 뒤에서 시작
+    const delayDistance = BALL_SPEED * (delayMs / 100) * 8;
+
+    // 발사 각도의 반대 방향으로 delayDistance만큼 뒤에서 시작
+    const angleRad = (-angleDeg * Math.PI) / 180; // PixiJS 좌표계에 맞춤
+    const startX = this.body.position.x - Math.cos(angleRad) * delayDistance;
+    const startY = this.body.position.y - Math.sin(angleRad) * delayDistance;
+
+    // 새 위치로 이동
+    Body.setPosition(this.body, { x: startX, y: startY });
+
+    // 즉시 발사
+    this.launchImmediately(angleDeg, BALL_SPEED);
+
+    // 일정 시간 후 body.start = true 설정
+    this.body.isSensor = true;
+
+    // setTimeout(() => {
+    //   (this.body as any).started = true;
+    //   this.body.isSensor = false;
+    //   console.log("변화");
+    // }, delayMs * 2 + 10);
+  }
+
+  private launchImmediately(targetAngle: number, speed: number): void {
+    if (this.body.isSleeping) {
+      Sleeping.set(this.body, false);
+    }
+
+    const angleRad = (-targetAngle * Math.PI) / 180;
+    const unitX = Math.cos(angleRad);
+    const unitY = Math.sin(angleRad);
+
+    // 즉시 속도 적용
+    Body.setVelocity(this.body, {
+      x: unitX * speed,
+      y: unitY * speed,
+    });
   }
 }
 
