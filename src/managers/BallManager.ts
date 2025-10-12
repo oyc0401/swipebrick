@@ -4,6 +4,7 @@ import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
 import type { SwipeBrick } from "../SwipeBrick";
 import { getNextId } from "../utils/IdGenerator";
+import { useGameStore } from "../stores/gameStore";
 
 export class BallManager {
   private activeBalls: BallEntity[] = [];
@@ -93,7 +94,17 @@ export class BallManager {
 
       this.activeBalls.push(ball);
     }
+    useGameStore.getState().setBallCount(count);
   }
+
+
+  public update(): void {
+  this.activeBalls.forEach(ball => ball.updateGraphics());
+  
+  const hiddenBalls = this.activeBalls.filter(ball => !ball.isVisible()).length;
+
+  useGameStore.getState().setBallCount(hiddenBalls);
+}
 
   public launchBalls(angleDeg: number): void {
     this.activeBalls.forEach((ball, index) => {
