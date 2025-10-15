@@ -23,3 +23,10 @@ export function isTossApp(): boolean {
     return false;
   }
 }
+
+/**
+ * 안드로이드 WebView에서 실행 중인지 확인
+ */
+export function isAndroidWebView(): boolean {
+  return typeof (window as any).AndroidBridge !== "undefined";
+}
