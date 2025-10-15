@@ -5,7 +5,7 @@ import { GameUI } from "./components/GameUI";
 
 import { getSafeAreaInsets } from "@apps-in-toss/web-framework";
 
-import { isTossApp } from "./utils/platform";
+import { isTossApp, isAndroidWebView } from "./utils/platform";
 import { initializeI18n } from "./utils/i18n";
 
 async function loadFonts(): Promise<void> {
@@ -56,10 +56,24 @@ async function initializeApp() {
   // 폰트 미리 로드
   await loadFonts();
 
-  if (isTossApp()) {
+  const container = document.getElementById("safe-area-wrap");
+
+  if (isAndroidWebView()) {
+    // 안드로이드 WebView: SafeArea 값을 AndroidBridge에서 전달받음
+    const safeAreaTop = (window as any).safeAreaTop || 0;
+    const safeAreaBottom = (window as any).safeAreaBottom || 0;
+
+    if (container) {
+      container.style.paddingTop = `${safeAreaTop}px`;
+      container.style.paddingBottom = `${safeAreaBottom}px`;
+    }
+
+    console.log("Platform: Android WebView");
+    console.log(`SafeArea - Top: ${safeAreaTop}px, Bottom: ${safeAreaBottom}px`);
+  } else if (isTossApp()) {
+    // Toss 앱: getSafeAreaInsets 사용
     const insets = getSafeAreaInsets();
 
-    const container = document.getElementById("safe-area-wrap");
     if (container) {
       container.style.paddingTop = `${insets.top}px`;
       container.style.paddingBottom = `${insets.bottom}px`;
