@@ -6,10 +6,10 @@ import { isTossApp } from "../utils/platform";
 
 export class ScoreRepositoryFactory {
   static create(): IScoreRepository {
-    // // 1. 안드로이드 WebView 확인
-    // if (typeof (window as any).AndroidBridge !== "undefined") {
-    //   return new AndroidWebViewRepository();
-    // }
+    // 1. 안드로이드 WebView 확인
+    if (typeof (window as any).AndroidBridge !== "undefined") {
+      return new AndroidWebViewRepository();
+    }
 
     // 2. Toss 앱 확인
     if (isTossApp()) {
