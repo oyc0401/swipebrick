@@ -30,14 +30,14 @@ export function GameOverDialog() {
             {"게임을 재도전하세요!"}
           </ConfirmDialogDummy.Description>
         }
-        cancelButton={
-          <ConfirmDialogDummy.CancelButton onClick={handleCancel}>
-            다시하기
-          </ConfirmDialogDummy.CancelButton>
-        }
+        // cancelButton={
+        //   <ConfirmDialogDummy.CancelButton onClick={handleCancel}>
+        //     다시하기
+        //   </ConfirmDialogDummy.CancelButton>
+        // }
         confirmButton={
-          <ConfirmDialogDummy.ConfirmButton onClick={handleConfirm}>
-            공유하기
+          <ConfirmDialogDummy.ConfirmButton onClick={handleCancel}>
+            다시하기
           </ConfirmDialogDummy.ConfirmButton>
         }
         onClose={handleCancel}

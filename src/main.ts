@@ -60,8 +60,9 @@ async function initializeApp() {
 
   if (isAndroidWebView()) {
     // 안드로이드 WebView: SafeArea 값을 AndroidBridge에서 전달받음
-    const safeAreaTop = (window as any).safeAreaTop || 0;
-    const safeAreaBottom = (window as any).safeAreaBottom || 0;
+    const safeAreaTop = (window as any).AndroidBridge.getSafeAreaTop() || 0;
+    const safeAreaBottom =
+      (window as any).AndroidBridge.getSafeAreaBottom() || 0;
 
     if (container) {
       container.style.paddingTop = `${safeAreaTop}px`;
@@ -101,3 +102,22 @@ if (uiElement) {
 }
 
 export const game = new Game().init();
+
+// // FPS 측정 변수
+// let frames = 0;
+// let lastFpsUpdateTime = performance.now();
+
+// function dod() {
+//   requestAnimationFrame(() => {
+//     frames++;
+//     const now = performance.now();
+//     if (now - lastFpsUpdateTime >= 1000) {
+//       const fps = Math.round((frames * 1000) / (now - lastFpsUpdateTime));
+//       console.log(`FPS: ${fps}`);
+//       frames = 0;
+//       lastFpsUpdateTime = now;
+//     }
+//     dod();
+//   });
+// }
+// dod();
