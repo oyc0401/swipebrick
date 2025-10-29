@@ -256,7 +256,7 @@ export class PhysicsEngine {
             if (!(body as any).started) {
               (body as any).started = true;
               body.isSensor = false;
-              console.log("출발");
+
               this.ballLanchedCallbacks.forEach((callback) => callback());
 
               // 그리고 이 공이 마지막 공일 때
