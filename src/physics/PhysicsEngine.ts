@@ -14,6 +14,7 @@ export class PhysicsEngine {
   private brickCollisionCallbacks: Array<(brickBody: Matter.Body) => void> = [];
   private bottomCollisionCallbacks: Array<(ballBody: Matter.Body) => void> = [];
   private allBallsLaunchedCallbacks: Array<() => void> = [];
+  private ballLanchedCallbacks: Array<() => void> = [];
 
   private constructor() {
     this.engine = Engine.create();
@@ -252,15 +253,21 @@ export class PhysicsEngine {
           if (body.position.y < 352) {
             // 공이 막 출발선을 넘었을 때 (y < 352)
 
-            // 그리고 이 공이 마지막 공일 때
-            if ((body as any).isLast) {
-              this.allBallsLaunchedCallbacks.forEach((callback) => callback());
-              // 콜백이 여러번 호출되지 않도록 isLast를 false로 변경
-              (body as any).isLast = false;
-            }
+            if (!(body as any).started) {
+              (body as any).started = true;
+              body.isSensor = false;
+              console.log("출발");
+              this.ballLanchedCallbacks.forEach((callback) => callback());
 
-            (body as any).started = true;
-            body.isSensor = false;
+              // 그리고 이 공이 마지막 공일 때
+              if ((body as any).isLast) {
+                this.allBallsLaunchedCallbacks.forEach((callback) =>
+                  callback()
+                );
+                // 콜백이 여러번 호출되지 않도록 isLast를 false로 변경
+                (body as any).isLast = false;
+              }
+            }
           } else {
             (body as any).started = false;
             body.isSensor = true;
@@ -371,6 +378,9 @@ export class PhysicsEngine {
   public onAllBallsLaunched(callback: () => void): void {
     this.allBallsLaunchedCallbacks.push(callback);
   }
+  public onBallLaunched(callback: () => void): void {
+    this.ballLanchedCallbacks.push(callback);
+  }
 
   public destroy(): void {
     // 이벤트 리스너 제거
@@ -380,5 +390,6 @@ export class PhysicsEngine {
     this.brickCollisionCallbacks = [];
     this.bottomCollisionCallbacks = [];
     this.allBallsLaunchedCallbacks = [];
+    this.ballLanchedCallbacks = [];
   }
 }

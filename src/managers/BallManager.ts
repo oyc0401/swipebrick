@@ -15,6 +15,7 @@ export class BallManager {
   private onBallLandedCallbacks: Array<(landedBall: BallEntity) => void> = [];
   private onAllBallsSettledCallbacks: Array<() => void> = [];
   private onAllBallsLaunchedCallbacks: Array<() => void> = [];
+  private onBallLaunchedCallbacks: Array<() => void> = [];
 
   private landedBallAnimationPromises: Promise<void>[] = [];
 
@@ -36,6 +37,9 @@ export class BallManager {
   public onAllBallsLaunched(callback: () => void): void {
     this.onAllBallsLaunchedCallbacks.push(callback);
   }
+  public onBallLaunched(callback: () => void): void {
+    this.onBallLaunchedCallbacks.push(callback);
+  }
 
   // ===== Event Handlers =====
 
@@ -48,6 +52,10 @@ export class BallManager {
 
     physicsEngine.onAllBallsLaunched(() => {
       this.onAllBallsLaunchedCallbacks.forEach((cb) => cb());
+    });
+
+    physicsEngine.onBallLaunched(() => {
+      this.onBallLaunchedCallbacks.forEach((cb) => cb());
     });
   }
 
@@ -182,6 +190,6 @@ export class BallManager {
     this.activeBalls = [];
     this.onBallLandedCallbacks = [];
     this.onAllBallsLaunchedCallbacks = [];
-    this.onAllBallsLaunchedCallbacks = [];
+    this.onBallLaunchedCallbacks = [];
   }
 }
