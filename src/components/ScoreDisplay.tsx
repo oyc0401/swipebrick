@@ -36,11 +36,11 @@ export function ScoreDisplay() {
           typography="st7"
           fontWeight="bold"
           style={{ margin: "3px" }}
-          color={score === bestScore ? colors.blue500 : colors.grey700}
+          color={score >= bestScore ? colors.blue500 : colors.grey700}
         >
-          <Paragraph.Text style={{ marginBottom: "8px" }}>{`${t(
-            "score.best"
-          )}: ${bestScore}`}</Paragraph.Text>
+          <Paragraph.Text style={{ marginBottom: "8px" }}>
+            {t("score.best")}: {score > bestScore ? score : bestScore}
+          </Paragraph.Text>
         </Paragraph>
         <Paragraph
           typography="st7"
@@ -48,9 +48,9 @@ export function ScoreDisplay() {
           style={{ margin: "3px" }}
           color={colors.grey700}
         >
-          <Paragraph.Text typography="st7">{`${t(
-            "score.current"
-          )}: ${score}`}</Paragraph.Text>
+          <Paragraph.Text typography="st7">
+            {`${t("score.current")}: ${score}`}
+          </Paragraph.Text>
         </Paragraph>
       </div>
     );

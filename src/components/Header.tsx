@@ -5,6 +5,7 @@ import { ScoreDisplay } from "./ScoreDisplay";
 import storeIcon from "/store_icon.svg";
 import settingIcon from "/setting_icon.svg";
 import rankIcon from "/rank_icon.svg";
+import { isTossApp } from "../utils/platform";
 
 const headerWrapperStyle = css`
   display: flex;
@@ -59,11 +60,13 @@ export function Header() {
           <ScoreDisplay />
 
           <div css={rightButtonGroupStyle}>
-            <IconButton
-              iconSrc={rankIcon}
-              iconAlt="Ranking"
-              onClick={() => console.log("Ranking button clicked")}
-            />
+            {isTossApp() && (
+              <IconButton
+                iconSrc={rankIcon}
+                iconAlt="Ranking"
+                onClick={() => console.log("Ranking button clicked")}
+              />
+            )}
           </div>
         </div>
       </div>

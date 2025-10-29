@@ -138,22 +138,22 @@ export class InputManager {
     // 각도를 0-360 범위로 정규화
     if (angle < 0) angle += 360;
 
-    // 유효한 각도 범위 확인 (30도~150도)
+    // 유효한 각도 범위 확인 (10도~170도)
     if (angle < this.MIN_ANGLE || angle > this.MAX_ANGLE) {
       // 가장 가까운 유효 각도로 클램핑
       let clampedAngle: number;
 
       if (angle < this.MIN_ANGLE) {
-        // 30도 미만이면 30도로
+        // 10도 미만이면 10도로
         clampedAngle = this.MIN_ANGLE;
       } else if (angle > this.MAX_ANGLE && angle <= 180) {
-        // 150도 초과 180도 이하면 150도로
+        // 170도 초과 180도 이하면 170도로
         clampedAngle = this.MAX_ANGLE;
-      } else if (angle > 180 && angle < 360 - this.MIN_ANGLE) {
-        // 180도 초과 330도 미만이면 150도로 (더 가까운 쪽)
+      } else if (angle > 180 && angle < 270) {
+        // 180도 초과 270도 미만이면 170도로 (더 가까운 쪽)
         clampedAngle = this.MAX_ANGLE;
       } else {
-        // 330도 이상이면 30도로 (더 가까운 쪽)
+        // 270도 이상이면 10도로 (더 가까운 쪽)
         clampedAngle = this.MIN_ANGLE;
       }
 
@@ -165,6 +165,8 @@ export class InputManager {
       // 제한된 각도로 새로운 좌표 계산
       const newX = ballX + Math.cos(clampedAngleRad) * distance;
       const newY = ballY - Math.sin(clampedAngleRad) * distance;
+
+      console.log(clampedAngle, angle);
 
       return { x: newX, y: newY, angle: clampedAngle };
     }
