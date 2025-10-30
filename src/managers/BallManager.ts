@@ -104,7 +104,7 @@ export class BallManager {
 
       this.activeBalls.push(ball);
     }
-    useGameStore.getState().setBallCount(count);
+    // useGameStore.getState().setBallCount(count);
   }
 
 
