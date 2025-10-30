@@ -26,8 +26,8 @@ export function easeOutBackMove(
   container: Container,
   fromY: number,
   toY: number,
-  duration = 300,
-  overshoot = 3
+  duration = 350,
+  overshoot = 2
 ) {
   if (!container || container.destroyed) return;
 
