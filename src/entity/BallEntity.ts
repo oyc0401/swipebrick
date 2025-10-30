@@ -78,14 +78,7 @@ export class BallEntity extends ActiveEntity {
   }
 
   public setVisible(visible: boolean): void {
-    this.visible = visible;
     this.renderComponent.setVisible(visible);
-  }
-
-  private visible: boolean = false; //처음에는 false
-
-  public isVisible(): boolean {
-    return this.visible; // visible 상태 확인
   }
 
   public updateGraphics(): void {

@@ -20,7 +20,7 @@ const bottomSpacerStyle = css`
 
 export const GameUI = () => {
   const onPointerDown = useGameStore((state) => state.onPointerDown);
-   const ballCount = useGameStore(state => state.ballCount);
+   const numBalls = useGameStore(state => state.numBalls);
 
   useEffect(() => {
     console.log("React render complete");
@@ -47,7 +47,7 @@ export const GameUI = () => {
       transform: translate(-50%, -50%);
     `}
   >
-    {ballCount}
+    {numBalls}
   </p>
         {/* 게임 영역 - 투명하게 유지 */}
       </div>

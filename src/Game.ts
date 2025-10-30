@@ -213,15 +213,6 @@ export class Game {
   private startGameLoop(): void {
     this.physics.startLoop();
     this.renderer.startLoop();
-
-  // BallManager 업데이트 등록
-  const ticker = new Ticker();
-  ticker.add(() => {
-    if (this.swipeBrick.getIsRunning()) {
-    this.ballManager.update();
-    }
-  });
-  ticker.start();
   }
 
   private setupEventCallbacks(): void {
