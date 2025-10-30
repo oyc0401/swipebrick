@@ -94,17 +94,17 @@ export class BallEntity extends ActiveEntity {
       } else {
         this.setVisible(true);
 
-        this.positions.push(this.getPosition());
+        this.positions.unshift(this.getPosition());
 
-        if (this.positions.length > 10) {
-          this.positions.shift();
+        if (this.positions.length > 20) {
+          this.positions.pop();
         }
 
-        if (this.id == "ball-0") {
-          (this.renderComponent as CircleRenderComponent).drawTails(
-            this.positions
-          );
-        }
+        // if (this.id == "ball-0") {
+        (this.renderComponent as CircleRenderComponent).drawTails(
+          this.positions
+        );
+        // }
       }
     }
     // console.log(this.id, this.getPosition());

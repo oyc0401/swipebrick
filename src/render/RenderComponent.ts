@@ -128,18 +128,87 @@ export class CircleRenderComponent extends RenderComponent {
 
   drawTails(points: { x: number; y: number }[]) {
     this.tailGraphics.clear();
+    if (points.length < 2) {
+      return;
+    }
 
-    if (points.length > 1) {
-      this.tailGraphics.moveTo(points[0].x, points[0].y);
+    // for (let i = 0; i < points.length - 1; i++) {
+    //   const p = points[i];
+    //   // 모던 API: 각 서클마다 개별 fill 적용
+    //   this.tailGraphics.circle(p.x, p.y, 1).fill({ color: 0xff0000 });
+    // }
 
-      for (let i = 1; i < points.length; i++) {
-        this.tailGraphics.lineTo(points[i].x, points[i].y);
+    let vectors = [];
+    let length = points.length;
+
+    vectors.push({
+      x: points[1].x - points[0].x,
+      y: points[1].y - points[0].y,
+    });
+
+    for (let i = 1; i < points.length - 1; i++) {
+      vectors.push({
+        x: points[i + 1].x - points[i - 1].x,
+        y: points[i + 1].y - points[i - 1].y,
+      });
+    }
+
+    // console.log(vectors);
+
+    const radius = 8;
+
+    let lastP1, lastP2;
+    let polygons: {
+      x: number;
+      y: number;
+    }[][] = [];
+
+    for (let i = 0; i < vectors.length; i++) {
+      let percent = 1 - i / (vectors.length - 1);
+      let point = points[i];
+      let vector = vectors[i];
+      let len = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+      let unit = { x: vector.x / len, y: vector.y / len };
+
+      let perpendicular = { x: -unit.y, y: unit.x };
+
+      let p1 = {
+        x: point.x + perpendicular.x * percent * radius,
+        y: point.y + perpendicular.y * percent * radius,
+      };
+
+      let perpendicular2 = { x: unit.y, y: -unit.x };
+
+      let p2 = {
+        x: point.x + perpendicular2.x * percent * radius,
+        y: point.y + perpendicular2.y * percent * radius,
+      };
+
+      if (lastP1) {
+        polygons.push([lastP1!, p1, p2, lastP2!]);
+      }
+      lastP1 = p1;
+      lastP2 = p2;
+    }
+
+    polygons.push([lastP1!, points[length - 1], lastP2!]);
+
+    // pixijs에서 fill할때 다각형이 겹쳐있으면 오류남.. 나도 알고싶지 않았음..
+    for (let polygon of polygons) {
+      this.tailGraphics.beginPath();
+
+      this.tailGraphics.moveTo(polygon[0].x, polygon[0].y);
+
+      for (let i = 1; i < polygon.length; i++) {
+        let p = polygon[i];
+        this.tailGraphics.lineTo(p.x, p.y);
       }
 
-      this.tailGraphics.stroke({
-        width: 6,
-        color: 0x73f5fe,
-        alpha: 1,
+      this.tailGraphics.closePath();
+
+      this.tailGraphics.fill({
+        color: 0xdcfdff,
+        alpha: 0.7,
       });
     }
   }
