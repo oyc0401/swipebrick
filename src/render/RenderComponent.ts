@@ -74,6 +74,11 @@ export class CircleRenderComponent extends RenderComponent {
     this.container.addChild(this.sprite);
 
     this.container.zIndex = 3;
+
+    // tailGrapics 초기화
+    this.tailGraphics = new Graphics();
+    this.tailGraphics.zIndex = 2; // 공보다 아래, 벽돌보다 위에 렌더링
+    GraphicEngine.getInstance().getGameViewport().addChild(this.tailGraphics);
   }
 
   private createCircleSprite(): Sprite {
@@ -103,6 +108,12 @@ export class CircleRenderComponent extends RenderComponent {
     if (this.sprite) {
       this.sprite.destroy();
     }
+
+    GraphicEngine.getInstance()
+      .getGameViewport()
+      .removeChild(this.tailGraphics);
+    this.tailGraphics.destroy();
+
     super.destroy();
   }
 
@@ -111,6 +122,26 @@ export class CircleRenderComponent extends RenderComponent {
       texture.destroy(true);
     }
     CircleRenderComponent.textureCache.clear();
+  }
+
+  tailGraphics: Graphics;
+
+  drawTails(points: { x: number; y: number }[]) {
+    this.tailGraphics.clear();
+
+    if (points.length > 1) {
+      this.tailGraphics.moveTo(points[0].x, points[0].y);
+
+      for (let i = 1; i < points.length; i++) {
+        this.tailGraphics.lineTo(points[i].x, points[i].y);
+      }
+
+      this.tailGraphics.stroke({
+        width: 6,
+        color: 0x73f5fe,
+        alpha: 1,
+      });
+    }
   }
 }
 

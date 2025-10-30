@@ -95,7 +95,7 @@ export class BallManager {
         x: ballStartX,
         y: GAME_HEIGHT - BALL_RADIUS,
       };
-      const ball = new BallEntity(`ball-${getNextId()}`, ballStartPosition);
+      const ball = new BallEntity(`ball-${i}`, ballStartPosition);
 
       if (i === count - 1) {
         (ball.getPhysicsBody() as any).isLast = true;

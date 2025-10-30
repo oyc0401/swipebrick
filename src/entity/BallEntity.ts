@@ -11,6 +11,8 @@ export class BallEntity extends ActiveEntity {
   private color: number = getTheme().ballColor;
 
   private registerToPhysics: boolean;
+
+  private positions: any[] = [];
   constructor(
     id: string,
     position: Position,
@@ -91,8 +93,21 @@ export class BallEntity extends ActiveEntity {
         this.setVisible(false);
       } else {
         this.setVisible(true);
+
+        this.positions.push(this.getPosition());
+
+        if (this.positions.length > 10) {
+          this.positions.shift();
+        }
+
+        if (this.id == "ball-0") {
+          (this.renderComponent as CircleRenderComponent).drawTails(
+            this.positions
+          );
+        }
       }
     }
+    // console.log(this.id, this.getPosition());
   }
 
   public moveTo(targetX: number): Promise<void> {
