@@ -346,6 +346,18 @@ export class RoundedRectangleRenderComponent extends RenderComponent {
     this.container.addChild(this.healthText);
   }
 
+  public hitEffect(): void {
+    if (!this.container || this.container.destroyed) return;
+
+    this.graphics.alpha = 0.8;
+
+    setTimeout(() => {
+      if (this.container && !this.container.destroyed) {
+        this.graphics.alpha = 1;
+      }
+    }, 16.67 * 3);
+  }
+
   public destroy(): void {
     if (this.healthText) {
       this.healthText.destroy();
