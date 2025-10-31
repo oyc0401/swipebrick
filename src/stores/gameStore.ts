@@ -7,9 +7,11 @@ interface GameState {
   bestScore: number;
   isDialogOpen: boolean;
 
-  numBalls: number;                // 공 개수 상태
+  numBalls: number;
+  ballx : number;             
   
-  setNumBalls: (count: number) => void; 
+  setBallx : ( ballx : number) => void;
+  setNumBalls: (value: number | ((prev: number) => number)) => void;
   setScore: (score: number) => void;
   setBestScore: (bestScore: number) => void;
   openDialog: () => void;
@@ -27,7 +29,12 @@ export const useGameStore = create<GameState>((set) => ({
   isDialogOpen: false,
   onClose: undefined,
   numBalls: 1,
-  setNumBalls: (count: number) => set({ numBalls: count }),
+  ballx : 175, //중앙
+  setNumBalls: (value: number | ((prev: number) => number)) =>
+  set(state => ({
+      numBalls: typeof value === "function" ? value(state.numBalls) : value
+    })),
+  setBallx:((ballx : number) => set({ballx})),
   setScore: (score: number) => set({ score }),
   setBestScore: (bestScore: number) => set({ bestScore }),
   openDialog: () => set({ isDialogOpen: true }),

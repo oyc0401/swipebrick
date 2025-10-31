@@ -20,7 +20,8 @@ const bottomSpacerStyle = css`
 
 export const GameUI = () => {
   const onPointerDown = useGameStore((state) => state.onPointerDown);
-   const numBalls = useGameStore(state => state.numBalls);
+  const numBalls = useGameStore((state) => state.numBalls);
+  const ballx = useGameStore((state) => state.ballx);
 
   useEffect(() => {
     console.log("React render complete");
@@ -42,12 +43,12 @@ export const GameUI = () => {
       text-align: center;
       margin: 0;
       position: absolute;
-      top: 50%;
-      left: 50%;
+      top: 70%;
+      left: ${ballx}px;
       transform: translate(-50%, -50%);
     `}
   >
-    {numBalls}
+   {numBalls > 0 && <p>{numBalls}</p>}
   </p>
         {/* 게임 영역 - 투명하게 유지 */}
       </div>

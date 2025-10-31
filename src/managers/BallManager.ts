@@ -57,7 +57,8 @@ export class BallManager {
 
     physicsEngine.onBallLaunched(() => {
       this.onBallLaunchedCallbacks.forEach((cb) => cb());
-
+      
+      useGameStore.getState().setNumBalls(prev => prev - 1);
       console.log("공 하나 출발!");
     });
   }
@@ -90,6 +91,7 @@ export class BallManager {
   // ===== Ball Management =====
 
   public createBalls(count: number): void {
+    useGameStore.getState().setNumBalls(count);
     for (let i = 0; i < count; i++) {
       const ballStartX = this.swipeBrick.getBallStartX();
       const ballStartPosition: Position = {
@@ -104,17 +106,7 @@ export class BallManager {
 
       this.activeBalls.push(ball);
     }
-    // useGameStore.getState().setBallCount(count);
   }
-
-
-  public update(): void {
-  this.activeBalls.forEach(ball => ball.updateGraphics());
-  
-  const hiddenBalls = this.activeBalls.filter(ball => !ball.isVisible()).length;
-
-  useGameStore.getState().setBallCount(hiddenBalls);
-}
 
   public launchBalls(angleDeg: number): void {
     this.activeBalls.forEach((ball, index) => {

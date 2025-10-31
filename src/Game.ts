@@ -204,8 +204,16 @@ export class Game {
   }
 
   private async updateScoreUI(): Promise<void> {
+    const currentNumBalls = this.swipeBrick.getBallCount();
+    useGameStore.getState().setNumBalls(currentNumBalls);
+
     const currentScore = this.swipeBrick.getLevel();
     useGameStore.getState().setScore(currentScore);
+  }
+
+  private async updateBallx() : Promise<void> {
+    const currentBallx = this.swipeBrick.getBallStartX();
+    useGameStore.getState().setBallx(currentBallx);
   }
 
   // ===== 🔧 시스템 초기화 =====
@@ -248,6 +256,7 @@ export class Game {
 
   private setupBallCallbacks(): void {
     this.ballManager.onAllBallsLaunched(() => {
+      
       console.log("모든 공 출발!");
       this.ballManager.hidePreviewBall();
     });
@@ -274,10 +283,12 @@ export class Game {
       this.brickManager.createBricks();
       this.swipeBrick.endShot();
 
+
       this.ballManager.showPreviewBall();
       this.ballManager.hideLandedBall();
 
       // UI 즉시 업데이트
+      this.updateBallx();
       this.updateScoreUI();
 
       if (this.swipeBrick.isGameOver()) {
