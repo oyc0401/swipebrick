@@ -10,6 +10,7 @@ import {
 import type { IRenderComponent } from "../core/components/IComponent";
 import { GraphicEngine } from "./GraphicEngine";
 import { easeOutBackMove } from "./BounceEffect";
+import { lerpColorGammaCorrect } from "../utils/colors";
 
 export abstract class RenderComponent implements IRenderComponent {
   protected graphics: Graphics;
@@ -193,8 +194,16 @@ export class CircleRenderComponent extends RenderComponent {
 
     polygons.push([lastP1!, points[length - 1], lastP2!]);
 
+    const startColor = 0xb9faff; // 시작색
+    const endColor = 0xffffff; // 끝색
+
     // pixijs에서 fill할때 다각형이 겹쳐있으면 오류남.. 나도 알고싶지 않았음..
-    for (let polygon of polygons) {
+    for (let i = 0; i < polygons.length; i++) {
+      const polygon = polygons[i];
+      const t = polygons.length > 1 ? i / (polygons.length - 1) : 0;
+
+      const color = lerpColorGammaCorrect(startColor, endColor, t);
+
       this.tailGraphics.beginPath();
 
       this.tailGraphics.moveTo(polygon[0].x, polygon[0].y);
@@ -207,7 +216,7 @@ export class CircleRenderComponent extends RenderComponent {
       this.tailGraphics.closePath();
 
       this.tailGraphics.fill({
-        color: 0xdcfdff,
+        color,
         alpha: 0.7,
       });
     }
