@@ -352,7 +352,7 @@ export class PhysicsEngine {
   public startLoop(): void {
     const FIXED_TIMESTEP = 1000 / 60;
 
-    const subStep = 8;
+    const subStep = 2;
     const runner = Runner.create({
       delta: FIXED_TIMESTEP / subStep, // 고정 타임스텝 (ms)
     });

@@ -194,7 +194,7 @@ export class CircleRenderComponent extends RenderComponent {
 
     polygons.push([lastP1!, points[length - 1], lastP2!]);
 
-    const startColor = 0xb9faff; // 시작색
+    const startColor = 0xdcfdff; // 시작색
     const endColor = 0xffffff; // 끝색
 
     // pixijs에서 fill할때 다각형이 겹쳐있으면 오류남.. 나도 알고싶지 않았음..

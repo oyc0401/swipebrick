@@ -111,12 +111,14 @@ export class BallEntity extends ActiveEntity {
   }
 
   public moveTo(targetX: number): Promise<void> {
+    const backSpeed = 16;
     return new Promise<void>((resolve) => {
       const ticker = new Ticker();
 
       ticker.add(() => {
         const pos = this.getPosition(); // 현재 위치
         const dx = targetX - pos.x;
+        const direction = dx < 0 ? -1 : 1;
 
         if (Math.abs(dx) < 1) {
           this.physicsComponent.setPosition(targetX, pos.y); // 실제 위치 업데이트
@@ -124,7 +126,13 @@ export class BallEntity extends ActiveEntity {
           ticker.destroy();
           resolve(); // 이동 완료
         } else {
-          this.physicsComponent.setPosition(pos.x + dx * 0.2, pos.y); // 부드럽게 이동
+          this.physicsComponent.setPosition(
+            pos.x + direction * backSpeed,
+            pos.y
+          ); // 부드럽게 이동
+          if (Math.abs(dx) < backSpeed) {
+            this.physicsComponent.setPosition(pos.x + dx, pos.y);
+          }
         }
       });
 

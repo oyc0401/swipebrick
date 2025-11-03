@@ -115,26 +115,26 @@ export class BrickManager {
         return;
       }
 
-      console.error("Unknown collision body:", {
-        timestamp: new Date().toISOString(),
-        body: {
-          label: body.label,
-          id: body.id,
-          entityId: body.plugin.entityId,
-          position: { x: body.position.x, y: body.position.y },
-          category: body.collisionFilter.category,
-          mask: body.collisionFilter.mask,
-          isStatic: body.isStatic,
-          isSensor: body.isSensor,
-        },
-        entities: {
-          brickCount: this.brickEntities.size,
-          itemCount: this.itemEntities.size,
-          brickIds: Array.from(this.brickEntities.keys()),
-          itemIds: Array.from(this.itemEntities.keys()),
-        },
-        level: this.swipeBrick.getLevel(),
-      });
+      // console.error("Unknown collision body:", {
+      //   timestamp: new Date().toISOString(),
+      //   body: {
+      //     label: body.label,
+      //     id: body.id,
+      //     entityId: body.plugin.entityId,
+      //     position: { x: body.position.x, y: body.position.y },
+      //     category: body.collisionFilter.category,
+      //     mask: body.collisionFilter.mask,
+      //     isStatic: body.isStatic,
+      //     isSensor: body.isSensor,
+      //   },
+      //   entities: {
+      //     brickCount: this.brickEntities.size,
+      //     itemCount: this.itemEntities.size,
+      //     brickIds: Array.from(this.brickEntities.keys()),
+      //     itemIds: Array.from(this.itemEntities.keys()),
+      //   },
+      //   level: this.swipeBrick.getLevel(),
+      // });
     });
   }
 

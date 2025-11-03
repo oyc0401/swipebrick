@@ -57,7 +57,7 @@ export class BallManager {
     physicsEngine.onBallLaunched(() => {
       this.onBallLaunchedCallbacks.forEach((cb) => cb());
 
-      console.log("공 하나 출발!");
+      // console.log("공 하나 출발!");
     });
   }
 
