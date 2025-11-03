@@ -7,11 +7,13 @@ interface GameState {
   bestScore: number;
   isDialogOpen: boolean;
 
-  numBalls: number;
-  ballx : number;             
+  remainingBalls: number;
+  ballTextX : number;   
+  ballTextY : number;          
   
-  setBallx : ( ballx : number) => void;
-  setNumBalls: (value: number | ((prev: number) => number)) => void;
+  setBallTextX : ( ballTextX : number) => void;
+  setBallTextY : ( ballTextY : number) => void;
+  setRemainingBalls: (remainingBalls : number) => void;
   setScore: (score: number) => void;
   setBestScore: (bestScore: number) => void;
   openDialog: () => void;
@@ -28,13 +30,12 @@ export const useGameStore = create<GameState>((set) => ({
   bestScore: 0,
   isDialogOpen: false,
   onClose: undefined,
-  numBalls: 1,
-  ballx : 175, //중앙
-  setNumBalls: (value: number | ((prev: number) => number)) =>
-  set(state => ({
-      numBalls: typeof value === "function" ? value(state.numBalls) : value
-    })),
-  setBallx:((ballx : number) => set({ballx})),
+  remainingBalls: 1,
+  ballTextY : 515,
+  ballTextX : 175, //중앙
+  setRemainingBalls: ((remainingBalls : number) => set({remainingBalls})),
+  setBallTextX:((ballTextX : number) => set({ballTextX})),
+  setBallTextY:((ballTextY : number) => set({ballTextY})),
   setScore: (score: number) => set({ score }),
   setBestScore: (bestScore: number) => set({ bestScore }),
   openDialog: () => set({ isDialogOpen: true }),

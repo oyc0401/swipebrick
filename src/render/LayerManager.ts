@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle } from "pixi.js";
 import type { Application } from "pixi.js";
+import { useGameStore } from "../stores/gameStore";
 
 /**
  * 반응형 UI 가로 크기
