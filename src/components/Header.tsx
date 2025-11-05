@@ -6,6 +6,10 @@ import storeIcon from "/store_icon.svg";
 import settingIcon from "/setting_icon.svg";
 import rankIcon from "/rank_icon.svg";
 import { isTossApp } from "../utils/platform";
+import {
+  isMinVersionSupported,
+  openGameCenterLeaderboard,
+} from "@apps-in-toss/web-framework";
 
 const headerWrapperStyle = css`
   display: flex;
@@ -45,6 +49,19 @@ const spacerStyle = css`
 `;
 
 export function Header() {
+  const isSupported = isMinVersionSupported({
+    android: "5.221.0",
+    ios: "5.221.0",
+  });
+
+  if (!isSupported) {
+    return;
+  }
+
+  function handleClick() {
+    openGameCenterLeaderboard();
+  }
+
   return (
     <div css={spacerStyle}>
       <div css={headerWrapperStyle}>
@@ -64,7 +81,9 @@ export function Header() {
               <IconButton
                 iconSrc={rankIcon}
                 iconAlt="Ranking"
-                onClick={() => console.log("Ranking button clicked")}
+                onClick={() => {
+                  handleClick();
+                }}
               />
             )}
           </div>

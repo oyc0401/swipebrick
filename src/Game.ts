@@ -132,7 +132,24 @@ export class Game {
 
       if (isTossApp()) {
         // TODO: 이거 배포 때 열기!! rank
-        // await submitGameCenterLeaderBoardScore({ score: `${currentScore}` });
+        try {
+          const result = await submitGameCenterLeaderBoardScore({
+            score: `${currentScore}`,
+          });
+
+          if (!result) {
+            console.warn("지원하지 않는 앱 버전이에요.");
+            return;
+          }
+
+          if (result.statusCode === "SUCCESS") {
+            console.log("점수 제출 성공!");
+          } else {
+            console.error("점수 제출 실패:", result.statusCode);
+          }
+        } catch (error) {
+          console.error("점수 제출 중 오류가 발생했어요.", error);
+        }
       }
     }
 
