@@ -22,10 +22,11 @@ const bottomSpacerStyle = css`
 const ballTextStyle = (viewScale: number, ballTextX: number) => css`
   color: #3182f6;
   font-size: 12px;
+  font-weight: 450;
   text-align: center;
   margin: 0;
   position: absolute;
-  bottom: ${20 * viewScale}px;
+  bottom: ${13 * viewScale}px;
   left: ${ballTextX * viewScale}px;
   transform: translate(-50%, -50%);
 `;
@@ -50,7 +51,7 @@ export const GameUI = () => {
         css={gameViewStyle}
         onPointerDown={onPointerDown}
       >
-                <p
+                <p 
     css={ballTextStyle(viewScale, ballTextX)}>
    {remainingBalls > 0 && remainingBalls}
   </p>
