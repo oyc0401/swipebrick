@@ -9,10 +9,10 @@ interface GameState {
 
   remainingBalls: number;
   ballTextX : number;   
-  ballTextY : number;          
+  viewScale : number;          
   
   setBallTextX : ( ballTextX : number) => void;
-  setBallTextY : ( ballTextY : number) => void;
+  setViewScale : (viewScale : number) => void;
   setRemainingBalls: (remainingBalls : number) => void;
   setScore: (score: number) => void;
   setBestScore: (bestScore: number) => void;
@@ -31,11 +31,11 @@ export const useGameStore = create<GameState>((set) => ({
   isDialogOpen: false,
   onClose: undefined,
   remainingBalls: 1,
-  ballTextY : 515,
   ballTextX : 175, //중앙
+  viewScale : 515,
   setRemainingBalls: ((remainingBalls : number) => set({remainingBalls})),
   setBallTextX:((ballTextX : number) => set({ballTextX})),
-  setBallTextY:((ballTextY : number) => set({ballTextY})),
+  setViewScale:((viewScale : number) => set({viewScale})),
   setScore: (score: number) => set({ score }),
   setBestScore: (bestScore: number) => set({ bestScore }),
   openDialog: () => set({ isDialogOpen: true }),

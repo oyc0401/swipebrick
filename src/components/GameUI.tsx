@@ -9,6 +9,7 @@ import { useGameStore } from "../stores/gameStore";
 const gameViewStyle = css`
   width: 100%;
   aspect-ratio: 1 / 1;
+  position: relative;
   // background: rgba(255, 0, 0, 0.3);
 `;
 
@@ -18,11 +19,23 @@ const bottomSpacerStyle = css`
   // background: rgba(0, 125, 0, 0.3);
 `;
 
+const ballTextStyle = (viewScale: number, ballTextX: number) => css`
+  color: #3182f6;
+  font-size: 12px;
+  text-align: center;
+  margin: 0;
+  position: absolute;
+  bottom: ${20 * viewScale}px;
+  left: ${ballTextX * viewScale}px;
+  transform: translate(-50%, -50%);
+`;
+
+
 export const GameUI = () => {
   const onPointerDown = useGameStore((state) => state.onPointerDown);
   const remainingBalls = useGameStore((state) => state.remainingBalls);
   const ballTextX = useGameStore((state) => state.ballTextX);
-  const ballTextY = useGameStore((state) => state.ballTextY);
+  const viewScale = useGameStore((state) => state.viewScale);
 
   useEffect(() => {
     console.log("React render complete");
@@ -38,18 +51,8 @@ export const GameUI = () => {
         onPointerDown={onPointerDown}
       >
                 <p
-    css={css`
-      color: #3182f6;
-      font-size: 12px;
-      text-align: center;
-      margin: 0;
-      position: absolute;
-      top: ${ballTextY}px;
-      left: ${ballTextX}px;
-      transform: translate(-50%, -50%);
-    `}
-  >
-   {remainingBalls > 0 && <p>{remainingBalls}</p>}
+    css={ballTextStyle(viewScale, ballTextX)}>
+   {remainingBalls > 0 && remainingBalls}
   </p>
         {/* 게임 영역 - 투명하게 유지 */}
       </div>

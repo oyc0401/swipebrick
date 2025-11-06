@@ -84,6 +84,7 @@ export class Game {
     this.ballManager.showPreviewBall();
     this.ballManager.hideLandedBall();
     this.updateScoreUI();
+    this.updateBallx();
 
     // 게임 루프 시작
     this.startGameLoop();
@@ -155,6 +156,7 @@ export class Game {
     this.ballManager.showPreviewBall();
     this.ballManager.hideLandedBall();
     this.updateScoreUI();
+    this.updateBallx();
   }
 
   // ===== 📊 데이터 관리 =====
