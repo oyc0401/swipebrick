@@ -7,6 +7,8 @@ import { getSafeAreaInsets } from "@apps-in-toss/web-framework";
 
 import { isTossApp, isAndroidWebView } from "./utils/platform";
 import { initializeI18n } from "./utils/i18n";
+import { enableRafPatch } from "./utils/rafPatch";
+import { startFpsMeter } from "./utils/rafMeter";
 
 async function loadFonts(): Promise<void> {
   const startTime = performance.now();
@@ -103,100 +105,8 @@ if (uiElement) {
 
 export const game = new Game().init();
 
-// // FPS 측정 변수
-// let frames = 0;
-// let lastFpsUpdateTime = performance.now();
+// startFpsMeter((fps) => {
+//   console.log("FPS:", fps);
+// });
 
-// function dod() {
-//   requestAnimationFrame(() => {
-//     frames++;
-//     const now = performance.now();
-//     if (now - lastFpsUpdateTime >= 1000) {
-//       const fps = Math.round((frames * 1000) / (now - lastFpsUpdateTime));
-//       console.log(`FPS: ${fps}`);
-//       frames = 0;
-//       lastFpsUpdateTime = now;
-//     }
-//     dod();
-//   });
-// }
-// dod();
-
-// (() => {
-//   const win = window as any;
-//   if (win.__rafPatch) return;
-
-//   const nativeRAF = win.requestAnimationFrame.bind(win);
-//   const nativeCAF = win.cancelAnimationFrame.bind(win);
-
-//   let enabled = false;
-//   let fps = 60;
-//   let step = 1000 / fps;
-//   let start = performance.now();
-//   let nextDue = start + step;
-//   let tick = 0;
-//   let driverId = 0;
-//   let nextId = 1;
-//   const pending = new Map<number, FrameRequestCallback>();
-
-//   function drain(t: number) {
-//     if (!pending.size) return;
-//     const tasks = Array.from(pending.values());
-//     pending.clear();
-//     for (const cb of tasks) cb(t);
-//   }
-
-//   function driver(now: number) {
-//     if (!enabled) return;
-
-//     if (now >= nextDue) {
-//       tick++;
-//       const t = start + tick * step;
-//       drain(t);
-//       nextDue += step;
-//     }
-
-//     driverId = nativeRAF(driver);
-//   }
-
-//   function patchedRAF(cb: FrameRequestCallback) {
-//     const id = nextId++;
-//     pending.set(id, cb);
-//     if (!enabled) enable(fps);
-//     return id;
-//   }
-
-//   function patchedCAF(id: number) {
-//     pending.delete(id);
-//   }
-
-//   function enable(newFPS: number = 60) {
-//     fps = newFPS;
-//     step = 1000 / fps;
-//     start = performance.now();
-//     nextDue = start + step;
-//     tick = 0;
-
-//     if (!enabled) {
-//       enabled = true;
-//       driverId = nativeRAF(driver);
-//     }
-
-//     win.requestAnimationFrame = patchedRAF;
-//     win.cancelAnimationFrame = patchedCAF;
-//   }
-
-//   function disable() {
-//     if (!enabled) return;
-//     enabled = false;
-//     nativeCAF(driverId);
-//     driverId = 0;
-//     pending.clear();
-//     win.requestAnimationFrame = nativeRAF;
-//     win.cancelAnimationFrame = nativeCAF;
-//   }
-
-//   win.__rafPatch = { enable, disable };
-// })();
-
-// // window.__rafPatch.enable(60);
+// enableRafPatch(20);
