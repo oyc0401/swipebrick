@@ -18,13 +18,15 @@ export function GameOverDialog() {
   const score = useGameStore((state) => state.score);
 
   async function handleConfirm() {
-    // '/' 경로를 딥링크로 포함한 토스 공유 링크를 생성해요.
-    const tossLink = await getTossShareLink("intoss://swipebrick");
-    // alert(tossLink);
-    // 생성한 링크를 메시지로 공유해요.
-    await share({
-      message: `스와이프 벽돌게임에서 ${score}점을 달성했어요.\n같이 게임 해요!\n${tossLink}`,
-    });
+    if (isTossApp()) {
+      // '/' 경로를 딥링크로 포함한 토스 공유 링크를 생성해요.
+      const tossLink = await getTossShareLink("intoss://swipebrick");
+      // alert(tossLink);
+      // 생성한 링크를 메시지로 공유해요.
+      await share({
+        message: `스와이프 벽돌게임에서 ${score}점을 달성했어요.\n같이 게임 해요!\n${tossLink}`,
+      });
+    }
   }
 
   if (!isTossApp()) {

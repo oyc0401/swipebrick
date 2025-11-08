@@ -49,16 +49,15 @@ const spacerStyle = css`
 `;
 
 export function Header() {
-  const isSupported = isMinVersionSupported({
-    android: "5.221.0",
-    ios: "5.221.0",
-  });
+  function openLeaderBoard() {
+    const isSupported = isMinVersionSupported({
+      android: "5.221.0",
+      ios: "5.221.0",
+    });
 
-  if (!isSupported) {
-    return;
-  }
-
-  function handleClick() {
+    if (!isSupported) {
+      return;
+    }
     openGameCenterLeaderboard();
   }
 
@@ -82,7 +81,7 @@ export function Header() {
                 iconSrc={rankIcon}
                 iconAlt="Ranking"
                 onClick={() => {
-                  handleClick();
+                  openLeaderBoard();
                 }}
               />
             )}
