@@ -121,3 +121,82 @@ export const game = new Game().init();
 //   });
 // }
 // dod();
+
+// (() => {
+//   const win = window as any;
+//   if (win.__rafPatch) return;
+
+//   const nativeRAF = win.requestAnimationFrame.bind(win);
+//   const nativeCAF = win.cancelAnimationFrame.bind(win);
+
+//   let enabled = false;
+//   let fps = 60;
+//   let step = 1000 / fps;
+//   let start = performance.now();
+//   let nextDue = start + step;
+//   let tick = 0;
+//   let driverId = 0;
+//   let nextId = 1;
+//   const pending = new Map<number, FrameRequestCallback>();
+
+//   function drain(t: number) {
+//     if (!pending.size) return;
+//     const tasks = Array.from(pending.values());
+//     pending.clear();
+//     for (const cb of tasks) cb(t);
+//   }
+
+//   function driver(now: number) {
+//     if (!enabled) return;
+
+//     if (now >= nextDue) {
+//       tick++;
+//       const t = start + tick * step;
+//       drain(t);
+//       nextDue += step;
+//     }
+
+//     driverId = nativeRAF(driver);
+//   }
+
+//   function patchedRAF(cb: FrameRequestCallback) {
+//     const id = nextId++;
+//     pending.set(id, cb);
+//     if (!enabled) enable(fps);
+//     return id;
+//   }
+
+//   function patchedCAF(id: number) {
+//     pending.delete(id);
+//   }
+
+//   function enable(newFPS: number = 60) {
+//     fps = newFPS;
+//     step = 1000 / fps;
+//     start = performance.now();
+//     nextDue = start + step;
+//     tick = 0;
+
+//     if (!enabled) {
+//       enabled = true;
+//       driverId = nativeRAF(driver);
+//     }
+
+//     win.requestAnimationFrame = patchedRAF;
+//     win.cancelAnimationFrame = patchedCAF;
+//   }
+
+//   function disable() {
+//     if (!enabled) return;
+//     enabled = false;
+//     nativeCAF(driverId);
+//     driverId = 0;
+//     pending.clear();
+//     win.requestAnimationFrame = nativeRAF;
+//     win.cancelAnimationFrame = nativeCAF;
+//   }
+
+//   win.__rafPatch = { enable, disable };
+// })();
+
+// // window.__rafPatch.enable(60);
