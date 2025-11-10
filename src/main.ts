@@ -104,8 +104,8 @@ if (uiElement) {
 
 export const game = new Game().init();
 
-startFpsMeter((fps) => {
-  console.log("FPS:", fps);
-});
+// startFpsMeter((fps) => {
+//   console.log("FPS:", fps);
+// });
 
-enableRafPatch(20);
+// enableRafPatch(20);

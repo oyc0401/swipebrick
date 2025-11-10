@@ -1,4 +1,5 @@
 import { css } from "@emotion/react";
+import { useState, useEffect } from "react";
 import { IconButton } from "./IconButton";
 import { ScoreDisplay } from "./ScoreDisplay";
 
@@ -40,6 +41,7 @@ const rightButtonGroupStyle = css`
   flex-direction: row;
   justify-content: end;
   flex: 1;
+  position: relative;
 `;
 
 const spacerStyle = css`
@@ -49,6 +51,13 @@ const spacerStyle = css`
 `;
 
 export function Header() {
+  const [ageRatingOpacity, setAgeRatingOpacity] = useState(0);
+
+  useEffect(() => {
+    setAgeRatingOpacity(1);
+    setTimeout(() => setAgeRatingOpacity(0), 3300);
+  }, []);
+
   function openLeaderBoard() {
     const isSupported = isMinVersionSupported({
       android: "5.221.0",
@@ -85,6 +94,20 @@ export function Header() {
                 }}
               />
             )}
+            <img
+              src="/game_all.svg"
+              alt="게임 연령등급"
+              css={css`
+                height: 64px;
+                width: auto;
+                opacity: ${ageRatingOpacity};
+                transition: opacity 0.3s ease-out;
+                position: absolute;
+                top: 0;
+                right: 0;
+                pointer-events: none;
+              `}
+            />
           </div>
         </div>
       </div>
