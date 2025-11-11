@@ -7,6 +7,7 @@ import { getSafeAreaInsets } from "@apps-in-toss/web-framework";
 
 import { isTossApp, isAndroidWebView } from "./utils/platform";
 import { initializeI18n } from "./utils/i18n";
+import { enableRafPatch, startFpsMeter } from "fpskit";
 
 async function loadFonts(): Promise<void> {
   const startTime = performance.now();
@@ -103,21 +104,8 @@ if (uiElement) {
 
 export const game = new Game().init();
 
-// // FPS 측정 변수
-// let frames = 0;
-// let lastFpsUpdateTime = performance.now();
+// startFpsMeter((fps) => {
+//   console.log("FPS:", fps);
+// });
 
-// function dod() {
-//   requestAnimationFrame(() => {
-//     frames++;
-//     const now = performance.now();
-//     if (now - lastFpsUpdateTime >= 1000) {
-//       const fps = Math.round((frames * 1000) / (now - lastFpsUpdateTime));
-//       console.log(`FPS: ${fps}`);
-//       frames = 0;
-//       lastFpsUpdateTime = now;
-//     }
-//     dod();
-//   });
-// }
-// dod();
+// enableRafPatch(20);

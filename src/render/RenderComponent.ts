@@ -10,6 +10,7 @@ import {
 import type { IRenderComponent } from "../core/components/IComponent";
 import { GraphicEngine } from "./GraphicEngine";
 import { easeOutBackMove } from "./BounceEffect";
+import { lerpColorGammaCorrect } from "../utils/colors";
 
 export abstract class RenderComponent implements IRenderComponent {
   protected graphics: Graphics;
@@ -74,6 +75,11 @@ export class CircleRenderComponent extends RenderComponent {
     this.container.addChild(this.sprite);
 
     this.container.zIndex = 3;
+
+    // tailGrapics 초기화
+    this.tailGraphics = new Graphics();
+    this.tailGraphics.zIndex = 2; // 공보다 아래, 벽돌보다 위에 렌더링
+    GraphicEngine.getInstance().getGameViewport().addChild(this.tailGraphics);
   }
 
   private createCircleSprite(): Sprite {
@@ -103,6 +109,12 @@ export class CircleRenderComponent extends RenderComponent {
     if (this.sprite) {
       this.sprite.destroy();
     }
+
+    GraphicEngine.getInstance()
+      .getGameViewport()
+      .removeChild(this.tailGraphics);
+    this.tailGraphics.destroy();
+
     super.destroy();
   }
 
@@ -111,6 +123,103 @@ export class CircleRenderComponent extends RenderComponent {
       texture.destroy(true);
     }
     CircleRenderComponent.textureCache.clear();
+  }
+
+  tailGraphics: Graphics;
+
+  drawTails(points: { x: number; y: number }[]) {
+    this.tailGraphics.clear();
+    if (points.length < 2) {
+      return;
+    }
+
+    // for (let i = 0; i < points.length - 1; i++) {
+    //   const p = points[i];
+    //   // 모던 API: 각 서클마다 개별 fill 적용
+    //   this.tailGraphics.circle(p.x, p.y, 1).fill({ color: 0xff0000 });
+    // }
+
+    let vectors = [];
+    let length = points.length;
+
+    vectors.push({
+      x: points[1].x - points[0].x,
+      y: points[1].y - points[0].y,
+    });
+
+    for (let i = 1; i < points.length - 1; i++) {
+      vectors.push({
+        x: points[i + 1].x - points[i - 1].x,
+        y: points[i + 1].y - points[i - 1].y,
+      });
+    }
+
+    // console.log(vectors);
+
+    const radius = 8;
+
+    let lastP1, lastP2;
+    let polygons: {
+      x: number;
+      y: number;
+    }[][] = [];
+
+    for (let i = 0; i < vectors.length; i++) {
+      let percent = 1 - i / (vectors.length - 1);
+      let point = points[i];
+      let vector = vectors[i];
+      let len = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+      let unit = { x: vector.x / len, y: vector.y / len };
+
+      let perpendicular = { x: -unit.y, y: unit.x };
+
+      let p1 = {
+        x: point.x + perpendicular.x * percent * radius,
+        y: point.y + perpendicular.y * percent * radius,
+      };
+
+      let perpendicular2 = { x: unit.y, y: -unit.x };
+
+      let p2 = {
+        x: point.x + perpendicular2.x * percent * radius,
+        y: point.y + perpendicular2.y * percent * radius,
+      };
+
+      if (lastP1) {
+        polygons.push([lastP1!, p1, p2, lastP2!]);
+      }
+      lastP1 = p1;
+      lastP2 = p2;
+    }
+
+    polygons.push([lastP1!, points[length - 1], lastP2!]);
+
+    const startColor = 0xdcfdff; // 시작색
+    const endColor = 0xffffff; // 끝색
+
+    // pixijs에서 fill할때 다각형이 겹쳐있으면 오류남.. 나도 알고싶지 않았음..
+    for (let i = 0; i < polygons.length; i++) {
+      const polygon = polygons[i];
+      const t = polygons.length > 1 ? i / (polygons.length - 1) : 0;
+
+      const color = lerpColorGammaCorrect(startColor, endColor, t);
+
+      this.tailGraphics.beginPath();
+
+      this.tailGraphics.moveTo(polygon[0].x, polygon[0].y);
+
+      for (let i = 1; i < polygon.length; i++) {
+        let p = polygon[i];
+        this.tailGraphics.lineTo(p.x, p.y);
+      }
+
+      this.tailGraphics.closePath();
+
+      this.tailGraphics.fill({
+        color,
+        alpha: 0.7,
+      });
+    }
   }
 }
 
@@ -244,6 +353,18 @@ export class RoundedRectangleRenderComponent extends RenderComponent {
 
     // 컨테이너에 텍스트 추가
     this.container.addChild(this.healthText);
+  }
+
+  public hitEffect(): void {
+    if (!this.container || this.container.destroyed) return;
+
+    this.graphics.alpha = 0.8;
+
+    setTimeout(() => {
+      if (this.container && !this.container.destroyed) {
+        this.graphics.alpha = 1;
+      }
+    }, 16.67 * 3);
   }
 
   public destroy(): void {

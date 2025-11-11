@@ -348,15 +348,59 @@ export class PhysicsEngine {
     return angle;
   }
 
-  // 60 프레임 고정
+  // rAF + 고정 타임스텝(60fps) + subStep 분할 보정
   public startLoop(): void {
-    const FIXED_TIMESTEP = 1000 / 60;
+    const FIXED_TIMESTEP = 1000 / 60; // ≈ 16.6666666667 ms
+    const SUB_STEPS = 8; // 한 타임스텝을 8등분
+    const SUB_DT = 1; //FIXED_TIMESTEP / SUB_STEPS; // ≈ 2.0833333333 ms (엔진 dt)
 
-    const subStep = 8;
-    const runner = Runner.create({
-      delta: FIXED_TIMESTEP / subStep, // 고정 타임스텝 (ms)
-    });
-    Runner.run(runner, this.engine);
+    let last = performance.now();
+    let acc = 0;
+    let rafId = 0;
+    let running = true;
+
+    // 선택: 과도한 지연 시 스파이럴 방지용 클램프 (예: 200ms)
+    const MAX_ACC = 200;
+
+    const loop = (now: number) => {
+      if (!running) return;
+
+      // rAF 타임스탬프(now)는 performance.now()와 동일 스케일
+      let delta = now - last;
+      last = now;
+
+      // 장시간 일시중지 등 극단값 방어
+      if (delta > MAX_ACC) delta = MAX_ACC;
+
+      // 지연 누적
+      acc += delta;
+
+      // 누적된 시간만큼 sub-step 횟수 계산
+      // 예) acc=50 → (50 / 16.6667) * 8 ≈ 24.0회
+      const substepsToRun = Math.floor(acc / SUB_DT);
+
+      if (substepsToRun > 0) {
+        // sub-step마다 엔진 업데이트 (엔진 dt는 고정 SUB_DT)
+        for (let i = 0; i < substepsToRun; i++) {
+          Engine.update(this.engine, SUB_DT);
+        }
+        // 소비한 시간만큼 누적에서 제거
+        acc -= substepsToRun * SUB_DT;
+        // 남은 acc(예: 51ms였으면 1ms)는 다음 프레임으로 이월
+      }
+
+      rafId = requestAnimationFrame(loop);
+    };
+
+    // 시작
+    last = performance.now();
+    rafId = requestAnimationFrame(loop);
+
+    // // 필요 시 정지 API
+    // (this as any).stopLoop = () => {
+    //   running = false;
+    //   cancelAnimationFrame(rafId);
+    // };
   }
 
   public addBody(body: Matter.Body): void {

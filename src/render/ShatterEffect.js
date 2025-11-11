@@ -6,7 +6,7 @@ export class ShatterEffect {
     this.shards = [];
     this.tileSize = options.size || 7;
     this.count = options.count || 20;
-    this.gravity = 0.35;
+    this.gravity = 0.15;
     this.drag = 0.99;
     this.duration = 60;
     this.delay = 30;
@@ -46,7 +46,7 @@ export class ShatterEffect {
       s.y = y + yOffset - this.height / 2 - this.tileSize / 2;
 
       // 물리 속성
-      s.vx = (Math.random() - 0.5) * 6;
+      s.vx = (Math.random() - 0.5) * 3;
       s.vy = -1 * Math.random() * 2;
       s.angularVel = (Math.random() - 0.5) * 0.3;
       s.delay = this.delay;

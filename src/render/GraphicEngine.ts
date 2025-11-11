@@ -171,7 +171,7 @@ export class GraphicEngine {
   ): void {
     if (!this.aimLine) {
       this.aimLine = new Graphics();
-      this.layerManager.getGameViewport().addChildAt(this.aimLine, 0);
+      this.layerManager.getGameViewport().addChild(this.aimLine);
     }
 
     this.aimLine.zIndex = 2; // 최상단 보장

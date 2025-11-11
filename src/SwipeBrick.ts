@@ -99,6 +99,7 @@ export class SwipeBrick implements ISwipeBrick {
 
   /** 공 개수 반환 */
   getBallCount(): number {
+    // return 1;
     return this.ballCount;
   }
 
@@ -229,20 +230,20 @@ export class SwipeBrick implements ISwipeBrick {
    */
   private getRandomBrickCount(currentLevel: number): number {
     // 각 벽돌 개수(1~5)에 대한 확률 가중치
-    
+
     let finalWeights: number[];
     finalWeights = [0.3, 0.45, 0.4, 0, 0];
-    
-    if (currentLevel >= 10){ 
-      const steps = Math.floor((currentLevel-10)/10); //레벨 구간 설정
-      
+
+    if (currentLevel >= 10) {
+      const steps = Math.floor((currentLevel - 10) / 10); //레벨 구간 설정
+
       const prob4 = Math.min(0.4, steps * 0.1);
       const prob5 = Math.min(0.2, steps * 0.05); // 인덱스 4 = 벽돌 5개
 
       finalWeights = [0.3, 0.45, 0.4, prob4, prob5];
 
-    // baseWeights에서 시작하여, 50레벨마다 벽돌 4,5개는 각각 0.1,0.05씩 확률이 증가한다.
-    // 만약 벽돌 4,5개가 각각 0.4,0.2 즉 200레벨에 돌파하게 된다면 더이상 값이 오르지 않는다.
+      // baseWeights에서 시작하여, 50레벨마다 벽돌 4,5개는 각각 0.1,0.05씩 확률이 증가한다.
+      // 만약 벽돌 4,5개가 각각 0.4,0.2 즉 200레벨에 돌파하게 된다면 더이상 값이 오르지 않는다.
     }
 
     // 전체 확률 합 (꼭 1일 필요는 없음 — 비율 기준이므로)
@@ -427,7 +428,9 @@ export class SwipeBrick implements ISwipeBrick {
 
     // 숫자 범위 검증
     if (data.level < 1 || data.ballCount < 1 || data.ballStartX < 0) {
-      throw new Error("Invalid game state: negative or zero values not allowed");
+      throw new Error(
+        "Invalid game state: negative or zero values not allowed"
+      );
     }
 
     // isRunning과 shotAngle 일관성 검증
@@ -435,21 +438,32 @@ export class SwipeBrick implements ISwipeBrick {
     const shotAngle = data.shotAngle ?? null;
 
     if (isRunning && shotAngle === null) {
-      throw new Error("Invalid game state: isRunning is true but shotAngle is null");
+      throw new Error(
+        "Invalid game state: isRunning is true but shotAngle is null"
+      );
     }
 
     if (!isRunning && shotAngle !== null) {
-      throw new Error("Invalid game state: isRunning is false but shotAngle is not null");
+      throw new Error(
+        "Invalid game state: isRunning is false but shotAngle is not null"
+      );
     }
 
     // objects 배열 구조 검증
     if (data.objects.length !== this.GRID_HEIGHT) {
-      throw new Error(`Invalid objects array: expected ${this.GRID_HEIGHT} rows, got ${data.objects.length}`);
+      throw new Error(
+        `Invalid objects array: expected ${this.GRID_HEIGHT} rows, got ${data.objects.length}`
+      );
     }
 
     for (let y = 0; y < data.objects.length; y++) {
-      if (!Array.isArray(data.objects[y]) || data.objects[y].length !== this.GRID_WIDTH) {
-        throw new Error(`Invalid objects row ${y}: expected ${this.GRID_WIDTH} columns`);
+      if (
+        !Array.isArray(data.objects[y]) ||
+        data.objects[y].length !== this.GRID_WIDTH
+      ) {
+        throw new Error(
+          `Invalid objects row ${y}: expected ${this.GRID_WIDTH} columns`
+        );
       }
 
       for (let x = 0; x < data.objects[y].length; x++) {
@@ -462,18 +476,24 @@ export class SwipeBrick implements ISwipeBrick {
             typeof obj.x !== "number" ||
             typeof obj.y !== "number"
           ) {
-            throw new Error(`Invalid object at [${y}][${x}]: missing required fields`);
+            throw new Error(
+              `Invalid object at [${y}][${x}]: missing required fields`
+            );
           }
 
           // 타입별 검증
           if (obj.type === "brick") {
             if (typeof obj.health !== "number" || obj.health < 1) {
-              throw new Error(`Invalid brick at [${y}][${x}]: health must be positive number`);
+              throw new Error(
+                `Invalid brick at [${y}][${x}]: health must be positive number`
+              );
             }
           } else if (obj.type === "item") {
             // 아이템은 health 필드가 없어야 함
             if (obj.health !== undefined) {
-              throw new Error(`Invalid item at [${y}][${x}]: should not have health field`);
+              throw new Error(
+                `Invalid item at [${y}][${x}]: should not have health field`
+              );
             }
           } else {
             throw new Error(`Invalid object type at [${y}][${x}]: ${obj.type}`);
@@ -481,7 +501,9 @@ export class SwipeBrick implements ISwipeBrick {
 
           // 좌표 일관성 검증
           if (obj.x !== x || obj.y !== y) {
-            throw new Error(`Position mismatch at [${y}][${x}]: object has coordinates (${obj.x}, ${obj.y})`);
+            throw new Error(
+              `Position mismatch at [${y}][${x}]: object has coordinates (${obj.x}, ${obj.y})`
+            );
           }
         }
       }

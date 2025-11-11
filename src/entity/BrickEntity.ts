@@ -41,6 +41,8 @@ export class BrickEntity extends Entity {
   public hit(): void {
     this.health--;
     this.updateHealthText();
+
+    (this.renderComponent as RoundedRectangleRenderComponent).hitEffect();
   }
 
   public setColor(color: number): void {
@@ -67,6 +69,8 @@ export class BrickEntity extends Entity {
   public setHealth(health: number): void {
     this.health = health;
     this.updateHealthText();
+
+    (this.renderComponent as RoundedRectangleRenderComponent).hitEffect();
   }
 
   public calculateBrickColor(stage: number): void {
