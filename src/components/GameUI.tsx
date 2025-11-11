@@ -20,17 +20,16 @@ const bottomSpacerStyle = css`
 `;
 
 const ballTextStyle = (viewScale: number, ballTextX: number) => css`
-  color: #3182f6;
-  font-size: 12px;
-  font-weight: 450;
+  color: #44c4cd;
+  font-size: 14px;
   text-align: center;
   margin: 0;
   position: absolute;
-  bottom: ${13 * viewScale}px;
+  bottom: ${12 * viewScale}px;
   left: ${ballTextX * viewScale}px;
   transform: translate(-50%, -50%);
+  font-weight: 600;
 `;
-
 
 export const GameUI = () => {
   const onPointerDown = useGameStore((state) => state.onPointerDown);
@@ -46,15 +45,10 @@ export const GameUI = () => {
     <>
       <Header />
 
-      <div
-        id="view"
-        css={gameViewStyle}
-        onPointerDown={onPointerDown}
-      >
-                <p 
-    css={ballTextStyle(viewScale, ballTextX)}>
-   {remainingBalls > 0 && remainingBalls}
-  </p>
+      <div id="view" css={gameViewStyle} onPointerDown={onPointerDown}>
+        <p css={ballTextStyle(viewScale, ballTextX)}>
+          {remainingBalls > 0 && remainingBalls}
+        </p>
         {/* 게임 영역 - 투명하게 유지 */}
       </div>
 
