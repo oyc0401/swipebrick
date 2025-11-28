@@ -5,7 +5,6 @@ import {
   TextStyle,
   Sprite,
   Texture,
-  Ticker,
 } from "pixi.js";
 import type { IRenderComponent } from "../core/components/IComponent";
 import { GraphicEngine } from "./GraphicEngine";
@@ -57,7 +56,16 @@ export abstract class RenderComponent implements IRenderComponent {
 
   public destroy(): void {
     this.removeFromViewport();
-    this.container.destroy();
+
+    // Graphics 명시적 destroy
+    if (this.graphics && !this.graphics.destroyed) {
+      this.graphics.destroy(true);
+    }
+
+    // Container와 모든 children destroy
+    if (this.container && !this.container.destroyed) {
+      this.container.destroy({ children: true });
+    }
   }
 }
 
@@ -106,14 +114,19 @@ export class CircleRenderComponent extends RenderComponent {
   }
 
   public destroy(): void {
-    if (this.sprite) {
-      this.sprite.destroy();
+    // Sprite만 destroy, 텍스처는 캐시에 유지
+    if (this.sprite && !this.sprite.destroyed) {
+      this.sprite.destroy(false);
     }
 
-    GraphicEngine.getInstance()
-      .getGameViewport()
-      .removeChild(this.tailGraphics);
-    this.tailGraphics.destroy();
+    // tailGraphics destroy
+    if (this.tailGraphics && !this.tailGraphics.destroyed) {
+      const viewport = GraphicEngine.getInstance().getGameViewport();
+      if (viewport && this.tailGraphics.parent === viewport) {
+        viewport.removeChild(this.tailGraphics);
+      }
+      this.tailGraphics.destroy(true);
+    }
 
     super.destroy();
   }
