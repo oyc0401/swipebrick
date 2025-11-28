@@ -21,11 +21,11 @@ const bottomSpacerStyle = css`
 
 const ballTextStyle = (viewScale: number, ballTextX: number) => css`
   color: #44c4cd;
-  font-size: 14px;
+  font-size: 18px;
   text-align: center;
   margin: 0;
   position: absolute;
-  bottom: ${12 * viewScale}px;
+  bottom: ${6 * viewScale}px;
   left: ${ballTextX * viewScale}px;
   transform: translate(-50%, -50%);
   font-weight: 600;
