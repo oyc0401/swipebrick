@@ -1,7 +1,14 @@
 import { Engine, World, Events, Body, Sleeping, Runner } from "matter-js";
 
 import Matter from "matter-js";
-import { BALL_RADIUS, GAME_HEIGHT } from "../GameState";
+import { BALL_RADIUS, GAME_HEIGHT, GAME_WIDTH } from "../GameState";
+import {
+  BALL_SPEED,
+  WATCHDOG_OOB_MARGIN,
+  WATCHDOG_MIN_SPEED_RATIO,
+  WATCHDOG_SLOW_MS,
+  WATCHDOG_MAX_FLIGHT_MS,
+} from "../Setting";
 // 벽에 붙는 현상 제거 - Matter.js 내부 속성 접근을 위한 의도적 타입 우회
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (Matter.Resolver as any)._restingThresh = 0; // 기본 2 → 0
@@ -98,11 +105,25 @@ export class PhysicsEngine {
 
     if (!(ballBody as any).started) return;
 
-    // 공을 바닥에 딱 붙여서 위치 조정
+    this.landBall(ballBody);
+  }
+
+  /**
+   * 공을 바닥에 착지시켜 턴 종료 파이프라인을 태운다.
+   * 정상 바닥 충돌과 워치독 강제 착지가 공유하는 단일 경로.
+   * x가 NaN/비유한이면 안전한 좌표로 클램프하여 이후 moveTo 애니메이션이 멈추지 않도록 보장한다.
+   */
+  private landBall(ballBody: Matter.Body): void {
     const ballRadius = BALL_RADIUS;
     const bottomY = GAME_HEIGHT;
+
+    // 공을 바닥에 딱 붙여서 위치 조정 (x는 유한/경계 내로 보정)
+    const rawX = ballBody.position.x;
+    const safeX = Number.isFinite(rawX)
+      ? Math.min(Math.max(rawX, ballRadius), GAME_WIDTH - ballRadius)
+      : GAME_WIDTH / 2;
     Body.setPosition(ballBody, {
-      x: ballBody.position.x,
+      x: safeX,
       y: bottomY - ballRadius,
     });
 
@@ -115,6 +136,66 @@ export class PhysicsEngine {
     this.bottomCollisionCallbacks.forEach((callback) => {
       callback(ballBody);
     });
+  }
+
+  /**
+   * 턴 종료 보장 워치독: 프레임마다 비행 중인 공을 검사해
+   * (1) NaN/경계 이탈 (2) 저속 지속 (3) 최대 비행 시간 초과 중 하나라도 걸리면
+   * 정상 착지와 동일하게 강제 착지시켜 턴이 영구 정지하는 것을 방지한다.
+   * @param now rAF 콜백의 벽시계 시간 (performance.now() 스케일)
+   */
+  private runWatchdog(now: number): void {
+    const minSpeed = BALL_SPEED * WATCHDOG_MIN_SPEED_RATIO;
+
+    for (const body of this.world.bodies) {
+      if (body.label !== "ball") continue;
+      if (body.isSleeping) continue; // 이미 착지/정지한 공
+
+      // 최초 관측 시점 기록 (비행 시간 백스톱 기준)
+      if ((body as any).spawnedAt === undefined) {
+        (body as any).spawnedAt = now;
+      }
+
+      const { x, y } = body.position;
+
+      // 프롱1: NaN/경계 대폭 이탈 → 즉시 강제 착지 (유실된 공)
+      const outOfBounds =
+        !Number.isFinite(x) ||
+        !Number.isFinite(y) ||
+        x < -WATCHDOG_OOB_MARGIN ||
+        x > GAME_WIDTH + WATCHDOG_OOB_MARGIN ||
+        y < -WATCHDOG_OOB_MARGIN ||
+        y > GAME_HEIGHT + WATCHDOG_OOB_MARGIN;
+      if (outOfBounds) {
+        console.warn(`Watchdog: out-of-bounds ball force-landed`, body.id);
+        this.landBall(body);
+        continue;
+      }
+
+      // 프롱3: 최대 비행 시간 초과 → 강제 착지 (사실상 영구 궤도 백스톱)
+      // started 여부 무관: 발사선 아래서 센서로 이탈해 영영 started가 안 되는 공까지 회수
+      if (now - (body as any).spawnedAt > WATCHDOG_MAX_FLIGHT_MS) {
+        console.warn(`Watchdog: max-flight-time ball force-landed`, body.id);
+        this.landBall(body);
+        continue;
+      }
+
+      // 프롱2: 저속 지속 감지 → 강제 착지 (갇힌/degenerate 궤도)
+      // 정상 공은 에너지 보존으로 항상 speed ≈ BALL_SPEED 이므로 정상 개입 없음.
+      if ((body as any).started) {
+        if (body.speed < minSpeed) {
+          if ((body as any).lowSpeedSince === undefined) {
+            (body as any).lowSpeedSince = now;
+          } else if (now - (body as any).lowSpeedSince > WATCHDOG_SLOW_MS) {
+            console.warn(`Watchdog: low-speed ball force-landed`, body.id);
+            this.landBall(body);
+            continue;
+          }
+        } else {
+          (body as any).lowSpeedSince = undefined;
+        }
+      }
+    }
   }
 
   private groupBallCollisions(
@@ -388,6 +469,9 @@ export class PhysicsEngine {
         acc -= substepsToRun * SUB_DT;
         // 남은 acc(예: 51ms였으면 1ms)는 다음 프레임으로 이월
       }
+
+      // 턴 종료 보장 워치독 (서브스텝 루프 밖, 프레임당 1회, 벽시계 now 기준)
+      this.runWatchdog(now);
 
       rafId = requestAnimationFrame(loop);
     };
