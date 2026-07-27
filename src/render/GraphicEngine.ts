@@ -1,4 +1,11 @@
-import { Application, Container, Graphics, Ticker } from "pixi.js";
+import {
+  Application,
+  Container,
+  Graphics,
+  Text,
+  TextStyle,
+  Ticker,
+} from "pixi.js";
 import { EntityManager } from "../core/entity/EntityManager";
 import { LayerManager } from "./LayerManager";
 // @ts-ignore
@@ -28,6 +35,8 @@ export class GraphicEngine {
   private gameHeight: number;
   private debugGuide: Graphics | null = null;
   private aimLine: Graphics | null = null;
+  private ballCountText: Text | null = null;
+  private ballCount: number = 0;
   public shatterEffect: any = null; // ShatterEffect 인스턴스
   public shatterItemEffect: any = null; // ShatterItemEffect 인스턴스
   private ticker: Ticker | null = null;
@@ -80,6 +89,8 @@ export class GraphicEngine {
 
     this.layerManager.setupLayers(this.app.stage);
 
+    this.setupBallCountText();
+
     // ShatterEffect 초기화 (gameViewport에 렌더링)
     const theme = getTheme();
     this.shatterEffect = new ShatterEffect(
@@ -114,6 +125,45 @@ export class GraphicEngine {
 
   public addDebugGuide(): void {
     this.layerManager.addDebugGuide();
+  }
+
+  // ===== 공 개수 텍스트 (게임 좌표계에서 렌더링) =====
+
+  private setupBallCountText(): void {
+    const textStyle = new TextStyle({
+      fontFamily: "Inter",
+      fontSize: 18,
+      fill: 0x44c4cd,
+      fontWeight: "600",
+      align: "center",
+    });
+
+    this.ballCountText = new Text({ text: "", style: textStyle });
+    this.ballCountText.anchor.set(0.5, 0.5);
+    this.ballCountText.position.set(
+      this.gameWidth / 2,
+      this.gameHeight - 28
+    );
+    this.ballCountText.zIndex = 2;
+    this.ballCountText.visible = false;
+    this.layerManager.getGameViewport().addChild(this.ballCountText);
+  }
+
+  public setBallCount(count: number): void {
+    this.ballCount = count;
+
+    if (!this.ballCountText) return;
+    this.ballCountText.text = count.toString();
+    this.ballCountText.visible = count > 0;
+  }
+
+  public decreaseBallCount(): void {
+    this.setBallCount(this.ballCount - 1);
+  }
+
+  public setBallCountX(x: number): void {
+    if (!this.ballCountText) return;
+    this.ballCountText.x = x;
   }
 
   public getCenterLayer(): Container {
@@ -389,6 +439,11 @@ export class GraphicEngine {
     if (this.aimLine) {
       this.aimLine.destroy(true);
       this.aimLine = null;
+    }
+
+    if (this.ballCountText) {
+      this.ballCountText.destroy(true);
+      this.ballCountText = null;
     }
 
     // LayerManager 정리

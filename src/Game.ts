@@ -224,15 +224,15 @@ export class Game {
 
   private async updateScoreUI(): Promise<void> {
     const currentNumBalls = this.swipeBrick.getBallCount();
-    useGameStore.getState().setRemainingBalls(currentNumBalls);
+    this.renderer.setBallCount(currentNumBalls);
 
     const currentScore = this.swipeBrick.getLevel();
     useGameStore.getState().setScore(currentScore);
   }
 
-  private async updateBallx() : Promise<void> {
+  private async updateBallx(): Promise<void> {
     const currentBallTextX = this.swipeBrick.getBallStartX();
-    useGameStore.getState().setBallTextX(currentBallTextX);
+    this.renderer.setBallCountX(currentBallTextX);
   }
 
   // ===== 🔧 시스템 초기화 =====

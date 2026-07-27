@@ -1,6 +1,5 @@
 import { Container, Graphics, Rectangle } from "pixi.js";
 import type { Application } from "pixi.js";
-import { useGameStore } from "../stores/gameStore";
 
 /**
  * 반응형 UI 가로 크기
@@ -81,7 +80,6 @@ export class LayerManager {
 
     // centerLayer에 스케일 적용
     this.centerLayer.scale.set(scale);
-    useGameStore.getState().setViewScale(scale);
 
     // 화면 중앙에 배치
     this.centerLayer.position.set(screenWidth / 2, screenHeight / 2);

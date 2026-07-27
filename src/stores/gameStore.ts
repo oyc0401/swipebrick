@@ -7,13 +7,6 @@ interface GameState {
   bestScore: number;
   isDialogOpen: boolean;
 
-  remainingBalls: number;
-  ballTextX : number;   
-  viewScale : number;          
-  
-  setBallTextX : ( ballTextX : number) => void;
-  setViewScale : (viewScale : number) => void;
-  setRemainingBalls: (remainingBalls : number) => void;
   setScore: (score: number) => void;
   setBestScore: (bestScore: number) => void;
   openDialog: () => void;
@@ -30,12 +23,6 @@ export const useGameStore = create<GameState>((set) => ({
   bestScore: 0,
   isDialogOpen: false,
   onClose: undefined,
-  remainingBalls: 1,
-  ballTextX : 175, //중앙
-  viewScale : 515,
-  setRemainingBalls: ((remainingBalls : number) => set({remainingBalls})),
-  setBallTextX:((ballTextX : number) => set({ballTextX})),
-  setViewScale:((viewScale : number) => set({viewScale})),
   setScore: (score: number) => set({ score }),
   setBestScore: (bestScore: number) => set({ bestScore }),
   openDialog: () => set({ isDialogOpen: true }),

@@ -2,9 +2,9 @@ import { BallEntity } from "../entity/BallEntity";
 import type { Position } from "../GameState";
 import { GAME_HEIGHT, BALL_RADIUS } from "../GameState";
 import { PhysicsEngine } from "../physics/PhysicsEngine";
+import { GraphicEngine } from "../render/GraphicEngine";
 import type { SwipeBrick } from "../SwipeBrick";
 import { getNextId } from "../utils/IdGenerator";
-import { useGameStore } from "../stores/gameStore";
 
 export class BallManager {
   private activeBalls: BallEntity[] = [];
@@ -58,10 +58,7 @@ export class BallManager {
     physicsEngine.onBallLaunched(() => {
       this.onBallLaunchedCallbacks.forEach((cb) => cb());
 
-      
-      this.decreaseRemainingBalls();
-      // console.log("공 하나 출발!");
-
+      GraphicEngine.getInstance().decreaseBallCount();
     });
   }
 
@@ -93,7 +90,7 @@ export class BallManager {
   // ===== Ball Management =====
 
   public createBalls(count: number): void {
-    useGameStore.getState().setRemainingBalls(count);
+    GraphicEngine.getInstance().setBallCount(count);
     for (let i = 0; i < count; i++) {
       const ballStartX = this.swipeBrick.getBallStartX();
       const ballStartPosition: Position = {
@@ -172,12 +169,6 @@ export class BallManager {
       this.activeBalls.splice(index, 1);
     }
   }
-   public decreaseRemainingBalls = () => {
-  useGameStore.setState((state) => ({
-    remainingBalls: state.remainingBalls - 1,
-  }));
-  };
-
   public getActiveBallCount(): number {
     return this.activeBalls.length;
   }
