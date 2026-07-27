@@ -159,6 +159,8 @@ export class PhysicsEngine {
       const { x, y } = body.position;
 
       // 프롱1: NaN/경계 대폭 이탈 → 즉시 강제 착지 (유실된 공)
+      // 발사 대기열의 공(started=false)은 의도적으로 발사선 뒤 32px×index,
+      // 즉 경계 밖에서 진입을 기다리므로 검사 대상이 아니다 — 프롱3이 백스톱.
       const outOfBounds =
         !Number.isFinite(x) ||
         !Number.isFinite(y) ||
@@ -166,7 +168,7 @@ export class PhysicsEngine {
         x > GAME_WIDTH + WATCHDOG_OOB_MARGIN ||
         y < -WATCHDOG_OOB_MARGIN ||
         y > GAME_HEIGHT + WATCHDOG_OOB_MARGIN;
-      if (outOfBounds) {
+      if ((body as any).started && outOfBounds) {
         console.warn(`Watchdog: out-of-bounds ball force-landed`, body.id);
         this.landBall(body);
         continue;
